@@ -58,7 +58,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           'assets/images/logo.png',
           height: 32,
           fit: BoxFit.contain,
-          errorBuilder: (_, _, _) =>
+          errorBuilder: (_, __, ___) =>
               const Icon(Icons.school, color: AppColors.accent, size: 28),
         ),
         actions: [

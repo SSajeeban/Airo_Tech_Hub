@@ -218,7 +218,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       'assets/images/logo.png',
                                       height: 64,
                                       fit: BoxFit.contain,
-                                      errorBuilder: (_, _, _) => Column(
+                                      errorBuilder: (_, __, ___) => Column(
                                         children: const [
                                           Icon(Icons.school, size: 48, color: Color(0xFF169688)),
                                           Text(

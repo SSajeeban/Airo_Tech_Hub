@@ -23,7 +23,7 @@ class LandingScreen extends ConsumerWidget {
           'assets/images/logo.png',
           height: 36,
           fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => Container(
+          errorBuilder: (_, __, ___) => Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.accent,
