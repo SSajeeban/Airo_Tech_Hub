@@ -41,6 +41,7 @@ dependencies:
   google_fonts: 6.3.2
   intl: ^0.20.3
   url_launcher: ^6.3.3
+  file_picker: ^13.3.3
 
 dev_dependencies:
   flutter_test:

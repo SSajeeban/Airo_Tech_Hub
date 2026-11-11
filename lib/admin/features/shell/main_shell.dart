@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../core/admin_exit.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/admin_exit.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   final Widget child;
@@ -53,6 +52,13 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            tooltip: isTamil ? 'வழிசெலுத்தல் மெனு' : 'Open navigation menu',
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         titleSpacing: 16,
         title: Image.asset(
           'assets/images/logo.png',
@@ -64,8 +70,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         actions: [
           if (AdminExit.maybeOf(context) != null)
             IconButton(
-              tooltip: isTamil ? 'Portal-க்குத் திரும்பு' : 'Back to Portal',
-              icon: const Icon(Icons.home_outlined, size: 22),
+              tooltip: 'Portal',
+              icon: const Icon(Icons.home, size: 22),
               onPressed: AdminExit.maybeOf(context),
             ),
           // Language Quick Switch
@@ -194,6 +200,17 @@ class _MainShellState extends ConsumerState<MainShell> {
               onTap: () {
                 Navigator.pop(context);
                 context.push('/app/payments');
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.fiber_manual_record_outlined,
+                color: AppColors.danger,
+              ),
+              title: Text(isTamil ? 'பதிவுகள்' : 'Recording'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/app/recording');
               },
             ),
             ListTile(

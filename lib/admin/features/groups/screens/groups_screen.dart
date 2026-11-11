@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
+
+enum _GroupView { cards, table }
 
 class GroupsScreen extends ConsumerStatefulWidget {
   const GroupsScreen({super.key});
@@ -15,6 +18,7 @@ class GroupsScreen extends ConsumerStatefulWidget {
 class _GroupsScreenState extends ConsumerState<GroupsScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  _GroupView _view = _GroupView.cards;
 
   @override
   void dispose() {
@@ -22,73 +26,49 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
     super.dispose();
   }
 
-  void _showCreateGroupDialog(BuildContext context) {
-    final nameCtrl = TextEditingController();
-    final codeCtrl = TextEditingController();
-    final scheduleCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-
-    showDialog(
+  Future<void> _deleteGroup(GroupModel group, bool isTamil) async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Create New Class Group', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Group / Cohort Name', hintText: 'e.g. Physics Revision 2026'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: codeCtrl,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(labelText: 'Invite Code', hintText: 'e.g. PHY26'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: scheduleCtrl,
-                  decoration: const InputDecoration(labelText: 'Schedule', hintText: 'e.g. Saturdays 4:00 PM'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descCtrl,
-                  maxLines: 2,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                ),
-              ],
-            ),
+      builder: (context) => AlertDialog(
+        title: Text(isTamil ? 'குழுவை நீக்கவா?' : 'Delete group?'),
+        content: Text(
+          isTamil
+              ? '"${group.name}" குழுவை நீக்க விரும்புகிறீர்களா?'
+              : 'Are you sure you want to delete "${group.name}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(isTamil ? 'ரத்து' : 'Cancel'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameCtrl.text.trim().isEmpty) return;
-                final newGroup = GroupModel(
-                  id: 'grp_${DateTime.now().millisecondsSinceEpoch}',
-                  name: nameCtrl.text.trim(),
-                  code: codeCtrl.text.trim().toUpperCase().isNotEmpty ? codeCtrl.text.trim().toUpperCase() : 'AIR99',
-                  description: descCtrl.text.trim(),
-                  memberCount: 1,
-                  schedule: scheduleCtrl.text.trim().isNotEmpty ? scheduleCtrl.text.trim() : 'Flexible',
-                  createdAt: DateTime.now(),
-                );
-                ref.read(groupsProvider.notifier).update((state) => [newGroup, ...state]);
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Group "${newGroup.name}" created successfully!')),
-                );
-              },
-              child: const Text('Create'),
-            ),
-          ],
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: Text(isTamil ? 'நீக்கு' : 'Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    ref
+        .read(groupsProvider.notifier)
+        .update(
+          (groups) => groups.where((item) => item.id != group.id).toList(),
         );
-      },
+  }
+
+  void _copyJoinLink(GroupModel group, bool isTamil) {
+    Clipboard.setData(
+      ClipboardData(text: 'https://airotechhub.lk/group/${group.code}'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isTamil
+              ? '"${group.name}" குழுவின் இணைப்பு நகலெடுக்கப்பட்டது.'
+              : 'Join link for "${group.name}" copied.',
+        ),
+      ),
     );
   }
 
@@ -96,173 +76,319 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
   Widget build(BuildContext context) {
     final groups = ref.watch(groupsProvider);
     final isTamil = ref.watch(languageProvider) == 'ta';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final filtered = groups.where((g) {
-      return g.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          g.code.toLowerCase().contains(_searchQuery.toLowerCase());
+    final colors = Theme.of(context).colorScheme;
+    final filtered = groups.where((group) {
+      final query = _searchQuery.toLowerCase();
+      return group.name.toLowerCase().contains(query) ||
+          group.code.toLowerCase().contains(query) ||
+          group.description.toLowerCase().contains(query);
     }).toList();
 
-    return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateGroupDialog(context),
-        backgroundColor: AppColors.accent,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          isTamil ? 'புதிய குழு' : 'New Group',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Search & Filter Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              decoration: InputDecoration(
-                hintText: isTamil ? 'குழு அல்லது குறியீடு தேடவும்...' : 'Search group by name or code...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-              ),
-            ),
-          ),
-
-          // Groups List
-          Expanded(
-            child: filtered.isEmpty
-                ? Center(
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
                     child: Text(
-                      isTamil ? 'குழுக்கள் எதுவும் இல்லை' : 'No groups found',
-                      style: TextStyle(color: isDark ? AppColors.mutedDark : AppColors.mutedLight),
+                      isTamil ? 'குழுக்கள்' : 'Groups',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final group = filtered[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(color: isDark ? AppColors.lineDark : AppColors.lineLight),
+                  ),
+                  ToggleButtons(
+                    isSelected: [
+                      _view == _GroupView.cards,
+                      _view == _GroupView.table,
+                    ],
+                    onPressed: (index) => setState(
+                      () => _view = index == 0
+                          ? _GroupView.cards
+                          : _GroupView.table,
+                    ),
+                    borderRadius: BorderRadius.circular(9),
+                    borderColor: colors.outlineVariant,
+                    selectedBorderColor: AppColors.accent,
+                    fillColor: AppColors.accent,
+                    color: colors.onSurface,
+                    selectedColor: Colors.white,
+                    constraints: const BoxConstraints(
+                      minWidth: 68,
+                      minHeight: 40,
+                    ),
+                    children: [
+                      Text(isTamil ? 'அட்டைகள்' : 'Cards'),
+                      Text(isTamil ? 'அட்டவணை' : 'Table'),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) =>
+                          setState(() => _searchQuery = value),
+                      decoration: InputDecoration(
+                        hintText: isTamil
+                            ? 'குழுக்களைத் தேடவும்'
+                            : 'Search groups',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchQuery.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: isTamil ? 'அழி' : 'Clear',
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                                icon: const Icon(Icons.close),
+                              ),
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(9),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-                                    child: Text(
-                                      group.code.substring(0, 2),
-                                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accent),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          group.name,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          group.schedule,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: isDark ? AppColors.mutedDark : AppColors.mutedLight,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      group.code,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (group.description.isNotEmpty) ...[
-                                const SizedBox(height: 10),
-                                Text(
-                                  group.description,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: isDark ? AppColors.inkDark : AppColors.inkLight,
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 14),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.people_outline, size: 16, color: AppColors.mutedLight),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${group.memberCount} students',
-                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      OutlinedButton.icon(
-                                        onPressed: () {
-                                          Clipboard.setData(ClipboardData(text: 'https://airotechhub.lk/group/${group.code}'));
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Join link for "${group.name}" copied!')),
-                                          );
-                                        },
-                                        icon: const Icon(Icons.copy, size: 14),
-                                        label: const Text('Share Link', style: TextStyle(fontSize: 12)),
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(90, 32),
-                                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    onPressed: () => context.push('/app/groups/new'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      minimumSize: const Size(48, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(isTamil ? 'உருவாக்கு' : 'Create'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(
+                  child: Text(
+                    isTamil ? 'குழுக்கள் எதுவும் இல்லை' : 'No groups found',
+                    style: TextStyle(color: colors.onSurfaceVariant),
+                  ),
+                )
+              : _view == _GroupView.cards
+              ? LayoutBuilder(
+                  builder: (context, constraints) {
+                    final columns = constraints.maxWidth >= 1000
+                        ? 3
+                        : constraints.maxWidth >= 650
+                        ? 2
+                        : 1;
+                    return GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        mainAxisExtent: 142,
+                      ),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) =>
+                          _groupCard(filtered[index], isTamil, colors),
+                    );
+                  },
+                )
+              : _groupTable(filtered, isTamil),
+        ),
+      ],
+    );
+  }
+
+  Widget _groupCard(GroupModel group, bool isTamil, ColorScheme colors) {
+    final initial = group.name.trim().isEmpty
+        ? '?'
+        : group.name.trim()[0].toUpperCase();
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(13),
+        side: BorderSide(color: colors.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: colors.surfaceContainerHighest,
+                  child: Text(
+                    initial,
+                    style: TextStyle(
+                      color: colors.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      if (group.description.isNotEmpty)
+                        Text(
+                          group.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.onSurfaceVariant,
                           ),
                         ),
-                      );
-                    },
+                    ],
                   ),
-          ),
-        ],
+                ),
+                _actionButton(
+                  icon: Icons.visibility_outlined,
+                  tooltip: isTamil ? 'விவரங்கள்' : 'View details',
+                  onPressed: () => context.push('/app/groups/${group.id}'),
+                ),
+                _actionButton(
+                  icon: Icons.copy_outlined,
+                  tooltip: isTamil ? 'இணைப்பு நகலெடு' : 'Copy join link',
+                  onPressed: () => _copyJoinLink(group, isTamil),
+                ),
+                _actionButton(
+                  icon: Icons.edit_outlined,
+                  tooltip: isTamil ? 'திருத்து' : 'Edit',
+                  onPressed: () =>
+                      context.push('/app/groups/edit', extra: group),
+                ),
+                _actionButton(
+                  icon: Icons.delete_outline,
+                  tooltip: isTamil ? 'நீக்கு' : 'Delete',
+                  color: AppColors.danger,
+                  onPressed: () => _deleteGroup(group, isTamil),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              '${group.memberCount} ${isTamil ? 'உறுப்பினர்கள்' : 'Members'}',
+              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
+    return IconButton(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+      padding: EdgeInsets.zero,
+      iconSize: 18,
+      color: color,
+      icon: Icon(icon),
+    );
+  }
+
+  Widget _groupTable(List<GroupModel> groups, bool isTamil) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      scrollDirection: Axis.horizontal,
+      child: SingleChildScrollView(
+        child: DataTable(
+          columns: [
+            DataColumn(label: Text(isTamil ? 'பெயர்' : 'Name')),
+            DataColumn(label: Text(isTamil ? 'விளக்கம்' : 'Description')),
+            DataColumn(label: Text(isTamil ? 'உறுப்பினர்கள்' : 'Members')),
+            DataColumn(label: Text(isTamil ? 'செயல்கள்' : 'Actions')),
+          ],
+          rows: [
+            for (final group in groups)
+              DataRow(
+                cells: [
+                  DataCell(
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 220),
+                      child: Text(
+                        group.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 260),
+                      child: Text(
+                        group.description.isEmpty ? '—' : group.description,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  DataCell(Text('${group.memberCount}')),
+                  DataCell(
+                    Row(
+                      children: [
+                        _actionButton(
+                          icon: Icons.visibility_outlined,
+                          tooltip: isTamil ? 'விவரங்கள்' : 'View details',
+                          onPressed: () =>
+                              context.push('/app/groups/${group.id}'),
+                        ),
+                        _actionButton(
+                          icon: Icons.copy_outlined,
+                          tooltip: isTamil
+                              ? 'இணைப்பு நகலெடு'
+                              : 'Copy join link',
+                          onPressed: () => _copyJoinLink(group, isTamil),
+                        ),
+                        _actionButton(
+                          icon: Icons.edit_outlined,
+                          tooltip: isTamil ? 'திருத்து' : 'Edit',
+                          onPressed: () =>
+                              context.push('/app/groups/edit', extra: group),
+                        ),
+                        _actionButton(
+                          icon: Icons.delete_outline,
+                          tooltip: isTamil ? 'நீக்கு' : 'Delete',
+                          color: AppColors.danger,
+                          onPressed: () => _deleteGroup(group, isTamil),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
 }
-

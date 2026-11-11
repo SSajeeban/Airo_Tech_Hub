@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../network/api_client.dart';
 import '../services/storage_service.dart';
 import '../../models/site_content.dart';
@@ -194,6 +193,7 @@ final membersProvider = StateProvider<List<MemberModel>>((ref) {
       phone: '+94 77 123 4567',
       groupName: 'Advanced Mathematics Cohort 2026',
       status: 'Active',
+      groupId: 'grp_01',
     ),
     const MemberModel(
       id: 'm_02',
@@ -203,6 +203,7 @@ final membersProvider = StateProvider<List<MemberModel>>((ref) {
       phone: '+94 71 987 6543',
       groupName: 'Advanced Mathematics Cohort 2026',
       status: 'Active',
+      groupId: 'grp_01',
     ),
     const MemberModel(
       id: 'm_03',
@@ -212,6 +213,7 @@ final membersProvider = StateProvider<List<MemberModel>>((ref) {
       phone: '+94 75 456 7890',
       groupName: 'A/L Combined Mathematics Batch',
       status: 'Active',
+      groupId: 'grp_02',
     ),
     const MemberModel(
       id: 'm_04',
@@ -221,6 +223,7 @@ final membersProvider = StateProvider<List<MemberModel>>((ref) {
       phone: '+94 70 334 5566',
       groupName: 'Python & AI Fundamentals',
       status: 'Active',
+      groupId: 'grp_03',
     ),
   ];
 });
@@ -231,8 +234,10 @@ final noticesProvider = StateProvider<List<NoticeModel>>((ref) {
       id: 'not_01',
       title: 'Monthly Mock Exam Scheduled for Saturday',
       titleTa: 'மாதாந்திர மாதிரித் தேர்வு சனிக்கிழமை நடைபெறும்',
-      content: 'All registered students must join the exam room 15 minutes prior to the start time with your study materials ready.',
-      contentTa: 'பதிவு செய்த அனைத்து மாணவர்களும் தங்கள் கற்றல் பொருட்களுடன் தொடக்க நேரத்திற்கு 15 நிமிடங்களுக்கு முன்பே தேர்வு அறையில் இணைய வேண்டும்.',
+      content:
+          'All registered students must join the exam room 15 minutes prior to the start time with your study materials ready.',
+      contentTa:
+          'பதிவு செய்த அனைத்து மாணவர்களும் தங்கள் கற்றல் பொருட்களுடன் தொடக்க நேரத்திற்கு 15 நிமிடங்களுக்கு முன்பே தேர்வு அறையில் இணைய வேண்டும்.',
       isPinned: true,
       publishedAt: DateTime.now().subtract(const Duration(hours: 4)),
       author: 'Academic Coordinator',
@@ -241,8 +246,10 @@ final noticesProvider = StateProvider<List<NoticeModel>>((ref) {
       id: 'not_02',
       title: 'New AI Teacher Learning Modules Released',
       titleTa: 'புதிய AI ஆசிரியர் கற்றல் தொகுதிகள் வெளியிடப்பட்டுள்ளன',
-      content: 'Students can now generate practice quizzes and study notes directly within their library tab.',
-      contentTa: 'மாணவர்கள் இப்போது தங்கள் நூலகத் தாவலில் நேரடியாக பயிற்சி வினாடி வினாக்கள் மற்றும் குறிப்புகளை உருவாக்க முடியும்.',
+      content:
+          'Students can now generate practice quizzes and study notes directly within their library tab.',
+      contentTa:
+          'மாணவர்கள் இப்போது தங்கள் நூலகத் தாவலில் நேரடியாக பயிற்சி வினாடி வினாக்கள் மற்றும் குறிப்புகளை உருவாக்க முடியும்.',
       isPinned: false,
       publishedAt: DateTime.now().subtract(const Duration(days: 2)),
       author: 'AIRO Techhub Support',
@@ -250,28 +257,7 @@ final noticesProvider = StateProvider<List<NoticeModel>>((ref) {
   ];
 });
 
-final meetingsProvider = StateProvider<List<MeetingModel>>((ref) {
-  return [
-    MeetingModel(
-      id: 'mtg_01',
-      title: 'Calculus & Vectors Live Interactive Lecture',
-      groupName: 'Advanced Mathematics Cohort 2026',
-      scheduledTime: DateTime.now().add(const Duration(hours: 2)),
-      durationMinutes: 90,
-      meetingUrl: 'https://meet.jit.si/airo_math_adv_live',
-      isLive: true,
-    ),
-    MeetingModel(
-      id: 'mtg_02',
-      title: 'Python Neural Networks Workshop',
-      groupName: 'Python & AI Fundamentals',
-      scheduledTime: DateTime.now().add(const Duration(days: 1, hours: 3)),
-      durationMinutes: 60,
-      meetingUrl: 'https://meet.jit.si/airo_python_ai_session',
-      isLive: false,
-    ),
-  ];
-});
+final meetingsProvider = StateProvider<List<MeetingModel>>((ref) => []);
 
 final paymentsProvider = StateProvider<List<PaymentModel>>((ref) {
   return [

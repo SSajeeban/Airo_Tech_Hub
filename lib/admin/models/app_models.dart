@@ -6,6 +6,7 @@ class GroupModel {
   final int memberCount;
   final String schedule;
   final DateTime createdAt;
+  final Map<String, String> customFields;
 
   const GroupModel({
     required this.id,
@@ -15,19 +16,25 @@ class GroupModel {
     required this.memberCount,
     required this.schedule,
     required this.createdAt,
+    this.customFields = const {},
   });
 
   factory GroupModel.fromJson(Map<String, dynamic> json) {
     return GroupModel(
       id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? json['title'] as String? ?? 'Class Cohort',
+      name:
+          json['name'] as String? ?? json['title'] as String? ?? 'Class Cohort',
       code: json['code'] as String? ?? 'AIR01',
       description: json['description'] as String? ?? '',
-      memberCount: json['memberCount'] as int? ?? json['membersCount'] as int? ?? 0,
+      memberCount:
+          json['memberCount'] as int? ?? json['membersCount'] as int? ?? 0,
       schedule: json['schedule'] as String? ?? 'Mon & Wed 6:00 PM',
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
           : DateTime.now(),
+      customFields: (json['customFields'] as Map<String, dynamic>? ?? {}).map(
+        (key, value) => MapEntry(key, value.toString()),
+      ),
     );
   }
 }
@@ -41,6 +48,14 @@ class MemberModel {
   final String groupName;
   final String status;
   final String? photoUrl;
+  final String? groupId;
+  final List<String> groupIds;
+  final String? fullName;
+  final String? dateOfBirth;
+  final String? address;
+  final Map<String, String> customFields;
+  final List<String> documents;
+  final DateTime? joinedAt;
 
   const MemberModel({
     required this.id,
@@ -51,6 +66,14 @@ class MemberModel {
     required this.groupName,
     required this.status,
     this.photoUrl,
+    this.groupId,
+    this.groupIds = const [],
+    this.fullName,
+    this.dateOfBirth,
+    this.address,
+    this.customFields = const {},
+    this.documents = const [],
+    this.joinedAt,
   });
 
   factory MemberModel.fromJson(Map<String, dynamic> json) {
@@ -60,9 +83,26 @@ class MemberModel {
       initial: json['initial'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
-      groupName: json['groupName'] as String? ?? json['group'] as String? ?? 'General',
+      groupName:
+          json['groupName'] as String? ?? json['group'] as String? ?? 'General',
       status: json['status'] as String? ?? 'Active',
       photoUrl: json['photoUrl'] as String?,
+      groupId: json['groupId'] as String?,
+      groupIds: (json['groupIds'] as List<dynamic>? ?? [])
+          .map((value) => value.toString())
+          .toList(),
+      fullName: json['fullName'] as String?,
+      dateOfBirth: json['dateOfBirth'] as String?,
+      address: json['address'] as String?,
+      customFields: (json['customFields'] as Map<String, dynamic>? ?? {}).map(
+        (key, value) => MapEntry(key, value.toString()),
+      ),
+      documents: (json['documents'] as List<dynamic>? ?? [])
+          .map((value) => value.toString())
+          .toList(),
+      joinedAt: json['joinedAt'] != null
+          ? DateTime.tryParse(json['joinedAt'] as String)
+          : null,
     );
   }
 }
@@ -76,6 +116,8 @@ class NoticeModel {
   final bool isPinned;
   final DateTime publishedAt;
   final String author;
+  final String audience;
+  final DateTime? expiresAt;
 
   const NoticeModel({
     required this.id,
@@ -86,6 +128,8 @@ class NoticeModel {
     required this.isPinned,
     required this.publishedAt,
     required this.author,
+    this.audience = 'All groups',
+    this.expiresAt,
   });
 
   factory NoticeModel.fromJson(Map<String, dynamic> json) {
@@ -100,6 +144,10 @@ class NoticeModel {
           ? DateTime.tryParse(json['publishedAt'] as String) ?? DateTime.now()
           : DateTime.now(),
       author: json['author'] as String? ?? 'Instructor',
+      audience: json['audience'] as String? ?? 'All groups',
+      expiresAt: json['expiresAt'] != null
+          ? DateTime.tryParse(json['expiresAt'] as String)
+          : null,
     );
   }
 }
@@ -132,7 +180,9 @@ class MeetingModel {
           ? DateTime.tryParse(json['scheduledTime'] as String) ?? DateTime.now()
           : DateTime.now(),
       durationMinutes: json['durationMinutes'] as int? ?? 60,
-      meetingUrl: json['meetingUrl'] as String? ?? 'https://meet.jit.si/airo_${json['id'] ?? 'class'}',
+      meetingUrl:
+          json['meetingUrl'] as String? ??
+          'https://meet.jit.si/airo_${json['id'] ?? 'class'}',
       isLive: json['isLive'] as bool? ?? false,
     );
   }
@@ -140,6 +190,7 @@ class MeetingModel {
 
 class PaymentModel {
   final String id;
+  final String? memberId;
   final String memberName;
   final String groupName;
   final double amount;
@@ -148,9 +199,15 @@ class PaymentModel {
   final DateTime dueDate;
   final bool isPaid;
   final DateTime? paidAt;
+  final String title;
+  final String note;
+  final DateTime? startsOn;
+  final String? scheduleId;
+  final String appliesTo;
 
   const PaymentModel({
     required this.id,
+    this.memberId,
     required this.memberName,
     required this.groupName,
     required this.amount,
@@ -159,11 +216,17 @@ class PaymentModel {
     required this.dueDate,
     required this.isPaid,
     this.paidAt,
+    this.title = '',
+    this.note = '',
+    this.startsOn,
+    this.scheduleId,
+    this.appliesTo = 'Group',
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
     return PaymentModel(
       id: json['id'] as String? ?? '',
+      memberId: json['memberId'] as String?,
       memberName: json['memberName'] as String? ?? 'Student',
       groupName: json['groupName'] as String? ?? 'Batch A',
       amount: (json['amount'] as num?)?.toDouble() ?? 2500.0,
@@ -173,7 +236,16 @@ class PaymentModel {
           ? DateTime.tryParse(json['dueDate'] as String) ?? DateTime.now()
           : DateTime.now(),
       isPaid: json['isPaid'] as bool? ?? false,
-      paidAt: json['paidAt'] != null ? DateTime.tryParse(json['paidAt'] as String) : null,
+      paidAt: json['paidAt'] != null
+          ? DateTime.tryParse(json['paidAt'] as String)
+          : null,
+      title: json['title'] as String? ?? '',
+      note: json['note'] as String? ?? '',
+      startsOn: json['startsOn'] != null
+          ? DateTime.tryParse(json['startsOn'] as String)
+          : null,
+      scheduleId: json['scheduleId'] as String?,
+      appliesTo: json['appliesTo'] as String? ?? 'Group',
     );
   }
 }
@@ -229,4 +301,3 @@ class ChatMessage {
     this.attachmentUrl,
   });
 }
-
