@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_settings.dart';
 import 'phone_sign_in_screen.dart';
 import 'portal_screen.dart';
 
@@ -12,14 +13,25 @@ class AiroApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Airo Techhub',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B9A85)),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFB),
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) => MaterialApp(
+        title: 'Airo Techhub',
+        debugShowCheckedModeBanner: false,
+        themeMode: AppSettings.instance.themeMode,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B9A85)),
+          scaffoldBackgroundColor: const Color(0xFFF8FAFB),
+        ),
+        darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF1B9A85),
+            brightness: Brightness.dark,
+          ),
+        ),
+        home: const PortalScreen(memberPage: PhoneSignInScreen()),
       ),
-      home: const PortalScreen(memberPage: PhoneSignInScreen()),
     );
   }
 }

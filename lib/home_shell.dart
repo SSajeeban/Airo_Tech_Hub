@@ -6,6 +6,8 @@ import 'notices_tab.dart';
 import 'mock_data.dart';
 import 'app_logo.dart';
 import 'library_tab.dart';
+import 'app_settings.dart';
+import 'top_bar_actions.dart';
 
 class HomeShell extends StatefulWidget {
   final Member member;
@@ -37,7 +39,7 @@ class _HomeShellState extends State<HomeShell> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.group.name),
-        actions: const [AppBarLogo()],
+        actions: [ListenableBuilder(listenable: AppSettings.instance, builder: (context, _) => Row(mainAxisSize: MainAxisSize.min, children: topBarActions())), const AppBarLogo()],
       ),
       body: pages[_index],
       bottomNavigationBar: NavigationBar(
@@ -85,7 +87,7 @@ class _HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1F2A5A);
+    final navy = Theme.of(context).colorScheme.onSurface;
     const teal = Color(0xFF1B9A85);
 
     return ListView(
@@ -93,21 +95,21 @@ class _HomeTab extends StatelessWidget {
       children: [
         Text(
           group.name,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: navy,
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'Notice board',
           style: TextStyle(fontWeight: FontWeight.w700, color: navy),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'No notices for you yet.',
-          style: TextStyle(color: Colors.black54),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
         Card(
@@ -118,7 +120,7 @@ class _HomeTab extends StatelessWidget {
               children: [
                 Text(
                   'Your groups: ${group.name}',
-                  style: const TextStyle(color: Colors.black54),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 16),
                 const _UsageRow(label: 'Groups', used: 2, total: 3),

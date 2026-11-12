@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'admin/admin_entry.dart';
+import 'app_settings.dart';
 
 class PortalScreen extends StatelessWidget {
   final Widget memberPage;
@@ -19,7 +20,7 @@ class PortalScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1F2A5A);
+    final navy = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       body: SafeArea(
@@ -34,8 +35,8 @@ class PortalScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Image.asset('assets/images/logo.png', height: 90),
                   const SizedBox(height: 32),
-                  const Text(
-                    'SIGN IN TO A PORTAL',
+                  Text(
+                    tr('SIGN IN TO A PORTAL'),
                     style: TextStyle(
                       fontSize: 12,
                       letterSpacing: 1.5,
@@ -44,8 +45,8 @@ class PortalScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Choose your portal',
+                  Text(
+                    tr('Choose your portal'),
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
@@ -112,7 +113,7 @@ class _PortalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1F2A5A);
+    final navy = Theme.of(context).colorScheme.onSurface;
     const teal = Color(0xFF1B9A85);
 
     return Card(
@@ -138,29 +139,29 @@ class _PortalCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                tag,
+                tr(tag),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: highlighted ? teal : Colors.black54,
+                  color: highlighted ? teal : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              title,
-              style: const TextStyle(
+              tr(title),
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: navy,
               ),
             ),
             Text(
-              subtitle,
+              tr(subtitle),
               style: const TextStyle(color: teal, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            Text(description, style: const TextStyle(color: Colors.black54)),
+            Text(tr(description), style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -171,14 +172,14 @@ class _PortalCard extends StatelessWidget {
                         backgroundColor: teal,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Sign in'),
+                      child: Text(tr('Sign in')),
                     )
                   : OutlinedButton(
                       onPressed: onTap,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Sign in'),
+                      child: Text(tr('Sign in')),
                     ),
             ),
           ],
@@ -187,3 +188,13 @@ class _PortalCard extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+

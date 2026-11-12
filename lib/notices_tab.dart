@@ -9,12 +9,12 @@ class NoticesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1F2A5A);
+    final navy = Theme.of(context).colorScheme.onSurface;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           'Notice board',
           style: TextStyle(
             fontSize: 22,
@@ -24,9 +24,9 @@ class NoticesTab extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         if (notices.isEmpty)
-          const Text(
+          Text(
             'No notices for you yet.',
-            style: TextStyle(color: Colors.black54),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           )
         else
           for (final n in notices)

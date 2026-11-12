@@ -45,7 +45,7 @@ class _ChatTabState extends State<ChatTab> {
                     selected: _filter == f,
                     selectedColor: teal,
                     labelStyle: TextStyle(
-                      color: _filter == f ? Colors.white : Colors.black87,
+                      color: _filter == f ? Colors.white : Theme.of(context).colorScheme.onSurface,
                     ),
                     onSelected: (_) => setState(() => _filter = f),
                   ),
@@ -60,7 +60,7 @@ class _ChatTabState extends State<ChatTab> {
               _filter == 'Chats'
                   ? 'No chats yet. Start a conversation.'
                   : 'Nothing in $_filter yet.',
-              style: const TextStyle(color: Colors.black54),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ),
         ),

@@ -21,7 +21,7 @@ class MeetingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1F2A5A);
+    final navy = Theme.of(context).colorScheme.onSurface;
 
     final meetings = [
       MeetingItem(
@@ -35,7 +35,7 @@ class MeetingsTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           'Meetings',
           style: TextStyle(
             fontSize: 22,
@@ -51,7 +51,7 @@ class MeetingsTab extends StatelessWidget {
                 backgroundColor: Colors.grey.shade200,
                 child: Text(
                   m.title[0],
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: navy,
                     fontWeight: FontWeight.w700,
                   ),
