@@ -14,7 +14,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isTamil ? 'சுயவிவரம் & முத்திரை' : 'Profile & Workspace Branding'),
+        title: Text(isTamil ? 'சுயவிவரம்' : 'Profile'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -74,20 +74,20 @@ class ProfileScreen extends ConsumerWidget {
                     leading: const Icon(Icons.workspace_premium, color: AppColors.accent),
                     title: const Text('Subscription Plan', style: TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: const Text('Pro Educator Tier • Active'),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(Icons.chevron_right),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.palette_outlined, color: AppColors.brandBlue),
                     title: const Text('Custom Organization Logo', style: TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: const Text('Enabled for student portal'),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(Icons.chevron_right),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.security_outlined, color: AppColors.warning),
                     title: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.w600)),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(Icons.chevron_right),
                   ),
                 ],
               ),
