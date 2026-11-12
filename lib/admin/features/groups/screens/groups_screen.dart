@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -140,7 +141,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                         hintText: isTamil
                             ? 'குழுக்களைத் தேடவும்'
                             : 'Search groups',
-                        prefixIcon: const Icon(Icons.search),
+                        prefixIcon: const Icon(AppIcons.search),
                         suffixIcon: _searchQuery.isEmpty
                             ? null
                             : IconButton(
@@ -149,7 +150,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                                   _searchController.clear();
                                   setState(() => _searchQuery = '');
                                 },
-                                icon: const Icon(Icons.close),
+                                icon: const Icon(Icons.close_rounded),
                               ),
                         isDense: true,
                         border: OutlineInputBorder(
@@ -166,7 +167,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                       minimumSize: const Size(48, 48),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    icon: const Icon(Icons.add, size: 18),
+                    icon: const Icon(AppIcons.add, size: 18),
                     label: Text(isTamil ? 'உருவாக்கு' : 'Create'),
                   ),
                 ],
@@ -264,23 +265,23 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                   ),
                 ),
                 _actionButton(
-                  icon: Icons.visibility_outlined,
+                  icon: AppIcons.view,
                   tooltip: isTamil ? 'விவரங்கள்' : 'View details',
                   onPressed: () => context.push('/app/groups/${group.id}'),
                 ),
                 _actionButton(
-                  icon: Icons.copy_outlined,
+                  icon: AppIcons.copy,
                   tooltip: isTamil ? 'இணைப்பு நகலெடு' : 'Copy join link',
                   onPressed: () => _copyJoinLink(group, isTamil),
                 ),
                 _actionButton(
-                  icon: Icons.edit_outlined,
+                  icon: AppIcons.edit,
                   tooltip: isTamil ? 'திருத்து' : 'Edit',
                   onPressed: () =>
                       context.push('/app/groups/edit', extra: group),
                 ),
                 _actionButton(
-                  icon: Icons.delete_outline,
+                  icon: AppIcons.delete,
                   tooltip: isTamil ? 'நீக்கு' : 'Delete',
                   color: AppColors.danger,
                   onPressed: () => _deleteGroup(group, isTamil),
@@ -357,26 +358,26 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                     Row(
                       children: [
                         _actionButton(
-                          icon: Icons.visibility_outlined,
+                          icon: AppIcons.view,
                           tooltip: isTamil ? 'விவரங்கள்' : 'View details',
                           onPressed: () =>
                               context.push('/app/groups/${group.id}'),
                         ),
                         _actionButton(
-                          icon: Icons.copy_outlined,
+                          icon: AppIcons.copy,
                           tooltip: isTamil
                               ? 'இணைப்பு நகலெடு'
                               : 'Copy join link',
                           onPressed: () => _copyJoinLink(group, isTamil),
                         ),
                         _actionButton(
-                          icon: Icons.edit_outlined,
+                          icon: AppIcons.edit,
                           tooltip: isTamil ? 'திருத்து' : 'Edit',
                           onPressed: () =>
                               context.push('/app/groups/edit', extra: group),
                         ),
                         _actionButton(
-                          icon: Icons.delete_outline,
+                          icon: AppIcons.delete,
                           tooltip: isTamil ? 'நீக்கு' : 'Delete',
                           color: AppColors.danger,
                           onPressed: () => _deleteGroup(group, isTamil),

@@ -281,7 +281,7 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
           title: const Text('Member'),
           leading: IconButton(
             onPressed: () => context.go('/app/members'),
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
         ),
         body: const Center(child: Text('Member not found')),
@@ -305,7 +305,7 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
         leading: IconButton(
           tooltip: 'Back to members',
           onPressed: () => context.go('/app/members'),
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
       ),
       body: ListView(
@@ -496,7 +496,7 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   const SizedBox(height: 16),
                   _SectionCard(
                     title: 'Custom fields',
-                    icon: Icons.tune,
+                    icon: Icons.tune_rounded,
                     child: member.customFields.isEmpty
                         ? Text(
                             'No custom fields have been added.',
@@ -520,7 +520,7 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                     icon: Icons.folder_open_outlined,
                     trailing: OutlinedButton.icon(
                       onPressed: () => _addDocuments(member),
-                      icon: const Icon(Icons.upload_file),
+                      icon: const Icon(Icons.upload_file_rounded),
                       label: const Text('Add documents'),
                     ),
                     child: member.documents.isEmpty
@@ -545,7 +545,7 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   const SizedBox(height: 16),
                   _SectionCard(
                     title: 'Groups',
-                    icon: Icons.groups_outlined,
+                    icon: Icons.groups_2_outlined,
                     child: groups.isEmpty
                         ? const Text('No groups are available.')
                         : Wrap(
@@ -578,7 +578,7 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                     icon: Icons.payments_outlined,
                     trailing: OutlinedButton.icon(
                       onPressed: () => _addPayment(member),
-                      icon: const Icon(Icons.add),
+                      icon: const Icon(Icons.add_rounded),
                       label: const Text('Record payment'),
                     ),
                     child: payments.isEmpty

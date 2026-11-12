@@ -76,6 +76,7 @@ class AppTheme {
         onSurface: AppColors.inkLight,
       ),
       textTheme: textTheme,
+      iconTheme: const IconThemeData(size: 22),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.cardLight,
         elevation: 0,
@@ -175,6 +176,7 @@ class AppTheme {
         onSurface: AppColors.inkDark,
       ),
       textTheme: textTheme,
+      iconTheme: const IconThemeData(size: 22),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.cardDark,
         elevation: 0,

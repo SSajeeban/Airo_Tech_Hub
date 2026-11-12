@@ -64,12 +64,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC), // Crisp light background as in screenshot
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                 // Top Header: Breadcrumb (Left) & Language Toggle (Right)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -166,7 +170,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 36),
+                const SizedBox(height: 16),
 
                 // Center Sign-In Card Container (Exact Template Match)
                 Center(
@@ -218,9 +222,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       'assets/images/logo.png',
                                       height: 64,
                                       fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => Column(
+                                      errorBuilder: (_, _, _) => Column(
                                         children: const [
-                                          Icon(Icons.school, size: 48, color: Color(0xFF169688)),
+                                          Icon(Icons.school_outlined, size: 48, color: Color(0xFF169688)),
                                           Text(
                                             'AIRO TECHHUB',
                                             style: TextStyle(
@@ -392,23 +396,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                                   const SizedBox(height: 22),
 
-                                  // "Back to the site" Link
-                                  Center(
-                                    child: InkWell(
-                                      onTap: () => context.go('/'),
-                                      child: Text(
-                                        isTamil ? 'தளத்திற்குத் திரும்பு' : 'Back to the site',
-                                        style: const TextStyle(
-                                          color: Color(0xFF14877C),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 14),
-
                                   // "New subscriber? Create an account"
                                   Center(
                                     child: Wrap(
@@ -445,11 +432,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                 ),
+                Center(
+                  child: InkWell(
+                    onTap: () => context.go('/'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        isTamil ? 'தளத்திற்குத் திரும்பு' : 'Back to the site',
+                        style: const TextStyle(
+                          color: Color(0xFF14877C),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
+    ),
+  ),
     );
   }
 }

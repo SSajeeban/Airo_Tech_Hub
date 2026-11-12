@@ -367,7 +367,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
         ),
-        Icon(Icons.chevron_right, size: 18, color: colors.onSurfaceVariant),
+        Icon(Icons.chevron_right_rounded, size: 18, color: colors.onSurfaceVariant),
         Text(
           group.name,
           style: TextStyle(
@@ -710,7 +710,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
               constraints: const BoxConstraints.tightFor(width: 32, height: 32),
               padding: EdgeInsets.zero,
               iconSize: 17,
-              icon: const Icon(Icons.delete_outline),
+              icon: const Icon(Icons.delete_forever_outlined),
             ),
           ],
         ),
@@ -774,7 +774,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                       IconButton(
                         onPressed: () => _deleteMember(member, isTamil),
                         tooltip: isTamil ? 'நீக்கு' : 'Remove',
-                        icon: const Icon(Icons.delete_outline),
+                        icon: const Icon(Icons.delete_forever_outlined),
                         color: AppColors.danger,
                       ),
                     ],

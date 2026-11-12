@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -130,7 +131,7 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                         tooltip: isTamil
                             ? 'குழுக்களுக்குத் திரும்பு'
                             : 'Back to groups',
-                        icon: const Icon(Icons.arrow_back),
+                        icon: const Icon(AppIcons.back),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -239,7 +240,7 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.add, size: 18),
+                                        const Icon(Icons.add_rounded, size: 18),
                                         const SizedBox(width: 6),
                                         Text(
                                           isTamil

@@ -36,7 +36,7 @@ class _GroupJoinScreenState extends ConsumerState<GroupJoinScreen> {
           builder: (ctx) => AlertDialog(
             title: Row(
               children: const [
-                Icon(Icons.check_circle, color: AppColors.success),
+                Icon(Icons.check_circle_outline, color: AppColors.success),
                 SizedBox(width: 8),
                 Text('Group Found!'),
               ],

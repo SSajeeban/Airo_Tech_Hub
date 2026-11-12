@@ -108,8 +108,8 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen> {
                 'assets/images/logo.png',
                 height: 30,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.school, color: AppColors.accent, size: 30),
+                errorBuilder: (_, _, _) =>
+                    const Icon(Icons.school_outlined, color: AppColors.accent, size: 30),
               ),
             ),
             Center(
@@ -392,7 +392,7 @@ class _OptionCard extends StatelessWidget {
               ),
               if (selected)
                 const Icon(
-                  Icons.check_circle,
+                  Icons.check_circle_outline,
                   color: AppColors.accent,
                   size: 18,
                 ),

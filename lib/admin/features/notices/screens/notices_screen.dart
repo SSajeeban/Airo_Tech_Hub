@@ -466,7 +466,7 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
             Row(
               children: [
                 const Icon(
-                  Icons.groups_outlined,
+                  Icons.groups_2_outlined,
                   size: 15,
                   color: AppColors.mutedLight,
                 ),

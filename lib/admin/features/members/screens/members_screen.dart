@@ -93,7 +93,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                   if (!compact)
                     FilledButton.icon(
                       onPressed: () => context.push('/app/members/new'),
-                      icon: const Icon(Icons.person_add_alt_1),
+                      icon: const Icon(Icons.person_add_alt_1_rounded),
                       label: const Text('Create Member'),
                     ),
                 ],
@@ -104,7 +104,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: () => context.push('/app/members/new'),
-                    icon: const Icon(Icons.person_add_alt_1),
+                    icon: const Icon(Icons.person_add_alt_1_rounded),
                     label: const Text('Create Member'),
                   ),
                 ),
@@ -122,7 +122,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                       onChanged: (value) => setState(() => _query = value),
                       decoration: const InputDecoration(
                         hintText: 'Search members...',
-                        prefixIcon: Icon(Icons.search),
+                        prefixIcon: Icon(Icons.search_rounded),
                         border: OutlineInputBorder(),
                         isDense: true,
                       ),
@@ -273,7 +273,7 @@ class _MemberCard extends StatelessWidget {
               ],
             ),
             const Divider(height: 24),
-            _InfoLine(icon: Icons.groups_outlined, text: member.groupName),
+            _InfoLine(icon: Icons.groups_2_outlined, text: member.groupName),
             const SizedBox(height: 8),
             _InfoLine(icon: Icons.phone_outlined, text: member.phone),
             const Spacer(),
@@ -369,7 +369,7 @@ class _MembersTable extends StatelessWidget {
                           IconButton(
                             tooltip: 'Remove member',
                             onPressed: () => onDelete(member),
-                            icon: const Icon(Icons.delete_outline),
+                            icon: const Icon(Icons.delete_forever_outlined),
                           ),
                         ],
                       ),
@@ -491,7 +491,7 @@ class _EmptyMembers extends StatelessWidget {
           const SizedBox(height: 14),
           OutlinedButton.icon(
             onPressed: onCreate,
-            icon: const Icon(Icons.person_add_alt_1),
+            icon: const Icon(Icons.person_add_alt_1_rounded),
             label: const Text('Create Member'),
           ),
         ],

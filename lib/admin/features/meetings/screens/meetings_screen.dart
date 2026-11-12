@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -241,7 +242,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                 decoration: _inputDecoration(
                   isDark,
                   suffixIcon: const Icon(
-                    Icons.calendar_today_outlined,
+                    AppIcons.calendar,
                     size: 18,
                   ),
                 ),
@@ -476,7 +477,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                 IconButton(
                   tooltip: isTamil ? 'இணைப்பை நகலெடு' : 'Copy link',
                   onPressed: () => _copyMeetingLink(meeting),
-                  icon: const Icon(Icons.copy_outlined, size: 18),
+                  icon: const Icon(AppIcons.copy, size: 18),
                   visualDensity: VisualDensity.compact,
                 ),
                 TextButton(
@@ -548,7 +549,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
               IconButton(
                 tooltip: isTamil ? 'இணைப்பை நகலெடு' : 'Copy link',
                 onPressed: () => _copyMeetingLink(meeting),
-                icon: const Icon(Icons.copy_outlined, size: 18),
+                icon: const Icon(AppIcons.copy, size: 18),
                 visualDensity: VisualDensity.compact,
               ),
               TextButton(

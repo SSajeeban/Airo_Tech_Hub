@@ -155,7 +155,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   ),
                   FilledButton.icon(
                     onPressed: () => _createPayment(context, ref),
-                    icon: const Icon(Icons.add, size: 17),
+                    icon: const Icon(Icons.add_rounded, size: 17),
                     label: Text(
                       compact
                           ? (isTamil ? 'உருவாக்கு' : 'Create')
@@ -654,7 +654,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   .toList(),
             );
       },
-      icon: const Icon(Icons.delete_outline, size: 18),
+      icon: const Icon(Icons.delete_forever_outlined, size: 18),
     );
   }
 

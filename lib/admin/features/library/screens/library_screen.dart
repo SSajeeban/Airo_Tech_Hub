@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -53,18 +54,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         .firstOrNull;
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showUploadDialog(isTamil),
-        backgroundColor: AppColors.accent,
-        icon: const Icon(Icons.upload_file, color: Colors.white),
-        label: Text(
-          isTamil ? 'கோப்பைப் பதிவேற்று' : 'Upload file',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -145,12 +134,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             ),
             OutlinedButton.icon(
               onPressed: () => _showNewFolderDialog(isTamil),
-              icon: const Icon(Icons.create_new_folder_outlined),
+              icon: const Icon(AppIcons.folderAdd),
               label: Text(isTamil ? 'புதிய கோப்புறை' : 'New folder'),
             ),
             OutlinedButton.icon(
               onPressed: () => _showUploadDialog(isTamil),
-              icon: const Icon(Icons.upload_outlined),
+              icon: const Icon(AppIcons.upload),
               label: Text(isTamil ? 'கோப்பைப் பதிவேற்று' : 'Upload file'),
             ),
             ToggleButtons(
@@ -161,11 +150,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               children: const [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Icon(Icons.grid_view),
+                  child: Icon(AppIcons.grid),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Icon(Icons.view_list),
+                  child: Icon(AppIcons.list),
                 ),
               ],
             ),
@@ -211,7 +200,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Icon(Icons.calendar_today_outlined, size: 16),
+              const Icon(AppIcons.calendar, size: 16),
             ],
           ),
         ),
@@ -599,7 +588,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                 ),
                 _roundAction(
-                  icon: Icons.download_outlined,
+                  icon: AppIcons.download,
                   tooltip: isTamil ? 'பதிவிறக்கு' : 'Download',
                   onPressed: () => _showMessage(
                     isTamil
@@ -608,7 +597,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                 ),
                 _roundAction(
-                  icon: Icons.copy_outlined,
+                  icon: AppIcons.copy,
                   tooltip: isTamil ? 'நகலெடு' : 'Copy link',
                   onPressed: () => _showMessage(
                     isTamil
@@ -617,7 +606,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                 ),
                 _roundAction(
-                  icon: Icons.visibility_outlined,
+                  icon: AppIcons.view,
                   tooltip: isTamil ? 'பார்க்க' : 'Preview',
                   onPressed: () => _showMessage(
                     isTamil
@@ -626,7 +615,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                 ),
                 _roundAction(
-                  icon: Icons.delete_outline,
+                  icon: AppIcons.delete,
                   tooltip: isTamil ? 'நீக்கு' : 'Delete',
                   color: AppColors.warning,
                   onPressed: () => _confirmDelete(item, isTamil),

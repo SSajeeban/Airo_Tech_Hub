@@ -23,7 +23,7 @@ class LandingScreen extends ConsumerWidget {
           'assets/images/logo.png',
           height: 36,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => Container(
+          errorBuilder: (_, _, _) => Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.accent,
@@ -155,7 +155,7 @@ class LandingScreen extends ConsumerWidget {
                                 color: AppColors.accent.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.school, color: AppColors.accent, size: 24),
+                              child: const Icon(Icons.school_outlined, color: AppColors.accent, size: 24),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -177,7 +177,7 @@ class LandingScreen extends ConsumerWidget {
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
                           onPressed: () => context.push('/register'),
-                          icon: const Icon(Icons.arrow_forward, size: 18),
+                          icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                           label: Text(subCta),
                         ),
                       ],
@@ -207,7 +207,7 @@ class LandingScreen extends ConsumerWidget {
                                 color: AppColors.brandBlue.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.groups, color: AppColors.brandBlue, size: 24),
+                              child: const Icon(Icons.groups_2_rounded, color: AppColors.brandBlue, size: 24),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -229,7 +229,7 @@ class LandingScreen extends ConsumerWidget {
                         const SizedBox(height: 16),
                         OutlinedButton.icon(
                           onPressed: () => context.push('/group-join'),
-                          icon: const Icon(Icons.key, size: 18, color: AppColors.brandBlue),
+                          icon: const Icon(Icons.key_rounded, size: 18, color: AppColors.brandBlue),
                           label: Text(memCta),
                         ),
                       ],
@@ -320,7 +320,7 @@ class LandingScreen extends ConsumerWidget {
                     final label = isTamil ? feat.labelTa : feat.label;
                     return Chip(
                       label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                      avatar: const Icon(Icons.check_circle, size: 16, color: AppColors.accent),
+                      avatar: const Icon(Icons.check_circle_outline, size: 16, color: AppColors.accent),
                       backgroundColor: isDark ? AppColors.surfaceDark : AppColors.bgLight,
                       side: BorderSide(color: isDark ? AppColors.lineDark : AppColors.lineLight),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -377,7 +377,7 @@ class LandingScreen extends ConsumerWidget {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.brandGreen,
                           ),
-                          icon: const Icon(Icons.auto_awesome, size: 18),
+                          icon: const Icon(Icons.auto_awesome_outlined, size: 18),
                           label: Text(
                             isTamil ? 'AI ஆசிரியரை முயற்சிக்கவும்' : 'Try AI Teacher Assistant',
                           ),
@@ -435,7 +435,7 @@ class LandingScreen extends ConsumerWidget {
       case 'groups':
         return Icons.people_outline;
       case 'chat':
-        return Icons.chat_bubble_outline;
+        return Icons.chat_bubble_outline_rounded;
       case 'payments':
         return Icons.payments_outlined;
       case 'meetings':

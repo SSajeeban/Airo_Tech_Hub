@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -90,10 +91,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = date;
-      if (_calendarView == _CalendarView.weekly ||
-          _calendarView == _CalendarView.monthly) {
-        _currentDate = date;
-      }
+      _currentDate = date;
     });
   }
 
@@ -149,13 +147,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             _calendarView = view;
           }),
           onMovePeriod: _movePeriod,
-          onToday: () {
-            final today = DateTime.now();
-            setState(() {
-              _currentDate = today;
-              _selectedDate = today;
-            });
-          },
           onSelectDate: _selectDate,
         );
         final eventPanel = _EventCard(
@@ -271,7 +262,6 @@ class _CalendarCard extends StatelessWidget {
     required this.meetings,
     required this.onViewChanged,
     required this.onMovePeriod,
-    required this.onToday,
     required this.onSelectDate,
   });
 
@@ -282,7 +272,6 @@ class _CalendarCard extends StatelessWidget {
   final List<MeetingModel> meetings;
   final ValueChanged<_CalendarView> onViewChanged;
   final ValueChanged<int> onMovePeriod;
-  final VoidCallback onToday;
   final ValueChanged<DateTime> onSelectDate;
 
   @override
@@ -293,61 +282,197 @@ class _CalendarCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              runSpacing: 12,
-              spacing: 10,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                final borderColor = isDark
+                    ? const Color(0xFFB8C6D9)
+                    : AppColors.lineLight;
+                final secondaryText = isDark
+                    ? const Color(0xFFCBD5E1)
+                    : AppColors.mutedLight;
+                final labels = {
+                  _CalendarView.weekly: 'Weekly',
+                  _CalendarView.monthly: 'Monthly',
+                  _CalendarView.yearly: 'Yearly',
+                };
+
+                final viewSelector = Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(color: borderColor, width: 1.5),
+                    borderRadius: BorderRadius.circular(40),
                   ),
-                ),
-                Wrap(
-                  spacing: 4,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(36),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: _CalendarView.values.indexed.expand((entry) {
+                        final (index, option) = entry;
+                        return [
+                          if (index > 0)
+                            Container(
+                              width: 1.5,
+                              height: 32,
+                              color: borderColor.withValues(alpha: 0.8),
+                            ),
+                          Material(
+                            color: option == view
+                                ? const Color(0xFF1687B8)
+                                : Colors.transparent,
+                            child: InkWell(
+                              onTap: () => onViewChanged(option),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 9,
+                                ),
+                                child: Text(
+                                  labels[option]!,
+                                  style: TextStyle(
+                                    color: option == view
+                                        ? const Color(0xFF071525)
+                                        : secondaryText,
+                                    fontSize: 15,
+                                    fontWeight: option == view
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ];
+                      }).toList(),
+                    ),
+                  ),
+                );
+                final previousButton = IconButton(
+                  tooltip: 'Previous',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => onMovePeriod(-1),
+                  icon: const Icon(AppIcons.previous, size: 30),
+                );
+                final nextButton = IconButton(
+                  tooltip: 'Next',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => onMovePeriod(1),
+                  icon: const Icon(AppIcons.next, size: 30),
+                );
+                Widget dateSelector({required bool compact}) => Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (date != null) onSelectDate(date);
+                    },
+                    child: Container(
+                      width: compact ? double.infinity : null,
+                      constraints: compact
+                          ? null
+                          : BoxConstraints(maxWidth: constraints.maxWidth),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 13,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF1E293B)
+                            : AppColors.surfaceLight,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF2E3C53)
+                              : AppColors.lineLight,
+                        ),
+                        boxShadow: isDark
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.accent.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  blurRadius: 16,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            AppIcons.calendar,
+                            size: 20,
+                            color: AppColors.accent,
+                          ),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              compact
+                                  ? DateFormat(
+                                      'd MMM yyyy',
+                                    ).format(selectedDate)
+                                  : title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: isDark
+                                    ? const Color(0xFFE2E8F0)
+                                    : AppColors.inkLight,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 22,
+                            color: secondaryText,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+
+                if (constraints.maxWidth < 520) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      viewSelector,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          previousButton,
+                          Expanded(
+                            child: Center(child: dateSelector(compact: true)),
+                          ),
+                          nextButton,
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 14,
+                  runSpacing: 12,
                   children: [
-                    SegmentedButton<_CalendarView>(
-                      showSelectedIcon: false,
-                      segments: const [
-                        ButtonSegment(
-                          value: _CalendarView.weekly,
-                          label: Text('Weekly'),
-                        ),
-                        ButtonSegment(
-                          value: _CalendarView.monthly,
-                          label: Text('Monthly'),
-                        ),
-                        ButtonSegment(
-                          value: _CalendarView.yearly,
-                          label: Text('Yearly'),
-                        ),
-                      ],
-                      selected: {view},
-                      onSelectionChanged: (selection) =>
-                          onViewChanged(selection.first),
-                    ),
-                    IconButton(
-                      tooltip: 'Previous',
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => onMovePeriod(-1),
-                      icon: const Icon(Icons.chevron_left),
-                    ),
-                    OutlinedButton(
-                      onPressed: onToday,
-                      child: const Text('Today'),
-                    ),
-                    IconButton(
-                      tooltip: 'Next',
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => onMovePeriod(1),
-                      icon: const Icon(Icons.chevron_right),
-                    ),
+                    viewSelector,
+                    previousButton,
+                    dateSelector(compact: false),
+                    nextButton,
                   ],
-                ),
-              ],
+                );
+              },
             ),
             const SizedBox(height: 14),
             switch (view) {
@@ -722,7 +847,7 @@ class _EventCard extends StatelessWidget {
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () => _launchMeeting(context),
-                icon: const Icon(Icons.video_call_outlined),
+                icon: const Icon(AppIcons.meetings),
                 label: const Text('Open meeting'),
               ),
             ],

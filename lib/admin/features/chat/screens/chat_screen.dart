@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -199,7 +200,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             tooltip: isTamil ? 'சேனல்கள்' : 'Channels',
             visualDensity: VisualDensity.compact,
             icon: Icon(
-              Icons.groups_outlined,
+              AppIcons.groups,
               color: _selectedTab == 1
                   ? AppColors.accent
                   : (isDark ? AppColors.mutedDark : AppColors.mutedLight),
@@ -210,7 +211,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             tooltip: isTamil ? 'புதிய அரட்டை' : 'New chat',
             visualDensity: VisualDensity.compact,
             icon: Icon(
-              Icons.add_comment_outlined,
+              AppIcons.conversation,
               color: isDark ? AppColors.mutedDark : AppColors.mutedLight,
             ),
             onPressed: () => setState(() => _selectedTab = 2),
@@ -233,7 +234,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               color: isDark ? AppColors.mutedDark : AppColors.mutedLight,
               fontSize: 14,
             ),
-            prefixIcon: const Icon(Icons.search, size: 19),
+            prefixIcon: const Icon(AppIcons.search, size: 19),
             prefixIconColor: isDark
                 ? AppColors.mutedDark
                 : AppColors.mutedLight,
@@ -351,7 +352,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         isTamil ? '42 பேர் செயலில்' : '42 active',
         style: const TextStyle(fontSize: 12),
       ),
-      trailing: const Icon(Icons.chevron_right, size: 20),
+      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       onTap: () => setState(() => _isChannelOpen = true),
     );
   }
@@ -393,18 +394,110 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         .join();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: isDark ? AppColors.lineDark : AppColors.lineLight,
+    return InkWell(
+      onTap: () => _showStatusMenu(context, displayName, initials),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: isDark ? AppColors.lineDark : AppColors.lineLight,
+            ),
           ),
         ),
+        child: Row(
+          children: [
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: AppColors.accentLight,
+                  child: Text(
+                    initials.isEmpty ? 'A' : initials,
+                    style: const TextStyle(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? AppColors.cardDark : Colors.white,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    isTamil ? 'செயலில்' : 'Available',
+                    style: const TextStyle(
+                      color: AppColors.mutedLight,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: AppColors.mutedLight,
+            ),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Stack(
+    );
+  }
+
+  Future<void> _showStatusMenu(
+    BuildContext context,
+    String displayName,
+    String initials,
+  ) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final anchor = context.findRenderObject() as RenderBox;
+    final topLeft = anchor.localToGlobal(Offset.zero, ancestor: overlay);
+    final bottomRight = anchor.localToGlobal(
+      anchor.size.bottomRight(Offset.zero),
+      ancestor: overlay,
+    );
+    await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(topLeft, bottomRight),
+        Offset.zero & overlay.size,
+      ),
+      constraints: const BoxConstraints(minWidth: 310, maxWidth: 655),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      items: [
+        PopupMenuItem<String>(
+          enabled: false,
+          height: 74,
+          child: Row(
             children: [
               CircleAvatar(
                 radius: 22,
@@ -414,55 +507,64 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   style: const TextStyle(
                     color: AppColors.accent,
                     fontWeight: FontWeight.w700,
-                    fontSize: 12,
                   ),
                 ),
               ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppColors.success,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isDark ? AppColors.cardDark : Colors.white,
-                      width: 2,
-                    ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                ),
+                  const Text(
+                    'Admin',
+                    style: TextStyle(color: AppColors.mutedLight),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  isTamil ? 'செயலில்' : 'Available',
-                  style: const TextStyle(
-                    color: AppColors.mutedLight,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          child: _StatusMenuRow(
+            color: AppColors.success,
+            label: 'Available',
+            selected: true,
           ),
-          const Icon(Icons.keyboard_arrow_down, color: AppColors.mutedLight),
-        ],
-      ),
+        ),
+        const PopupMenuItem(
+          child: _StatusMenuRow(color: Colors.redAccent, label: 'Busy'),
+        ),
+        const PopupMenuItem(
+          child: _StatusMenuRow(
+            color: Colors.red,
+            label: 'Do not disturb',
+            showMinus: true,
+          ),
+        ),
+        const PopupMenuItem(
+          child: _StatusMenuRow(color: Colors.amber, label: 'Be right back'),
+        ),
+        const PopupMenuItem(
+          child: _StatusMenuRow(color: Colors.amber, label: 'Appear away'),
+        ),
+        const PopupMenuItem(
+          child: _StatusMenuRow(
+            color: Color(0xFF94A3B8),
+            label: 'Appear offline',
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          child: Text(
+            'Reset status',
+            style: TextStyle(color: AppColors.mutedLight),
+          ),
+        ),
+      ],
     );
   }
 
@@ -475,7 +577,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.forum_outlined,
+              AppIcons.conversation,
               size: 44,
               color: isDark ? AppColors.mutedDark : AppColors.lineLight,
             ),
@@ -528,7 +630,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               if (compact)
                 IconButton(
                   tooltip: isTamil ? 'பின்னால்' : 'Back to chats',
-                  icon: const Icon(Icons.arrow_back),
+                  icon: const Icon(AppIcons.back),
                   onPressed: () => setState(() => _isChannelOpen = false),
                 ),
               const Icon(Icons.tag, color: AppColors.accent, size: 20),
@@ -593,7 +695,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             IconButton(
               tooltip: isTamil ? 'கோப்பை இணைக்கவும்' : 'Attach file',
-              icon: const Icon(Icons.attach_file, color: AppColors.mutedLight),
+              icon: const Icon(AppIcons.attach, color: AppColors.mutedLight),
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -635,7 +737,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,
               ),
-              icon: const Icon(Icons.send, size: 18),
+              icon: const Icon(AppIcons.send, size: 18),
               onPressed: _sendMessage,
             ),
           ],
@@ -710,6 +812,43 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _StatusMenuRow extends StatelessWidget {
+  const _StatusMenuRow({
+    required this.color,
+    required this.label,
+    this.selected = false,
+    this.showMinus = false,
+  });
+
+  final Color color;
+  final String label;
+  final bool selected;
+  final bool showMinus;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: showMinus
+              ? const Icon(Icons.remove, color: Colors.white, size: 15)
+              : null,
+        ),
+        const SizedBox(width: 14),
+        Expanded(child: Text(label)),
+        Icon(
+          selected ? Icons.check : Icons.chevron_right,
+          color: selected ? AppColors.accent : AppColors.mutedLight,
+          size: 20,
+        ),
+      ],
     );
   }
 }

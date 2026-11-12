@@ -126,7 +126,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
         leading: IconButton(
           tooltip: 'Back to members',
           onPressed: () => context.go('/app/members'),
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
       ),
       body: Center(
@@ -278,7 +278,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                           ),
                           _ActionButton(
                             label: 'Choose photo',
-                            icon: Icons.upload_file,
+                            icon: Icons.upload_file_rounded,
                             onPressed: _pickPhoto,
                           ),
                         ],
@@ -308,13 +308,13 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                               onPressed: () => setState(
                                 () => _documents.removeAt(entry.key),
                               ),
-                              icon: const Icon(Icons.close),
+                              icon: const Icon(Icons.close_rounded),
                             ),
                           ),
                         ),
                       _ActionButton(
                         label: 'Choose documents',
-                        icon: Icons.upload_file,
+                        icon: Icons.upload_file_rounded,
                         onPressed: _pickDocuments,
                       ),
                       const SizedBox(height: 4),
@@ -330,7 +330,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                   const SizedBox(height: 16),
                   _FormSection(
                     title: 'Custom Fields',
-                    icon: Icons.tune,
+                    icon: Icons.tune_rounded,
                     children: [
                       if (_customFields.isEmpty)
                         Text(
@@ -347,13 +347,13 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                             onPressed: () => setState(
                               () => _customFields.removeAt(entry.key),
                             ),
-                            icon: const Icon(Icons.close),
+                            icon: const Icon(Icons.close_rounded),
                           ),
                         ),
                       ),
                       _ActionButton(
                         label: 'Add field',
-                        icon: Icons.add,
+                        icon: Icons.add_rounded,
                         onPressed: _addCustomField,
                       ),
                     ],
