@@ -39,7 +39,7 @@ class _LibraryTabState extends State<LibraryTab> {
   @override
   Widget build(BuildContext context) {
     const teal = Color(0xFF1B9A85);
-    final navy = Theme.of(context).colorScheme.onSurface;
+    final colors = Theme.of(context).colorScheme;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -49,8 +49,7 @@ class _LibraryTabState extends State<LibraryTab> {
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: navy,
-          ),
+          ).copyWith(color: colors.onSurface),
         ),
         const SizedBox(height: 12),
         Row(
@@ -92,14 +91,14 @@ class _LibraryTabState extends State<LibraryTab> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: colors.outlineVariant),
           ),
           child: Center(
             child: Text(
               'Nothing in this folder.',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(color: colors.onSurfaceVariant),
             ),
           ),
         ),

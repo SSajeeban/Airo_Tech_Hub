@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
 
+enum _PresenceStatus {
+  online,
+  available,
+  busy,
+  doNotDisturb,
+  beRightBack,
+  appearAway,
+  appearOffline,
+  reset,
+}
+
 class ChatTab extends StatefulWidget {
-  const ChatTab({super.key});
+  final String memberName;
+
+  const ChatTab({super.key, required this.memberName});
 
   @override
   State<ChatTab> createState() => _ChatTabState();
@@ -9,14 +22,79 @@ class ChatTab extends StatefulWidget {
 
 class _ChatTabState extends State<ChatTab> {
   String _filter = 'Chats';
+  _PresenceStatus _presenceStatus = _PresenceStatus.online;
+  bool _isPresenceMenuOpen = false;
+
+  static const _presenceStatuses = [
+    _PresenceStatus.online,
+    _PresenceStatus.available,
+    _PresenceStatus.busy,
+    _PresenceStatus.doNotDisturb,
+    _PresenceStatus.beRightBack,
+    _PresenceStatus.appearAway,
+    _PresenceStatus.appearOffline,
+  ];
+
+  String _statusLabel(_PresenceStatus status) => switch (status) {
+    _PresenceStatus.online => 'Online',
+    _PresenceStatus.available => 'Available',
+    _PresenceStatus.busy => 'Busy',
+    _PresenceStatus.doNotDisturb => 'Do not disturb',
+    _PresenceStatus.beRightBack => 'Be right back',
+    _PresenceStatus.appearAway => 'Appear away',
+    _PresenceStatus.appearOffline => 'Appear offline',
+    _PresenceStatus.reset => 'Reset status',
+  };
+
+  Color _statusColor(_PresenceStatus status) => switch (status) {
+    _PresenceStatus.online ||
+    _PresenceStatus.available => const Color(0xFF00B884),
+    _PresenceStatus.busy ||
+    _PresenceStatus.doNotDisturb => const Color(0xFFFF303B),
+    _PresenceStatus.beRightBack ||
+    _PresenceStatus.appearAway => const Color(0xFFFFB400),
+    _PresenceStatus.appearOffline ||
+    _PresenceStatus.reset => const Color(0xFF94A3B8),
+  };
 
   @override
   Widget build(BuildContext context) {
     const teal = Color(0xFF1B9A85);
     const filters = ['Unread', 'Channels', 'Chats'];
+    final colors = Theme.of(context).colorScheme;
 
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+          child: Row(
+            children: [
+              Text(
+                'Chat',
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.open_in_full,
+                color: colors.onSurfaceVariant,
+                size: 20,
+              ),
+              const SizedBox(width: 20),
+              Icon(
+                Icons.chat_bubble_outline,
+                color: colors.onSurfaceVariant,
+                size: 20,
+              ),
+              const SizedBox(width: 20),
+              Icon(
+                Icons.groups_outlined,
+                color: colors.onSurfaceVariant,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: TextField(
@@ -24,7 +102,7 @@ class _ChatTabState extends State<ChatTab> {
               hintText: 'Search',
               prefixIcon: const Icon(Icons.search),
               filled: true,
-              fillColor: Colors.grey.shade200,
+              fillColor: colors.surfaceContainerHighest,
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -35,36 +113,215 @@ class _ChatTabState extends State<ChatTab> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              for (final f in filters)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(f),
-                    selected: _filter == f,
-                    selectedColor: teal,
-                    labelStyle: TextStyle(
-                      color: _filter == f ? Colors.white : Theme.of(context).colorScheme.onSurface,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final f in filters)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(f),
+                      selected: _filter == f,
+                      selectedColor: teal,
+                      labelStyle: TextStyle(
+                        color: _filter == f ? Colors.white : colors.onSurface,
+                      ),
+                      onSelected: (_) => setState(() => _filter = f),
                     ),
-                    onSelected: (_) => setState(() => _filter = f),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
-        const Divider(height: 24),
+        Divider(height: 24, color: colors.outlineVariant),
         Expanded(
           child: Center(
             child: Text(
               _filter == 'Chats'
                   ? 'No chats yet. Start a conversation.'
                   : 'Nothing in $_filter yet.',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+          ),
+        ),
+        Divider(height: 1, color: colors.outlineVariant),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                _buildAvatar(teal, showStatusDot: true),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.memberName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        _statusLabel(_presenceStatus),
+                        style: TextStyle(
+                          color: _statusColor(_presenceStatus),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<_PresenceStatus>(
+                  tooltip: 'Change status',
+                  initialValue: _presenceStatus,
+                  onOpened: () => setState(() => _isPresenceMenuOpen = true),
+                  onCanceled: () => setState(() => _isPresenceMenuOpen = false),
+                  onSelected: (status) => setState(() {
+                    _isPresenceMenuOpen = false;
+                    _presenceStatus = status == _PresenceStatus.reset
+                        ? _PresenceStatus.online
+                        : status;
+                  }),
+                  itemBuilder: _buildPresenceMenu,
+                  icon: Icon(
+                    _isPresenceMenuOpen
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildAvatar(Color teal, {bool showStatusDot = false}) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: teal.withValues(alpha: 0.14),
+          child: Text(
+            widget.memberName.isNotEmpty
+                ? widget.memberName[0].toUpperCase()
+                : 'S',
+            style: TextStyle(color: teal, fontWeight: FontWeight.w700),
+          ),
+        ),
+        if (showStatusDot)
+          Positioned(
+            right: -1,
+            bottom: -1,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                shape: BoxShape.circle,
+              ),
+              child: _statusDot(_PresenceStatus.online, size: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _statusDot(_PresenceStatus status, {required double size}) {
+    final color = _statusColor(status);
+    if (status == _PresenceStatus.doNotDisturb) {
+      return Icon(Icons.do_not_disturb_on, color: color, size: size + 4);
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+
+  List<PopupMenuEntry<_PresenceStatus>> _buildPresenceMenu(
+    BuildContext context,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+
+    return [
+      PopupMenuItem<_PresenceStatus>(
+        enabled: false,
+        height: 76,
+        child: Row(
+          children: [
+            _buildAvatar(const Color(0xFF1B9A85), showStatusDot: true),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.memberName,
+                    style: TextStyle(
+                      color: colors.onSurface,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    'Member',
+                    style: TextStyle(
+                      color: colors.onSurfaceVariant,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      const PopupMenuDivider(height: 8),
+      for (final status in _presenceStatuses)
+        PopupMenuItem<_PresenceStatus>(
+          value: status,
+          height: 52,
+          child: Row(
+            children: [
+              _statusDot(status, size: 20),
+              const SizedBox(width: 14),
+              Expanded(child: Text(_statusLabel(status))),
+              if (_presenceStatus == status)
+                const Icon(Icons.check, color: Color(0xFF1B9A85), size: 20)
+              else
+                Icon(
+                  Icons.chevron_right,
+                  color: colors.onSurfaceVariant,
+                  size: 20,
+                ),
+            ],
+          ),
+        ),
+      const PopupMenuDivider(height: 8),
+      PopupMenuItem<_PresenceStatus>(
+        value: _PresenceStatus.reset,
+        height: 44,
+        child: Text(
+          'Reset status',
+          style: TextStyle(color: colors.onSurfaceVariant),
+        ),
+      ),
+    ];
   }
 }

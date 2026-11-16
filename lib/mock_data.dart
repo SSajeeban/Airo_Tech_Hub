@@ -61,12 +61,19 @@ class MockDb {
       teacher: 'Ms. Priya',
       code: 'ENGL2026',
     ),
+    Group(
+      id: 3,
+      name: 'Office',
+      teacher: 'A.Nismina',
+      code: 'OFFI2026',
+    ),
   ];
 
   static const List<Member> members = [
     Member(id: 1, name: 'Sathees', phone: '0771234567', groupId: 1),
     Member(id: 2, name: 'Anu', phone: '0712345678', groupId: 1),
     Member(id: 3, name: 'Ravi', phone: '0761234567', groupId: 2),
+    Member(id: 4, name: 'A.Nismina', phone: '0770000000', groupId: 3),
   ];
 
   static const List<Notice> notices = [
@@ -76,11 +83,12 @@ class MockDb {
 
   static const String testOtp = '123456';
 
-    static const List<Membership> memberships = [
+  static const List<Membership> memberships = [
     Membership(memberId: 1, groupId: 1),
     Membership(memberId: 1, groupId: 2),
     Membership(memberId: 2, groupId: 1),
     Membership(memberId: 3, groupId: 2),
+    Membership(memberId: 4, groupId: 3),
   ];
 
   static List<Group> groupsForMember(Member member) {

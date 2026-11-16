@@ -85,6 +85,29 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.black54),
                       ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 6,
+                        children: [
+                          ActionChip(
+                            label: const Text('A.Nismina (0770000000)', style: TextStyle(fontSize: 11)),
+                            onPressed: () {
+                              _phoneController.text = '0770000000';
+                              _codeController.text = '123456';
+                              setState(() => _codeSent = true);
+                            },
+                          ),
+                          ActionChip(
+                            label: const Text('Sathees (0771234567)', style: TextStyle(fontSize: 11)),
+                            onPressed: () {
+                              _phoneController.text = '0771234567';
+                              _codeController.text = '123456';
+                              setState(() => _codeSent = true);
+                            },
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 20),
                       TextField(
                         controller: _phoneController,
