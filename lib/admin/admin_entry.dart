@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +6,10 @@ import 'core/providers/app_providers.dart';
 import 'core/routes/app_router.dart';
 import 'core/services/storage_service.dart';
 import 'core/theme/app_theme.dart';
+
+void main() {
+  runApp(const AdminEntry());
+}
 
 class AdminEntry extends StatefulWidget {
   const AdminEntry({super.key});
@@ -26,8 +31,11 @@ class _AdminEntryState extends State<AdminEntry> {
             child: Center(child: CircularProgressIndicator()),
           );
         }
+
         return ProviderScope(
-          overrides: [storageServiceProvider.overrideWithValue(snap.data!)],
+          overrides: [
+            storageServiceProvider.overrideWithValue(snap.data!),
+          ],
           child: const _AdminApp(),
         );
       },
