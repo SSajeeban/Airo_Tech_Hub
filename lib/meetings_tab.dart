@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import 'admin/models/app_models.dart';
+import 'mock_meeting_store.dart';
 
 class MeetingItem {
   final String id;
@@ -16,16 +20,25 @@ class MeetingItem {
     required this.status,
     this.joinUrl,
   });
+
+  factory MeetingItem.fromModel(MeetingModel meeting) => MeetingItem(
+    id: meeting.id,
+    title: meeting.title,
+    groupName: meeting.groupName,
+    startsAt: DateFormat('dd MMM yyyy, h:mm a').format(meeting.scheduledTime),
+    status: meeting.isLive ? 'Live' : 'Upcoming',
+    joinUrl: meeting.meetingUrl,
+  );
 }
 
 class MeetingsTab extends StatefulWidget {
   final String memberName;
-  final String groupName;
+  final int groupId;
   final bool isTamil;
 
   const MeetingsTab({
     super.key,
-    required this.groupName,
+    required this.groupId,
     this.memberName = 'A.Nismina',
     this.isTamil = false,
   });
@@ -35,151 +48,35 @@ class MeetingsTab extends StatefulWidget {
 }
 
 class _MeetingsTabState extends State<MeetingsTab> {
-  // Initial empty list matching the exact reference screenshot ("No meetings yet.")
-  final List<MeetingItem> _meetings = [];
+  MockMeetingStore get _meetingStore => MockMeetingStore.instance;
 
-  void _showNewMeetingDialog() {
-    final titleColor = Theme.of(context).colorScheme.onSurface;
-    final titleController = TextEditingController(
-      text: '${widget.groupName} Catchup',
-    );
-    final timeController = TextEditingController(text: 'Today, 5:00 PM');
-    String selectedStatus = 'Upcoming';
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            widget.isTamil ? 'புதிய கூட்டம் அமைக்க' : 'Schedule New Meeting',
-            style: TextStyle(fontWeight: FontWeight.bold, color: titleColor),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  labelText: widget.isTamil
-                      ? 'கூட்டம் தலைப்பு'
-                      : 'Meeting Title',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: timeController,
-                decoration: InputDecoration(
-                  labelText: widget.isTamil ? 'ஆரம்ப நேரம்' : 'Starts At',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              DropdownButtonFormField<String>(
-                value: selectedStatus,
-                decoration: InputDecoration(
-                  labelText: widget.isTamil ? 'நிலை' : 'Status',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'Live', child: Text('Live')),
-                  DropdownMenuItem(value: 'Upcoming', child: Text('Upcoming')),
-                  DropdownMenuItem(value: 'Ended', child: Text('Ended')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setDialogState(() => selectedStatus = val);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(widget.isTamil ? 'ரத்து' : 'Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (titleController.text.trim().isEmpty) return;
-                setState(() {
-                  _meetings.add(
-                    MeetingItem(
-                      id: 'meet_${DateTime.now().millisecondsSinceEpoch}',
-                      title: titleController.text.trim(),
-                      groupName: widget.groupName,
-                      startsAt: timeController.text.trim(),
-                      status: selectedStatus,
-                    ),
-                  );
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      widget.isTamil
-                          ? 'கூட்டம் சேர்க்கப்பட்டது!'
-                          : 'Meeting scheduled successfully!',
-                    ),
-                  ),
-                );
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF1B9A85),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(widget.isTamil ? 'சேர்' : 'Schedule'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _loadSampleMeetings() {
-    setState(() {
-      _meetings.clear();
-      _meetings.addAll([
-        MeetingItem(
-          id: '1',
-          title: '${widget.groupName} Daily Sync',
-          groupName: widget.groupName,
-          startsAt: '10 Nov 2026 | 16:30',
-          status: 'Live',
-        ),
-        MeetingItem(
-          id: '2',
-          title: 'Review & Planning Session',
-          groupName: widget.groupName,
-          startsAt: '12 Nov 2026 | 10:00',
-          status: 'Upcoming',
-        ),
-      ]);
-    });
-  }
-
-  void _clearMeetings() {
-    setState(() {
-      _meetings.clear();
-    });
+  @override
+  void initState() {
+    super.initState();
+    _meetingStore.addListener(_onMeetingsChanged);
   }
 
   @override
+  void dispose() {
+    _meetingStore.removeListener(_onMeetingsChanged);
+    super.dispose();
+  }
+
+  void _onMeetingsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  List<MeetingItem> get _meetings => _meetingStore
+      .meetingsForMemberGroup(widget.groupId)
+      .map(MeetingItem.fromModel)
+      .toList();
+
+  @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1F2A5A);
     const teal = Color(0xFF1B9A85);
     final colors = Theme.of(context).colorScheme;
     final isWide = MediaQuery.of(context).size.width >= 750;
+    final meetings = _meetings;
     final headerTitle = RichText(
       text: TextSpan(
         children: [
@@ -204,64 +101,13 @@ class _MeetingsTabState extends State<MeetingsTab> {
         ],
       ),
     );
-    final headerActions = Wrap(
-      alignment: WrapAlignment.end,
-      spacing: 8,
-      runSpacing: 4,
-      children: [
-        if (_meetings.isNotEmpty)
-          TextButton.icon(
-            onPressed: _clearMeetings,
-            icon: const Icon(Icons.clear_all, size: 16),
-            label: Text(widget.isTamil ? 'அழி' : 'Clear'),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
-          ),
-        if (_meetings.isEmpty)
-          TextButton.icon(
-            onPressed: _loadSampleMeetings,
-            icon: const Icon(Icons.playlist_add, size: 16, color: teal),
-            label: Text(
-              widget.isTamil ? 'மாதிரி கூட்டம்' : 'Load Sample',
-              style: const TextStyle(color: teal),
-            ),
-          ),
-        FilledButton.icon(
-          onPressed: _showNewMeetingDialog,
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(widget.isTamil ? 'புதிய கூட்டம்' : 'New Meeting'),
-          style: FilledButton.styleFrom(
-            backgroundColor: teal,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-      ],
-    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isWide)
-            Row(
-              children: [
-                Expanded(child: headerTitle),
-                const SizedBox(width: 16),
-                headerActions,
-              ],
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                headerTitle,
-                const SizedBox(height: 12),
-                SizedBox(width: double.infinity, child: headerActions),
-              ],
-            ),
+          headerTitle,
           const SizedBox(height: 20),
 
           // Main Meeting Table Card matching reference image
@@ -301,7 +147,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                   child: Row(
                     children: [
                       Expanded(
-                        flex: isWide ? 4 : 4,
+                        flex: 4,
                         child: Text(
                           widget.isTamil ? 'கூட்டம்' : 'Meeting',
                           style: TextStyle(
@@ -312,7 +158,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                         ),
                       ),
                       Expanded(
-                        flex: isWide ? 3 : 3,
+                        flex: 3,
                         child: Text(
                           widget.isTamil ? 'ஆரம்பம்' : 'Starts',
                           style: TextStyle(
@@ -334,7 +180,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                         ),
                       ),
                       Expanded(
-                        flex: isWide ? 2 : 2,
+                        flex: 2,
                         child: Text(
                           widget.isTamil ? 'செயல்கள்' : 'Actions',
                           textAlign: TextAlign.end,
@@ -350,7 +196,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                 ),
 
                 // Table Content (Empty State or List)
-                if (_meetings.isEmpty)
+                if (meetings.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
@@ -367,13 +213,12 @@ class _MeetingsTabState extends State<MeetingsTab> {
                     ),
                   )
                 else
-                  for (int i = 0; i < _meetings.length; i++)
+                  for (int i = 0; i < meetings.length; i++)
                     _buildMeetingRow(
-                      _meetings[i],
-                      i == _meetings.length - 1,
+                      meetings[i],
+                      i == meetings.length - 1,
                       isWide,
                       teal,
-                      navy,
                     ),
               ],
             ),
@@ -388,7 +233,6 @@ class _MeetingsTabState extends State<MeetingsTab> {
     bool isLast,
     bool isWide,
     Color teal,
-    Color navy,
   ) {
     final colors = Theme.of(context).colorScheme;
     return Container(
@@ -420,14 +264,30 @@ class _MeetingsTabState extends State<MeetingsTab> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    item.title,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colors.onSurface,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.groupName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

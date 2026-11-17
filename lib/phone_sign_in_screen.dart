@@ -53,108 +53,144 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1F2A5A);
     const teal = Color(0xFF1B9A85);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: navy,
-      ),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Image.asset('assets/images/logo.png', height: 70),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Sign in with your phone',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 6,
-                        children: [
-                          ActionChip(
-                            label: const Text('A.Nismina (0770000000)', style: TextStyle(fontSize: 11)),
-                            onPressed: () {
-                              _phoneController.text = '0770000000';
-                              _codeController.text = '123456';
-                              setState(() => _codeSent = true);
-                            },
-                          ),
-                          ActionChip(
-                            label: const Text('Sathees (0771234567)', style: TextStyle(fontSize: 11)),
-                            onPressed: () {
-                              _phoneController.text = '0771234567';
-                              _codeController.text = '123456';
-                              setState(() => _codeSent = true);
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          labelText: 'Mobile number',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            height: 92,
+                            fit: BoxFit.contain,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (_codeSent) ...[
+                        const SizedBox(height: 34),
+                        const Text(
+                          'Sign in with your phone',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 36),
+                        const Text(
+                          'Mobile number',
+                          style: TextStyle(
+                            color: Color(0xFF475569),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         TextField(
-                          controller: _codeController,
-                          keyboardType: TextInputType.number,
-                          maxLength: 6,
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
                           decoration: InputDecoration(
-                            labelText: 'Code',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            hintText: '07XXXXXXXX',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFCBD5E1),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: teal,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
-                        const Text(
-                          'If this number is registered, a code was sent.',
-                          style: TextStyle(color: Colors.black54, fontSize: 12),
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          onPressed: _verify,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: teal,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                        if (_codeSent) ...[
+                          const SizedBox(height: 18),
+                          const Text(
+                            'Verification code',
+                            style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 14,
+                            ),
                           ),
-                          child: const Text('VERIFY'),
-                        ),
-                      ] else
-                        FilledButton(
-                          onPressed: _sendCode,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: teal,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _codeController,
+                            keyboardType: TextInputType.number,
+                            maxLength: 6,
+                            decoration: InputDecoration(
+                              hintText: 'Enter OTP',
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFCBD5E1),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: teal,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
                           ),
-                          child: const Text('Send code'),
+                          const Text(
+                            'If this number is registered, a code was sent.',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 18),
+                        SizedBox(
+                          height: 48,
+                          child: FilledButton(
+                            onPressed: _codeSent ? _verify : _sendCode,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: teal,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              _codeSent ? 'VERIFY OTP' : 'SEND OTP',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
-                    ],
+                        const SizedBox(height: 20),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          style: TextButton.styleFrom(foregroundColor: teal),
+                          child: const Text('Back to the site'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
