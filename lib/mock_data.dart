@@ -40,6 +40,26 @@ class Notice {
   });
 }
 
+class CalendarEvent {
+  final int id;
+  final int groupId;
+  final String title;
+  final String description;
+  final DateTime date;
+  final String startTime;
+  final String endTime;
+
+  const CalendarEvent({
+    required this.id,
+    required this.groupId,
+    required this.title,
+    required this.description,
+    required this.date,
+    required this.startTime,
+    required this.endTime,
+  });
+}
+
 class Membership {
   final int memberId;
   final int groupId;
@@ -61,12 +81,7 @@ class MockDb {
       teacher: 'Ms. Priya',
       code: 'ENGL2026',
     ),
-    Group(
-      id: 3,
-      name: 'Office',
-      teacher: 'A.Nismina',
-      code: 'OFFI2026',
-    ),
+    Group(id: 3, name: 'Office', teacher: 'A.Nismina', code: 'OFFI2026'),
   ];
 
   static const List<Member> members = [
@@ -81,6 +96,46 @@ class MockDb {
     Notice(id: 2, groupId: 2, title: 'New class time', body: 'Starts at 6 PM.'),
   ];
 
+  // Sample calendar events. These are temporary local data for testing.
+  static final List<CalendarEvent> events = [
+    CalendarEvent(
+      id: 1,
+      groupId: 1,
+      title: 'Mathematics Class',
+      description: 'Exam preparation - Chapter 1 to 3.',
+      date: DateTime(2026, 11, 17),
+      startTime: '09:00 AM',
+      endTime: '10:00 AM',
+    ),
+    CalendarEvent(
+      id: 2,
+      groupId: 2,
+      title: 'English Meeting',
+      description: 'Spoken English practice session.',
+      date: DateTime(2026, 11, 17),
+      startTime: '02:00 PM',
+      endTime: '03:00 PM',
+    ),
+    CalendarEvent(
+      id: 3,
+      groupId: 1,
+      title: 'Mathematics Test',
+      description: 'Monthly mathematics test.',
+      date: DateTime(2026, 11, 20),
+      startTime: '10:00 AM',
+      endTime: '11:00 AM',
+    ),
+    CalendarEvent(
+      id: 4,
+      groupId: 2,
+      title: 'English Speaking Practice',
+      description: 'Group speaking activity.',
+      date: DateTime(2026, 11, 27),
+      startTime: '03:00 PM',
+      endTime: '04:00 PM',
+    ),
+  ];
+
   static const String testOtp = '123456';
 
   static const List<Membership> memberships = [
@@ -92,16 +147,23 @@ class MockDb {
   ];
 
   static List<Group> groupsForMember(Member member) {
-    final ids = memberships
-        .where((m) => m.memberId == member.id)
-        .map((m) => m.groupId)
-        .toList();
-    return groups.where((g) => ids.contains(g.id)).toList();
+    final groupIds = memberships
+        .where((membership) => membership.memberId == member.id)
+        .map((membership) => membership.groupId)
+        .toSet();
+
+    return groups.where((group) => groupIds.contains(group.id)).toList();
+  }
+
+  static List<CalendarEvent> eventsForGroup(int groupId) {
+    return events.where((event) => event.groupId == groupId).toList();
   }
 
   static Group? findGroupByCode(String code) {
+    final cleanedCode = code.trim().toUpperCase();
+
     for (final group in groups) {
-      if (group.code == code) {
+      if (group.code.toUpperCase() == cleanedCode) {
         return group;
       }
     }
@@ -109,9 +171,10 @@ class MockDb {
   }
 
   static Member? findMemberByPhone(String phone) {
-    final cleaned = phone.replaceAll(' ', '');
+    final cleanedPhone = phone.replaceAll(RegExp(r'\\s+'), '');
+
     for (final member in members) {
-      if (member.phone == cleaned) {
+      if (member.phone == cleanedPhone) {
         return member;
       }
     }

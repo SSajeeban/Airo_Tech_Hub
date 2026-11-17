@@ -137,17 +137,90 @@ class _TimetableBoardState extends State<TimetableBoard> {
     ).subtract(Duration(days: daysToSubtract));
   }
 
+  bool _hasEvents(DateTime date) {
+    return _eventsForDate(date).isNotEmpty;
+  }
+
+  List<CalendarEvent> _eventsForDate(DateTime date) {
+    return MockDb.eventsForGroup(widget.group.id)
+        .where(
+          (event) =>
+              event.date.year == date.year &&
+              event.date.month == date.month &&
+              event.date.day == date.day,
+        )
+        .toList();
+  }
+
+  void _showEventsForDate(DateTime date) {
+    final events = _eventsForDate(date);
+
+    //
+    if (events.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(AppDateHelper.formatFullDate(date)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: events.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, index) {
+              final event = events[index];
+
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE3F4F0),
+                  child: Icon(Icons.event, color: Color(0xFF1B9A85)),
+                ),
+                title: Text(
+                  event.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  '${event.startTime} - ${event.endTime}\n'
+                  '${event.description}',
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: Color(0xFF1B9A85)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
+
+    final hasSelectedDateEvents = _hasEvents(_selectedDate);
 
     if (isWide) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 6, child: _buildCalendarCard()),
-          const SizedBox(width: 16),
-          Expanded(flex: 4, child: _buildEventCard()),
+          Expanded(
+            flex: hasSelectedDateEvents ? 6 : 1,
+            child: _buildCalendarCard(),
+          ),
+          if (hasSelectedDateEvents) ...[
+            const SizedBox(width: 16),
+            Expanded(flex: 4, child: _buildEventCard()),
+          ],
         ],
       );
     }
@@ -156,8 +229,10 @@ class _TimetableBoardState extends State<TimetableBoard> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildCalendarCard(),
-        const SizedBox(height: 16),
-        _buildEventCard(),
+        if (hasSelectedDateEvents) ...[
+          const SizedBox(height: 16),
+          _buildEventCard(),
+        ],
       ],
     );
   }
@@ -172,10 +247,16 @@ class _TimetableBoardState extends State<TimetableBoard> {
 
     final startOfWeek = _getStartOfWeek(_selectedDate);
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
-    final weekRangeText = AppDateHelper.formatWeekRange(startOfWeek, endOfWeek);
+    final weekRangeText = _viewMode == 'Weekly'
+        ? AppDateHelper.formatWeekRange(startOfWeek, endOfWeek)
+        : _viewMode == 'Monthly'
+        ? '${AppDateHelper.fullMonths[_selectedDate.month - 1]} ${_selectedDate.year}'
+        : '${_selectedDate.year}';
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(
+        MediaQuery.of(context).size.width < 400 ? 12 : 20,
+      ),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(18),
@@ -357,7 +438,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
     return Row(
       children: [
         for (int i = 0; i < days.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
+          if (i > 0) const SizedBox(width: 4),
           Expanded(
             child: _buildDayColumn(
               days[i],
@@ -381,69 +462,86 @@ class _TimetableBoardState extends State<TimetableBoard> {
     Color surfaceColor,
     Color outlineColor,
   ) {
-    final isSelected =
-        day.year == _selectedDate.year &&
-        day.month == _selectedDate.month &&
-        day.day == _selectedDate.day;
+    final isSelected = DateUtils.isSameDay(day, _selectedDate);
+    final isToday = DateUtils.isSameDay(day, DateTime.now());
+    final hasEvents = _hasEvents(day);
 
-    final isToday =
-        day.year == DateTime.now().year &&
-        day.month == DateTime.now().month &&
-        day.day == DateTime.now().day;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedDate = day;
-        });
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        height: 120,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? selectedColor : outlineColor,
-            width: isSelected ? 1.5 : 1.0,
-          ),
-        ),
-        child: Column(
-          children: [
-            Text(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 16,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
               AppDateHelper.formatShortDay(day),
               style: TextStyle(
                 color: isSelected ? selectedColor : mutedColor,
-                fontSize: 12,
+                fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 12),
-            Container(
-              width: 32,
-              height: 32,
+          ),
+        ),
+        const SizedBox(height: 4),
+        AspectRatio(
+          aspectRatio: 1,
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _selectedDate = day;
+              });
+              if (_hasEvents(day)) {
+                _showEventsForDate(day);
+              }
+            },
+            borderRadius: BorderRadius.circular(9),
+            child: Container(
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? selectedColor : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '${day.day}',
-                style: TextStyle(
-                  color: isSelected
-                      ? Colors.white
-                      : (isToday ? const Color(0xFF1B9A85) : textColor),
-                  fontWeight: isSelected || isToday
-                      ? FontWeight.w700
-                      : FontWeight.w500,
-                  fontSize: 14,
+                color: isSelected ? selectedColor : surfaceColor,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: isSelected ? selectedColor : outlineColor,
+                  width: isSelected ? 1.5 : 1,
                 ),
               ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${day.day}',
+                    style: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : (isToday ? const Color(0xFF1B9A85) : textColor),
+                      fontWeight: isSelected || isToday
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  if (hasEvents)
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF1B9A85),
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                  else
+                    const SizedBox(height: 5),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -464,67 +562,104 @@ class _TimetableBoardState extends State<TimetableBoard> {
     return Column(
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: AppDateHelper.shortWeekdays
-              .map(
-                (d) => Text(
-                  d,
+          children: AppDateHelper.shortWeekdays.map((dayName) {
+            return Expanded(
+              child: Center(
+                child: Text(
+                  dayName,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: mutedColor,
-                    fontSize: 12,
+                    fontSize: 10,
                   ),
                 ),
-              )
-              .toList(),
+              ),
+            );
+          }).toList(),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 7,
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
+            mainAxisSpacing: 5,
+            crossAxisSpacing: 5,
+            childAspectRatio: 1,
           ),
           itemCount: startWeekday + daysInMonth,
           itemBuilder: (context, index) {
             if (index < startWeekday) return const SizedBox();
+
             final dayNumber = index - startWeekday + 1;
             final day = DateTime(
               _selectedDate.year,
               _selectedDate.month,
               dayNumber,
             );
-            final isSelected =
-                day.year == _selectedDate.year &&
-                day.month == _selectedDate.month &&
-                day.day == _selectedDate.day;
+            final isSelected = DateUtils.isSameDay(day, _selectedDate);
+            final isToday = DateUtils.isSameDay(day, DateTime.now());
+            final hasEvents = _hasEvents(day);
 
             return InkWell(
-              onTap: () => setState(() => _selectedDate = day),
+              onTap: () {
+                setState(() => _selectedDate = day);
+                if (_hasEvents(day)) {
+                  _showEventsForDate(day);
+                }
+              },
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: isSelected ? selectedColor : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: outlineColor),
-                ),
-                child: Text(
-                  '$dayNumber',
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : textColor,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                  border: Border.all(
+                    color: isSelected ? selectedColor : outlineColor,
                   ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '$dayNumber',
+                      style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : (isToday ? const Color(0xFF1B9A85) : textColor),
+                        fontWeight: isSelected || isToday
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    if (hasEvents)
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF1B9A85),
+                          shape: BoxShape.circle,
+                        ),
+                      )
+                    else
+                      const SizedBox(height: 5),
+                  ],
                 ),
               ),
             );
           },
         ),
       ],
+    );
+  }
+
+  bool _monthHasEvents(int month) {
+    return MockDb.eventsForGroup(widget.group.id).any(
+      (event) =>
+          event.date.year == _selectedDate.year && event.date.month == month,
     );
   }
 
@@ -538,31 +673,60 @@ class _TimetableBoardState extends State<TimetableBoard> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 2.2,
+        childAspectRatio: 1.35,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
       ),
       itemCount: 12,
       itemBuilder: (context, index) {
-        final isSelectedMonth = _selectedDate.month == (index + 1);
+        final month = index + 1;
+        final isSelectedMonth = _selectedDate.month == month;
+        final hasEvents = _monthHasEvents(month);
+
         return InkWell(
-          onTap: () => setState(
-            () => _selectedDate = DateTime(_selectedDate.year, index + 1, 1),
-          ),
+          onTap: () {
+            setState(() {
+              _selectedDate = DateTime(_selectedDate.year, month, 1);
+              _viewMode = 'Monthly';
+            });
+          },
           borderRadius: BorderRadius.circular(8),
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: isSelectedMonth ? selectedColor : surfaceColor,
               borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              AppDateHelper.fullMonths[index],
-              style: TextStyle(
-                color: isSelectedMonth ? Colors.white : textColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+              border: Border.all(
+                color: isSelectedMonth
+                    ? selectedColor
+                    : Theme.of(context).colorScheme.outlineVariant,
               ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  AppDateHelper.fullMonths[index],
+                  style: TextStyle(
+                    color: isSelectedMonth ? Colors.white : textColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+                if (hasEvents) ...[
+                  const SizedBox(height: 5),
+                  Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: isSelectedMonth
+                          ? Colors.white
+                          : const Color(0xFF1B9A85),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         );
@@ -573,12 +737,11 @@ class _TimetableBoardState extends State<TimetableBoard> {
   Widget _buildEventCard() {
     const teal = Color(0xFF1B9A85);
     final colors = Theme.of(context).colorScheme;
-
-    final formattedSelected = AppDateHelper.formatFullDate(_selectedDate);
+    final events = _eventsForDate(_selectedDate);
 
     return Container(
-      padding: const EdgeInsets.all(20),
-      constraints: const BoxConstraints(minHeight: 240),
+      padding: const EdgeInsets.all(16),
+      constraints: const BoxConstraints(minHeight: 150),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(18),
@@ -595,102 +758,77 @@ class _TimetableBoardState extends State<TimetableBoard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Event',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-            ).copyWith(color: colors.onSurface),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            formattedSelected,
+            'Events',
             style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: colors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            AppDateHelper.formatFullDate(_selectedDate),
+            style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: teal,
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Matching the reference image: "Select a meeting to see the details and join link."
-          Text(
-            'Select a meeting to see the details and join link.',
-            style: TextStyle(
-              color: colors.onSurfaceVariant,
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Actionable sample session for interactive use
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colors.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.outlineVariant),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: teal.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.videocam_outlined, color: teal),
+          const SizedBox(height: 14),
+          if (events.isEmpty)
+            Text(
+              'No events scheduled for this date.',
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
+            )
+          else
+            ...events.map(
+              (event) => Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.outlineVariant),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${widget.group.name} Live Session',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ).copyWith(color: colors.onSurface),
+                child: Row(
+                  children: [
+                    const Icon(Icons.event, color: teal, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            event.title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: colors.onSurface,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${event.startTime} - ${event.endTime}',
+                            style: TextStyle(
+                              color: colors.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            event.description,
+                            style: TextStyle(
+                              color: colors.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '10:30 AM – 11:30 AM',
-                        style: TextStyle(
-                          color: colors.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Connecting to ${widget.group.name} meeting...',
-                        ),
-                      ),
-                    );
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: teal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
                     ),
-                    minimumSize: Size.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Join', style: TextStyle(fontSize: 12)),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
