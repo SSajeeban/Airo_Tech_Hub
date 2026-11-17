@@ -138,12 +138,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
   }
 
   bool _hasEvents(DateTime date) {
-    return MockDb.eventsForGroup(widget.group.id).any(
-      (event) =>
-          event.date.year == date.year &&
-          event.date.month == date.month &&
-          event.date.day == date.day,
-    );
+    return _eventsForDate(date).isNotEmpty;
   }
 
   List<CalendarEvent> _eventsForDate(DateTime date) {
@@ -160,40 +155,41 @@ class _TimetableBoardState extends State<TimetableBoard> {
   void _showEventsForDate(DateTime date) {
     final events = _eventsForDate(date);
 
+    //
+    if (events.isEmpty) return;
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(AppDateHelper.formatFullDate(date)),
-        content: events.isEmpty
-            ? const Text('No events scheduled for this date.')
-            : SizedBox(
-                width: double.maxFinite,
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: events.length,
-                  separatorBuilder: (_, __) => const Divider(),
-                  itemBuilder: (context, index) {
-                    final event = events[index];
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: events.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, index) {
+              final event = events[index];
 
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const CircleAvatar(
-                        backgroundColor: Color(0xFFE3F4F0),
-                        child: Icon(Icons.event, color: Color(0xFF1B9A85)),
-                      ),
-                      title: Text(
-                        event.title,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        '${event.startTime} - ${event.endTime}\n'
-                        '${event.description}',
-                      ),
-                    );
-                  },
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE3F4F0),
+                  child: Icon(Icons.event, color: Color(0xFF1B9A85)),
                 ),
-              ),
+                title: Text(
+                  event.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  '${event.startTime} - ${event.endTime}\n'
+                  '${event.description}',
+                ),
+              );
+            },
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -211,13 +207,20 @@ class _TimetableBoardState extends State<TimetableBoard> {
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
 
+    final hasSelectedDateEvents = _hasEvents(_selectedDate);
+
     if (isWide) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 6, child: _buildCalendarCard()),
-          const SizedBox(width: 16),
-          Expanded(flex: 4, child: _buildEventCard()),
+          Expanded(
+            flex: hasSelectedDateEvents ? 6 : 1,
+            child: _buildCalendarCard(),
+          ),
+          if (hasSelectedDateEvents) ...[
+            const SizedBox(width: 16),
+            Expanded(flex: 4, child: _buildEventCard()),
+          ],
         ],
       );
     }
@@ -226,8 +229,10 @@ class _TimetableBoardState extends State<TimetableBoard> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildCalendarCard(),
-        const SizedBox(height: 16),
-        _buildEventCard(),
+        if (hasSelectedDateEvents) ...[
+          const SizedBox(height: 16),
+          _buildEventCard(),
+        ],
       ],
     );
   }
@@ -486,7 +491,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
               setState(() {
                 _selectedDate = day;
               });
-              _showEventsForDate(day);
+              if (_hasEvents(day)) {
+                _showEventsForDate(day);
+              }
             },
             borderRadius: BorderRadius.circular(9),
             child: Container(
@@ -597,7 +604,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
             return InkWell(
               onTap: () {
                 setState(() => _selectedDate = day);
-                _showEventsForDate(day);
+                if (_hasEvents(day)) {
+                  _showEventsForDate(day);
+                }
               },
               borderRadius: BorderRadius.circular(8),
               child: Container(
