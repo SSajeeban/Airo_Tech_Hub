@@ -31,7 +31,6 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const AiroApp());
-
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
@@ -69,7 +68,6 @@ void main() {
     expect(find.text('Weekly'), findsOneWidget);
     await tester.tap(find.text('Tamil'));
     await tester.pump();
-
     await tester.pump(const Duration(milliseconds: 225));
     expect(find.text('Weekly'), findsOneWidget);
     expect(find.text('வாராந்திரம்'), findsOneWidget);
@@ -104,11 +102,13 @@ void main() {
     final weeklyDate = today.weekday == DateTime.sunday
         ? today.add(const Duration(days: 1))
         : today.subtract(const Duration(days: 1));
+
     var dateNumber = find.text('${weeklyDate.day}');
     expect(
       find.ancestor(of: dateNumber, matching: find.byType(AnimatedContainer)),
       findsOneWidget,
     );
+
     await tester.tap(dateNumber);
     await tester.pump(const Duration(milliseconds: 120));
     expect(tester.takeException(), isNull);
@@ -119,10 +119,12 @@ void main() {
 
     final monthlyDate = weeklyDate.day == 1 ? 2 : 1;
     dateNumber = find.text('$monthlyDate');
+
     expect(
       find.ancestor(of: dateNumber, matching: find.byType(AnimatedContainer)),
       findsOneWidget,
     );
+
     await tester.tap(dateNumber);
     await tester.pump(const Duration(milliseconds: 120));
     expect(tester.takeException(), isNull);
@@ -135,6 +137,12 @@ void main() {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
     AppSettings.instance.setLanguage('Sinhala');
+
+    addTearDown(() {
+      AppSettings.instance.setLanguage(previousLanguage);
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
 
     await tester.pumpWidget(
       MaterialApp(
@@ -151,9 +159,5 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-
-    AppSettings.instance.setLanguage(previousLanguage);
-    tester.view.resetPhysicalSize();
-    tester.view.resetDevicePixelRatio();
   });
 }

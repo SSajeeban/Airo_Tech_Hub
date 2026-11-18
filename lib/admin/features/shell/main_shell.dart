@@ -29,6 +29,21 @@ class _MainShellState extends ConsumerState<MainShell> {
     });
   }
 
+  static const _taShortMonths = [
+    'ஜன',
+    'பிப்',
+    'மார்',
+    'ஏப்',
+    'மே',
+    'ஜூன்',
+    'ஜூலை',
+    'ஆக',
+    'செப்',
+    'அக்',
+    'நவ',
+    'டிச'
+  ];
+
   @override
   void dispose() {
     _clockTimer?.cancel();
@@ -118,7 +133,9 @@ class _MainShellState extends ConsumerState<MainShell> {
           if (showDateTime) ...[
             Center(
               child: Text(
-                DateFormat('dd MMM yyyy  |  HH:mm:ss').format(_now),
+                isTamil
+                    ? '${_now.day.toString().padLeft(2, '0')} ${_taShortMonths[_now.month - 1]} ${_now.year}  |  ${DateFormat('HH:mm:ss').format(_now)}'
+                    : DateFormat('dd MMM yyyy  |  HH:mm:ss').format(_now),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurface,

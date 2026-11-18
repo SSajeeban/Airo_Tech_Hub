@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/landing/screens/landing_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/group_join_screen.dart';
@@ -28,10 +27,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     routes: [
-      // Public Landing
-      GoRoute(path: '/', builder: (context, state) => const LandingScreen()),
-
-      // Auth Routes
+      // Auth Routes - Login is the initial main page
+      GoRoute(path: '/', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',

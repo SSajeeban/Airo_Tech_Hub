@@ -6,8 +6,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
-enum _MemberView { cards, table }
-
 class GroupDetailScreen extends ConsumerStatefulWidget {
   const GroupDetailScreen({super.key, required this.groupId});
 
@@ -20,7 +18,6 @@ class GroupDetailScreen extends ConsumerStatefulWidget {
 class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  _MemberView _memberView = _MemberView.cards;
   String? _memberError;
 
   @override
@@ -567,40 +564,12 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                isTamil ? 'உறுப்பினர்கள்' : 'Members',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colors.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            ToggleButtons(
-              isSelected: [
-                _memberView == _MemberView.cards,
-                _memberView == _MemberView.table,
-              ],
-              onPressed: (index) => setState(
-                () => _memberView = index == 0
-                    ? _MemberView.cards
-                    : _MemberView.table,
-              ),
-              borderRadius: BorderRadius.circular(9),
-              borderColor: colors.outlineVariant,
-              selectedBorderColor: AppColors.accent,
-              fillColor: AppColors.accent,
-              color: colors.onSurface,
-              selectedColor: Colors.white,
-              constraints: const BoxConstraints(minWidth: 58, minHeight: 36),
-              children: [
-                Text(isTamil ? 'அட்டைகள்' : 'Cards'),
-                Text(isTamil ? 'அட்டவணை' : 'Table'),
-              ],
-            ),
-          ],
+        Text(
+          isTamil ? 'உறுப்பினர்கள்' : 'Members',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: colors.primary,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 8),
         if (members.isEmpty)
@@ -613,7 +582,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
               ),
             ),
           )
-        else if (_memberView == _MemberView.cards)
+        else
           LayoutBuilder(
             builder: (context, constraints) {
               final columns = constraints.maxWidth >= 900
@@ -635,9 +604,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                     _memberCard(members[index], isTamil, colors),
               );
             },
-          )
-        else
-          _memberTable(members, isTamil, colors),
+          ),
       ],
     );
   }
@@ -732,56 +699,6 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(isTamil ? 'மூடு' : 'Close'),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _memberTable(
-    List<MemberModel> members,
-    bool isTamil,
-    ColorScheme colors,
-  ) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: [
-          DataColumn(label: Text(isTamil ? 'பெயர்' : 'Name')),
-          DataColumn(label: Text(isTamil ? 'தொலைபேசி' : 'Phone')),
-          DataColumn(label: Text(isTamil ? 'செயல்கள்' : 'Actions')),
-        ],
-        rows: [
-          for (final member in members)
-            DataRow(
-              cells: [
-                DataCell(Text(member.name)),
-                DataCell(Text(member.phone)),
-                DataCell(
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => _showMemberDetails(member, isTamil),
-                        tooltip: isTamil ? 'விவரங்கள்' : 'View details',
-                        icon: const Icon(Icons.visibility_outlined),
-                        color: colors.onSurface,
-                      ),
-                      IconButton(
-                        onPressed: () => _editMember(member, isTamil),
-                        tooltip: isTamil ? 'திருத்து' : 'Edit',
-                        icon: const Icon(Icons.edit_outlined),
-                        color: colors.onSurface,
-                      ),
-                      IconButton(
-                        onPressed: () => _deleteMember(member, isTamil),
-                        tooltip: isTamil ? 'நீக்கு' : 'Remove',
-                        icon: const Icon(Icons.delete_forever_outlined),
-                        color: AppColors.danger,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
         ],
       ),
     );

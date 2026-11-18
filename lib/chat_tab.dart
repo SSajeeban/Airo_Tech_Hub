@@ -177,7 +177,9 @@ class _ChatTabState extends State<ChatTab> {
                       Text(
                         _statusLabel(_presenceStatus),
                         style: TextStyle(
-                          color: _statusColor(_presenceStatus),
+                          color: colors.brightness == Brightness.dark
+                              ? colors.onSurface
+                              : Colors.black,
                           fontSize: 13,
                         ),
                       ),
@@ -235,7 +237,7 @@ class _ChatTabState extends State<ChatTab> {
                 color: Theme.of(context).colorScheme.surface,
                 shape: BoxShape.circle,
               ),
-              child: _statusDot(_PresenceStatus.online, size: 12),
+              child: _statusDot(_presenceStatus, size: 12),
             ),
           ),
       ],

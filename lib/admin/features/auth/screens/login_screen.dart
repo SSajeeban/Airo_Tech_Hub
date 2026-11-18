@@ -82,7 +82,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Row(
                       children: [
                         InkWell(
-                          onTap: () => context.go('/'),
+                          onTap: () {
+                            if (Navigator.of(context, rootNavigator: true).canPop()) {
+                              Navigator.of(context, rootNavigator: true).pop();
+                            } else {
+                              context.go('/');
+                            }
+                          },
                           child: Text(
                             isTamil ? 'முகப்பு' : 'Home',
                             style: const TextStyle(
@@ -434,7 +440,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 Center(
                   child: InkWell(
-                    onTap: () => context.go('/'),
+                    onTap: () {
+                      if (Navigator.of(context, rootNavigator: true).canPop()) {
+                        Navigator.of(context, rootNavigator: true).pop();
+                      } else {
+                        context.go('/');
+                      }
+                    },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(

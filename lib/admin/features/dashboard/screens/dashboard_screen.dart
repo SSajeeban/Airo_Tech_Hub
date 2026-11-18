@@ -26,6 +26,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return DateTime(date.year, date.month, date.day - date.weekday % 7);
   }
 
+  void _onToday() {
+    setState(() {
+      _currentDate = DateTime.now();
+      _selectedDate = DateTime.now();
+    });
+  }
+
   void _movePeriod(int direction) {
     setState(() {
       switch (_calendarView) {
@@ -46,25 +53,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
   }
 
-  String _periodTitle() {
+  String _periodTitle(bool isTamil) {
     switch (_calendarView) {
       case _CalendarView.weekly:
         final start = _startOfWeek(_currentDate);
         final end = start.add(const Duration(days: 6));
-        final startText = DateFormat(
-          start.year == end.year && start.month == end.month
-              ? 'MMM d'
-              : start.year == end.year
-              ? 'MMM d'
-              : 'MMM d, yyyy',
-        ).format(start);
-        final endText = DateFormat(
-          start.year == end.year && start.month == end.month
-              ? 'd, yyyy'
-              : 'MMM d, yyyy',
-        ).format(end);
-        return '$startText – $endText';
+        if (isTamil) {
+          const taMonths = [
+            'ஜன',
+            'பிப்',
+            'மார்',
+            'ஏப்',
+            'மே',
+            'ஜூன்',
+            'ஜூலை',
+            'ஆக',
+            'செப்',
+            'அக்',
+            'நவ',
+            'டிச'
+          ];
+          return '${start.day} ${taMonths[start.month - 1]} – ${end.day} ${taMonths[end.month - 1]} ${end.year}';
+        }
+        final f = DateFormat('d MMM');
+        return '${f.format(start)} – ${f.format(end)} ${_currentDate.year}';
       case _CalendarView.monthly:
+        if (isTamil) {
+          const taFullMonths = [
+            'ஜனவரி',
+            'பிப்ரவரி',
+            'மார்ச்',
+            'ஏப்ரல்',
+            'மே',
+            'ஜூன்',
+            'ஜூலை',
+            'ஆகஸ்ட்',
+            'செப்டம்பர்',
+            'அக்டோபர்',
+            'நவம்பர்',
+            'டிசம்பர்'
+          ];
+          return '${taFullMonths[_currentDate.month - 1]} ${_currentDate.year}';
+        }
         return DateFormat('MMMM yyyy').format(_currentDate);
       case _CalendarView.yearly:
         return '${_currentDate.year}';
@@ -141,17 +171,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           view: _calendarView,
           currentDate: _currentDate,
           selectedDate: _selectedDate,
-          title: _periodTitle(),
+          title: _periodTitle(isTamil),
           meetings: meetings,
+          isTamil: isTamil,
           onViewChanged: (view) => setState(() {
             _calendarView = view;
           }),
           onMovePeriod: _movePeriod,
           onSelectDate: _selectDate,
+          onToday: _onToday,
         );
         final eventPanel = _EventCard(
           meeting: selectedMeeting,
           selectedDate: _selectedDate,
+          isTamil: isTamil,
         );
 
         return ListView(
@@ -182,7 +215,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ],
             const SizedBox(height: 16),
             _PlanUsageCard(
-              planName: 'Pro',
+              planName: isTamil ? 'புரோ' : 'Pro',
               memberPortalSlug: _accountSlug(displayName),
               groupsUsed: groups.length,
               groupsLimit: 20,
@@ -191,6 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               storageMb: storageMb,
               meetingsUsed: _meetingsInMonth(DateTime.now(), meetings),
               meetingsLimit: 100,
+              isTamil: isTamil,
             ),
           ],
         );
@@ -260,9 +294,11 @@ class _CalendarCard extends StatelessWidget {
     required this.selectedDate,
     required this.title,
     required this.meetings,
+    required this.isTamil,
     required this.onViewChanged,
     required this.onMovePeriod,
     required this.onSelectDate,
+    required this.onToday,
   });
 
   final _CalendarView view;
@@ -270,235 +306,232 @@ class _CalendarCard extends StatelessWidget {
   final DateTime selectedDate;
   final String title;
   final List<MeetingModel> meetings;
+  final bool isTamil;
   final ValueChanged<_CalendarView> onViewChanged;
   final ValueChanged<int> onMovePeriod;
   final ValueChanged<DateTime> onSelectDate;
+  final VoidCallback onToday;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isDark = Theme.of(context).brightness == Brightness.dark;
-                final borderColor = isDark
-                    ? const Color(0xFFB8C6D9)
-                    : AppColors.lineLight;
-                final secondaryText = isDark
-                    ? const Color(0xFFCBD5E1)
-                    : AppColors.mutedLight;
-                final labels = {
-                  _CalendarView.weekly: 'Weekly',
-                  _CalendarView.monthly: 'Monthly',
-                  _CalendarView.yearly: 'Yearly',
-                };
+    const navy = Color(0xFF1F2A5A);
+    const teal = Color(0xFF1B9A85);
+    final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedColor = isDark ? teal : navy;
 
-                final viewSelector = Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border.all(color: borderColor, width: 1.5),
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(36),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: _CalendarView.values.indexed.expand((entry) {
-                        final (index, option) = entry;
-                        return [
-                          if (index > 0)
-                            Container(
-                              width: 1.5,
-                              height: 32,
-                              color: borderColor.withValues(alpha: 0.8),
-                            ),
-                          Material(
-                            color: option == view
-                                ? const Color(0xFF1687B8)
-                                : Colors.transparent,
-                            child: InkWell(
-                              onTap: () => onViewChanged(option),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 18,
-                                  vertical: 9,
-                                ),
-                                child: Text(
-                                  labels[option]!,
-                                  style: TextStyle(
-                                    color: option == view
-                                        ? const Color(0xFF071525)
-                                        : secondaryText,
-                                    fontSize: 15,
-                                    fontWeight: option == view
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ];
-                      }).toList(),
-                    ),
-                  ),
-                );
-                final previousButton = IconButton(
-                  tooltip: 'Previous',
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => onMovePeriod(-1),
-                  icon: const Icon(AppIcons.previous, size: 30),
-                );
-                final nextButton = IconButton(
-                  tooltip: 'Next',
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => onMovePeriod(1),
-                  icon: const Icon(AppIcons.next, size: 30),
-                );
-                Widget dateSelector({required bool compact}) => Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (date != null) onSelectDate(date);
-                    },
-                    child: Container(
-                      width: compact ? double.infinity : null,
-                      constraints: compact
-                          ? null
-                          : BoxConstraints(maxWidth: constraints.maxWidth),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 13,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF1E293B)
-                            : AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF2E3C53)
-                              : AppColors.lineLight,
-                        ),
-                        boxShadow: isDark
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.accent.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  blurRadius: 16,
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            AppIcons.calendar,
-                            size: 20,
-                            color: AppColors.accent,
-                          ),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: Text(
-                              compact
-                                  ? DateFormat(
-                                      'd MMM yyyy',
-                                    ).format(selectedDate)
-                                  : title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: isDark
-                                    ? const Color(0xFFE2E8F0)
-                                    : AppColors.inkLight,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 22,
-                            color: secondaryText,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+    return Container(
+      padding: EdgeInsets.all(
+        MediaQuery.sizeOf(context).width < 400 ? 12 : 20,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Date range (e.g. "15 Nov – 21 Nov 2026")
+          InkWell(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: selectedDate,
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+              );
+              if (date != null) onSelectDate(date);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
 
-                if (constraints.maxWidth < 520) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      viewSelector,
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          previousButton,
-                          Expanded(
-                            child: Center(child: dateSelector(compact: true)),
-                          ),
-                          nextButton,
-                        ],
-                      ),
-                    ],
-                  );
-                }
-
-                return Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 14,
-                  runSpacing: 12,
+          // View switches + Nav buttons
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.spaceBetween,
+            children: [
+              // Segmented Tabs: Weekly, Monthly, Yearly
+              Container(
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.all(3),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    viewSelector,
-                    previousButton,
-                    dateSelector(compact: false),
-                    nextButton,
+                    _buildViewButton(
+                      _CalendarView.weekly,
+                      isTamil ? 'வாராந்திர' : 'Weekly',
+                      teal,
+                      colors.onSurface,
+                    ),
+                    _buildViewButton(
+                      _CalendarView.monthly,
+                      isTamil ? 'மாதாந்திர' : 'Monthly',
+                      teal,
+                      colors.onSurface,
+                    ),
+                    _buildViewButton(
+                      _CalendarView.yearly,
+                      isTamil ? 'வருடாந்திர' : 'Yearly',
+                      teal,
+                      colors.onSurface,
+                    ),
                   ],
-                );
+                ),
+              ),
+
+              // Controls: < Today >
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildNavIconButton(
+                    Icons.chevron_left,
+                    () => onMovePeriod(-1),
+                    colors.onSurface,
+                    colors.outlineVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  OutlinedButton(
+                    onPressed: onToday,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      minimumSize: Size.zero,
+                      side: BorderSide(color: colors.outlineVariant),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      isTamil ? 'இன்று' : 'Today',
+                      style: TextStyle(
+                        color: colors.onSurface,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  _buildNavIconButton(
+                    Icons.chevron_right,
+                    () => onMovePeriod(1),
+                    colors.onSurface,
+                    colors.outlineVariant,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Day Views
+          switch (view) {
+            _CalendarView.weekly => _WeekView(
+              currentDate: currentDate,
+              selectedDate: selectedDate,
+              meetings: meetings,
+              isTamil: isTamil,
+              onSelectDate: onSelectDate,
+              selectedColor: selectedColor,
+              tealColor: teal,
+            ),
+            _CalendarView.monthly => _MonthView(
+              currentDate: currentDate,
+              selectedDate: selectedDate,
+              meetings: meetings,
+              isTamil: isTamil,
+              onSelectDate: onSelectDate,
+              selectedColor: selectedColor,
+              tealColor: teal,
+            ),
+            _CalendarView.yearly => _YearView(
+              currentDate: currentDate,
+              meetings: meetings,
+              isTamil: isTamil,
+              selectedColor: selectedColor,
+              tealColor: teal,
+              onSelectMonth: (month) {
+                onViewChanged(_CalendarView.monthly);
+                onSelectDate(DateTime(currentDate.year, month));
               },
             ),
-            const SizedBox(height: 14),
-            switch (view) {
-              _CalendarView.weekly => _WeekView(
-                currentDate: currentDate,
-                selectedDate: selectedDate,
-                meetings: meetings,
-                onSelectDate: onSelectDate,
-              ),
-              _CalendarView.monthly => _MonthView(
-                currentDate: currentDate,
-                selectedDate: selectedDate,
-                meetings: meetings,
-                onSelectDate: onSelectDate,
-              ),
-              _CalendarView.yearly => _YearView(
-                currentDate: currentDate,
-                meetings: meetings,
-                onSelectMonth: (month) {
-                  onViewChanged(_CalendarView.monthly);
-                  onSelectDate(DateTime(currentDate.year, month));
-                },
-              ),
-            },
-          ],
+          },
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewButton(
+    _CalendarView targetView,
+    String label,
+    Color activeColor,
+    Color textColor,
+  ) {
+    final isSelected = view == targetView;
+    return InkWell(
+      onTap: () => onViewChanged(targetView),
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : textColor,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavIconButton(
+    IconData icon,
+    VoidCallback onPressed,
+    Color iconColor,
+    Color borderColor,
+  ) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 18, color: iconColor),
       ),
     );
   }
@@ -509,118 +542,165 @@ class _WeekView extends StatelessWidget {
     required this.currentDate,
     required this.selectedDate,
     required this.meetings,
+    required this.isTamil,
     required this.onSelectDate,
+    required this.selectedColor,
+    required this.tealColor,
   });
 
   final DateTime currentDate;
   final DateTime selectedDate;
   final List<MeetingModel> meetings;
+  final bool isTamil;
   final ValueChanged<DateTime> onSelectDate;
+  final Color selectedColor;
+  final Color tealColor;
 
   @override
   Widget build(BuildContext context) {
-    final start = DateTime(
+    final startOfWeek = DateTime(
       currentDate.year,
       currentDate.month,
       currentDate.day - currentDate.weekday % 7,
     );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cellWidth = constraints.maxWidth >= 550
-            ? (constraints.maxWidth - 48) / 7
-            : 76.0;
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(7, (index) {
-              final date = start.add(Duration(days: index));
-              final selected = DateUtils.isSameDay(date, selectedDate);
-              final count = meetings.where((meeting) {
-                return DateUtils.isSameDay(meeting.scheduledTime, date);
-              }).length;
-              return Container(
-                width: cellWidth,
-                height: 118,
-                margin: EdgeInsets.only(right: index == 6 ? 0 : 8),
-                child: _DayTile(
-                  date: date,
-                  selected: selected,
-                  meetingCount: count,
-                  onTap: () => onSelectDate(date),
-                ),
-              );
-            }),
+    final days = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        for (int i = 0; i < days.length; i++) ...[
+          if (i > 0) const SizedBox(width: 4),
+          Expanded(
+            child: _DayColumn(
+              date: days[i],
+              isSelected: DateUtils.isSameDay(days[i], selectedDate),
+              isToday: DateUtils.isSameDay(days[i], DateTime.now()),
+              meetingCount: meetings
+                  .where((m) => DateUtils.isSameDay(m.scheduledTime, days[i]))
+                  .length,
+              isTamil: isTamil,
+              selectedColor: selectedColor,
+              tealColor: tealColor,
+              textColor: colors.onSurface,
+              mutedColor: colors.onSurfaceVariant,
+              surfaceColor: colors.surface,
+              outlineColor: colors.outlineVariant,
+              onTap: () => onSelectDate(days[i]),
+            ),
           ),
-        );
-      },
+        ],
+      ],
     );
   }
 }
 
-class _DayTile extends StatelessWidget {
-  const _DayTile({
+class _DayColumn extends StatelessWidget {
+  const _DayColumn({
     required this.date,
-    required this.selected,
+    required this.isSelected,
+    required this.isToday,
     required this.meetingCount,
+    required this.isTamil,
+    required this.selectedColor,
+    required this.tealColor,
+    required this.textColor,
+    required this.mutedColor,
+    required this.surfaceColor,
+    required this.outlineColor,
     required this.onTap,
   });
 
   final DateTime date;
-  final bool selected;
+  final bool isSelected;
+  final bool isToday;
   final int meetingCount;
+  final bool isTamil;
+  final Color selectedColor;
+  final Color tealColor;
+  final Color textColor;
+  final Color mutedColor;
+  final Color surfaceColor;
+  final Color outlineColor;
   final VoidCallback onTap;
+
+  static const _taDayNames = [
+    'திங்',
+    'செவ்',
+    'புதன்',
+    'வியா',
+    'வெள்',
+    'சனி',
+    'ஞாயி',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final primary = colors.primary;
-    return Material(
-      color: selected
-          ? primary.withValues(alpha: 0.08)
-          : colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(9),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(9),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(9),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat('EEE').format(date),
-                style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
+    final hasEvents = meetingCount > 0;
+    final dayLabel = isTamil
+        ? _taDayNames[date.weekday - 1]
+        : DateFormat('EEE').format(date);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 16,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              dayLabel,
+              style: TextStyle(
+                color: isSelected ? selectedColor : mutedColor,
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
-              const SizedBox(height: 12),
-              Container(
-                width: 28,
-                height: 28,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: selected ? primary : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  '${date.day}',
-                  style: TextStyle(
-                    color: selected ? colors.onPrimary : colors.onSurface,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                ),
-              ),
-              if (meetingCount > 0) ...[
-                const Spacer(),
-                Text(
-                  '$meetingCount event${meetingCount == 1 ? '' : 's'}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: primary, fontSize: 10),
-                ),
-              ],
-            ],
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: 4),
+        AspectRatio(
+          aspectRatio: 1,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(9),
+            child: Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected ? selectedColor : surfaceColor,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: isSelected
+                      ? selectedColor
+                      : (isToday ? tealColor : outlineColor),
+                  width: isToday && !isSelected ? 1.5 : 1,
+                ),
+              ),
+              child: Text(
+                '${date.day}',
+                style: TextStyle(
+                  color: isSelected ? Colors.white : textColor,
+                  fontWeight: isSelected || isToday
+                      ? FontWeight.w700
+                      : FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        if (hasEvents)
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: tealColor,
+              shape: BoxShape.circle,
+            ),
+          )
+        else
+          const SizedBox(height: 4),
+      ],
     );
   }
 }
@@ -630,36 +710,47 @@ class _MonthView extends StatelessWidget {
     required this.currentDate,
     required this.selectedDate,
     required this.meetings,
+    required this.isTamil,
     required this.onSelectDate,
+    required this.selectedColor,
+    required this.tealColor,
   });
 
   final DateTime currentDate;
   final DateTime selectedDate;
   final List<MeetingModel> meetings;
+  final bool isTamil;
   final ValueChanged<DateTime> onSelectDate;
+  final Color selectedColor;
+  final Color tealColor;
+
+  static const _enDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  static const _taDays = ['ஞாயி', 'திங்', 'செவ்', 'புதன்', 'வியா', 'வெள்', 'சனி'];
 
   @override
   Widget build(BuildContext context) {
-    final firstOfMonth = DateTime(currentDate.year, currentDate.month);
-    final gridStart = DateTime(
-      firstOfMonth.year,
-      firstOfMonth.month,
-      1 - firstOfMonth.weekday % 7,
-    );
+    final firstOfMonth = DateTime(currentDate.year, currentDate.month, 1);
+    final daysInMonth = DateTime(
+      currentDate.year,
+      currentDate.month + 1,
+      0,
+    ).day;
+    final startWeekday = firstOfMonth.weekday % 7;
     final colors = Theme.of(context).colorScheme;
+
     return Column(
       children: [
         Row(
           children: List.generate(7, (index) {
-            final day = DateTime(2024, 1, 7 + index);
             return Expanded(
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    DateFormat('E').format(day),
+                    isTamil ? _taDays[index] : _enDays[index],
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
                       color: colors.onSurfaceVariant,
                     ),
                   ),
@@ -668,65 +759,79 @@ class _MonthView extends StatelessWidget {
             );
           }),
         ),
-        ...List.generate(6, (week) {
-          return Row(
-            children: List.generate(7, (day) {
-              final date = gridStart.add(Duration(days: week * 7 + day));
-              final inMonth = date.month == currentDate.month;
-              final selected = DateUtils.isSameDay(date, selectedDate);
-              final hasMeetings = meetings.any(
-                (meeting) => DateUtils.isSameDay(meeting.scheduledTime, date),
-              );
-              return Expanded(
-                child: AspectRatio(
-                  aspectRatio: 1.15,
-                  child: Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: Material(
-                      color: selected ? colors.primary : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                      child: InkWell(
-                        onTap: () => onSelectDate(date),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '${date.day}',
-                              style: TextStyle(
-                                color: selected
-                                    ? colors.onPrimary
-                                    : inMonth
-                                    ? colors.onSurface
-                                    : colors.onSurfaceVariant.withValues(
-                                        alpha: 0.45,
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            if (hasMeetings)
-                              Container(
-                                width: 5,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: selected
-                                      ? colors.onPrimary
-                                      : colors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              )
-                            else
-                              const SizedBox(height: 5),
-                          ],
-                        ),
-                      ),
-                    ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            mainAxisSpacing: 5,
+            crossAxisSpacing: 5,
+            childAspectRatio: 1,
+          ),
+          itemCount: startWeekday + daysInMonth,
+          itemBuilder: (context, index) {
+            if (index < startWeekday) return const SizedBox();
+
+            final dayNumber = index - startWeekday + 1;
+            final date = DateTime(
+              currentDate.year,
+              currentDate.month,
+              dayNumber,
+            );
+            final isSelected = DateUtils.isSameDay(date, selectedDate);
+            final isToday = DateUtils.isSameDay(date, DateTime.now());
+            final hasMeetings = meetings.any(
+              (meeting) => DateUtils.isSameDay(meeting.scheduledTime, date),
+            );
+
+            return InkWell(
+              onTap: () => onSelectDate(date),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected ? selectedColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isSelected
+                        ? selectedColor
+                        : (isToday ? tealColor : colors.outlineVariant),
+                    width: isToday && !isSelected ? 1.5 : 1,
                   ),
                 ),
-              );
-            }),
-          );
-        }),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '$dayNumber',
+                      style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : (isToday ? tealColor : colors.onSurface),
+                        fontWeight: isSelected || isToday
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    if (hasMeetings)
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.white : tealColor,
+                          shape: BoxShape.circle,
+                        ),
+                      )
+                    else
+                      const SizedBox(height: 5),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -736,52 +841,90 @@ class _YearView extends StatelessWidget {
   const _YearView({
     required this.currentDate,
     required this.meetings,
+    required this.isTamil,
     required this.onSelectMonth,
+    required this.selectedColor,
+    required this.tealColor,
   });
 
   final DateTime currentDate;
   final List<MeetingModel> meetings;
+  final bool isTamil;
   final ValueChanged<int> onSelectMonth;
+  final Color selectedColor;
+  final Color tealColor;
+
+  static const _enMonths = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  static const _taMonths = [
+    'ஜன', 'பிப்', 'மார்', 'ஏப்', 'மே', 'ஜூன்',
+    'ஜூலை', 'ஆக', 'செப்', 'அக்', 'நவ', 'டிச',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final columns = MediaQuery.sizeOf(context).width < 560 ? 2 : 3;
+    final colors = Theme.of(context).colorScheme;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: 12,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: columns,
-        mainAxisExtent: 76,
-        crossAxisSpacing: 8,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 1.35,
         mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
       ),
+      itemCount: 12,
       itemBuilder: (context, index) {
         final month = index + 1;
-        final count = meetings.where((meeting) {
-          return meeting.scheduledTime.year == currentDate.year &&
-              meeting.scheduledTime.month == month;
-        }).length;
-        return OutlinedButton(
-          onPressed: () => onSelectMonth(month),
-          style: OutlinedButton.styleFrom(
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(DateFormat('MMMM').format(DateTime(2000, month))),
+        final isSelectedMonth = currentDate.month == month;
+        final hasEvents = meetings.any((meeting) {
+          final t = meeting.scheduledTime;
+          return t.year == currentDate.year && t.month == month;
+        });
+
+        return InkWell(
+          onTap: () => onSelectMonth(month),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelectedMonth
+                  ? selectedColor
+                  : colors.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isSelectedMonth ? selectedColor : colors.outlineVariant,
               ),
-              if (count > 0)
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Text(
-                  '$count',
+                  isTamil ? _taMonths[index] : _enMonths[index],
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w700,
+                    color: isSelectedMonth ? Colors.white : colors.onSurface,
+                    fontWeight: isSelectedMonth
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    fontSize: 13,
                   ),
                 ),
-            ],
+                if (hasEvents) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: isSelectedMonth ? Colors.white : tealColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },
@@ -790,10 +933,45 @@ class _YearView extends StatelessWidget {
 }
 
 class _EventCard extends StatelessWidget {
-  const _EventCard({required this.meeting, required this.selectedDate});
+  const _EventCard({
+    required this.meeting,
+    required this.selectedDate,
+    required this.isTamil,
+  });
 
   final MeetingModel? meeting;
   final DateTime selectedDate;
+  final bool isTamil;
+
+  static const _taDays = [
+    'திங்கள்', 'செவ்வாய்', 'புதன்', 'வியாழன்', 'வெள்ளி', 'சனி', 'ஞாயிறு'
+  ];
+  static const _taFullMonths = [
+    'ஜனவரி', 'பிப்ரவரி', 'மார்ச்', 'ஏப்ரல்', 'மே', 'ஜூன்',
+    'ஜூலை', 'ஆகஸ்ட்', 'செப்டம்பர்', 'அக்டோபர்', 'நவம்பர்', 'டிசம்பர்'
+  ];
+  static const _taShortMonths = [
+    'ஜன', 'பிப்', 'மார்', 'ஏப்', 'மே', 'ஜூன்',
+    'ஜூலை', 'ஆக', 'செப்', 'அக்', 'நவ', 'டிச'
+  ];
+
+  String _formatMeetingDateTime(DateTime dt) {
+    final timeStr = DateFormat('h:mm a').format(dt);
+    if (isTamil) {
+      final dayName = _taDays[dt.weekday - 1];
+      final monthName = _taFullMonths[dt.month - 1];
+      return '$dayName, ${dt.day} $monthName ${dt.year} · $timeStr';
+    }
+    return '${DateFormat('EEE, d MMM yyyy').format(dt)} · $timeStr';
+  }
+
+  String _formatSelectedDate(DateTime dt) {
+    if (isTamil) {
+      final monthName = _taShortMonths[dt.month - 1];
+      return '${dt.day} $monthName ${dt.year}';
+    }
+    return DateFormat('d MMM yyyy').format(dt);
+  }
 
   Future<void> _launchMeeting(BuildContext context) async {
     final selectedMeeting = meeting;
@@ -802,7 +980,13 @@ class _EventCard extends StatelessWidget {
     if (uri == null || !await canLaunchUrl(uri)) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to open the meeting link.')),
+          SnackBar(
+            content: Text(
+              isTamil
+                  ? 'கூட்ட இணைப்பைத் திறக்க முடியவில்லை.'
+                  : 'Unable to open the meeting link.',
+            ),
+          ),
         );
       }
       return;
@@ -819,7 +1003,7 @@ class _EventCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Event',
+              isTamil ? 'நிகழ்வு' : 'Event',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -827,7 +1011,9 @@ class _EventCard extends StatelessWidget {
             const SizedBox(height: 12),
             if (meeting == null)
               Text(
-                'Select a meeting to see the details and join link.',
+                isTamil
+                    ? 'விவரங்கள் மற்றும் இணையும் இணைப்பைப் பார்க்க ஒரு கூட்டத்தைத் தேர்ந்தெடுக்கவும்.'
+                    : 'Select a meeting to see the details and join link.',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.45,
@@ -841,26 +1027,22 @@ class _EventCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(meeting!.groupName),
               const SizedBox(height: 8),
-              Text(
-                '${DateFormat('EEE, d MMM yyyy').format(meeting!.scheduledTime)} · ${DateFormat('h:mm a').format(meeting!.scheduledTime)}',
-              ),
+              Text(_formatMeetingDateTime(meeting!.scheduledTime)),
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () => _launchMeeting(context),
                 icon: const Icon(AppIcons.meetings),
-                label: const Text('Open meeting'),
+                label: Text(isTamil ? 'கூட்டத்தில் இணையவும்' : 'Open meeting'),
               ),
             ],
-            if (meeting == null)
-              const SizedBox(height: 2)
-            else
-              Text(
-                'Selected ${DateFormat('d MMM yyyy').format(selectedDate)}',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+            const SizedBox(height: 12),
+            Text(
+              '${isTamil ? 'தேர்ந்தெடுக்கப்பட்டது' : 'Selected'} ${_formatSelectedDate(selectedDate)}',
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+            ),
           ],
         ),
       ),
@@ -879,6 +1061,7 @@ class _PlanUsageCard extends StatelessWidget {
     required this.storageMb,
     required this.meetingsUsed,
     required this.meetingsLimit,
+    required this.isTamil,
   });
 
   final String planName;
@@ -890,6 +1073,7 @@ class _PlanUsageCard extends StatelessWidget {
   final double storageMb;
   final int meetingsUsed;
   final int meetingsLimit;
+  final bool isTamil;
 
   @override
   Widget build(BuildContext context) {
@@ -900,28 +1084,32 @@ class _PlanUsageCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Plan · $planName',
+              isTamil ? 'திட்டம் · $planName' : 'Plan · $planName',
               style: TextStyle(color: Theme.of(context).colorScheme.secondary),
             ),
             const SizedBox(height: 6),
-            Text('Member portal slug: $memberPortalSlug'),
+            Text(
+              isTamil
+                  ? 'உறுப்பினர் போர்டல் முகவரி: $memberPortalSlug'
+                  : 'Member portal slug: $memberPortalSlug',
+            ),
             const SizedBox(height: 16),
             _UsageMeter(
-              label: 'Groups',
+              label: isTamil ? 'குழுக்கள்' : 'Groups',
               valueLabel: '$groupsUsed / $groupsLimit',
               value: groupsUsed,
               limit: groupsLimit,
             ),
             const SizedBox(height: 13),
             _UsageMeter(
-              label: 'Members',
+              label: isTamil ? 'உறுப்பினர்கள்' : 'Members',
               valueLabel: '$membersUsed / $membersLimit',
               value: membersUsed,
               limit: membersLimit,
             ),
             const SizedBox(height: 13),
             _UsageMeter(
-              label: 'Storage',
+              label: isTamil ? 'சேமிப்பகம்' : 'Storage',
               valueLabel:
                   '${storageMb.toStringAsFixed(storageMb < 10 ? 1 : 0)} MB / 50 GB',
               value: storageMb,
@@ -929,7 +1117,7 @@ class _PlanUsageCard extends StatelessWidget {
             ),
             const SizedBox(height: 13),
             _UsageMeter(
-              label: 'Meetings this month',
+              label: isTamil ? 'இந்த மாத கூட்டங்கள்' : 'Meetings this month',
               valueLabel: '$meetingsUsed / $meetingsLimit',
               value: meetingsUsed,
               limit: meetingsLimit,

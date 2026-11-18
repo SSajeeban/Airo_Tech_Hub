@@ -1,7 +1,8 @@
 enum UserRole {
   subscriber,
   groupMember,
-  platformAdmin;
+  platformAdmin,
+  unknown;
 
   static UserRole fromString(String role) {
     switch (role.toLowerCase()) {
@@ -10,8 +11,9 @@ enum UserRole {
       case 'groupmember':
         return UserRole.groupMember;
       case 'subscriber':
-      default:
         return UserRole.subscriber;
+      default:
+        return UserRole.unknown;
     }
   }
 
@@ -23,6 +25,8 @@ enum UserRole {
         return 'Student / Member';
       case UserRole.subscriber:
         return 'Subscriber / Tutor';
+      case UserRole.unknown:
+        return 'Unknown';
     }
   }
 }
@@ -44,8 +48,9 @@ class UserProfile {
     return UserProfile(
       id: json['id'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      displayName: json['displayName'] as String? ?? json['name'] as String? ?? '',
-      role: UserRole.fromString(json['role'] as String? ?? 'Subscriber'),
+      displayName:
+          json['displayName'] as String? ?? json['name'] as String? ?? '',
+      role: UserRole.fromString(json['role'] as String? ?? ''),
     );
   }
 
@@ -61,10 +66,7 @@ class UserSession {
   final String token;
   final UserProfile user;
 
-  const UserSession({
-    required this.token,
-    required this.user,
-  });
+  const UserSession({required this.token, required this.user});
 
   factory UserSession.fromJson(Map<String, dynamic> json) {
     return UserSession(
@@ -73,9 +75,5 @@ class UserSession {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'token': token,
-    'user': user.toJson(),
-  };
+  Map<String, dynamic> toJson() => {'token': token, 'user': user.toJson()};
 }
-

@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'admin/core/constants/app_colors.dart';
+import 'admin/core/constants/app_icons.dart';
 import 'admin/core/providers/app_providers.dart';
 import 'admin/core/services/storage_service.dart';
 import 'admin/features/ai_teacher/screens/ai_teacher_screen.dart';
@@ -12,6 +15,7 @@ import 'meetings_tab.dart';
 import 'notices_tab.dart';
 import 'mock_data.dart';
 import 'library_tab.dart';
+import 'mock_meeting_store.dart';
 import 'timetable_board.dart';
 import 'app_settings.dart';
 
@@ -47,6 +51,7 @@ class _HomeShellState extends State<HomeShell> {
     _memberPhone = widget.member.phone;
     _nameController = TextEditingController(text: _memberName);
     _phoneController = TextEditingController(text: _memberPhone);
+    MockMeetingStore.instance.addListener(_onMeetingsChanged);
     unawaited(_loadSavedProfile());
     _updateClock();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateClock());
@@ -86,9 +91,14 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void dispose() {
     _timer?.cancel();
+    MockMeetingStore.instance.removeListener(_onMeetingsChanged);
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  void _onMeetingsChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -134,7 +144,7 @@ class _HomeShellState extends State<HomeShell> {
       ),
       MeetingsTab(
         memberName: _memberName,
-        groupName: widget.group.name,
+        groupId: widget.group.id,
         isTamil: _isTamil,
       ),
       const LibraryTab(),
@@ -174,9 +184,9 @@ class _HomeShellState extends State<HomeShell> {
               ),
             ],
           ),
-          floatingActionButton: _index == 1
-              ? null
-              : _buildAiTeacherButton(teal),
+          floatingActionButton: _index == 0
+              ? _buildAiTeacherButton(teal)
+              : null,
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         ),
       );
@@ -217,85 +227,123 @@ class _HomeShellState extends State<HomeShell> {
           ],
         ),
         drawer: Drawer(
+          backgroundColor: theme.colorScheme.surface,
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: navy),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: teal,
-                      child: Text(
-                        _memberName.isNotEmpty
-                            ? _memberName[0].toUpperCase()
-                            : 'A',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      _memberName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      widget.group.name,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
+              UserAccountsDrawerHeader(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.headingLight, AppColors.accentHover],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
+                currentAccountPicture: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Text(
+                    _memberName.isNotEmpty ? _memberName[0].toUpperCase() : 'A',
+                    style: const TextStyle(
+                      color: AppColors.accent,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                accountName: Text(
+                  _memberName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                accountEmail: Text(widget.group.name),
               ),
-              _buildDrawerItem(Icons.home_outlined, _tr('Home'), 0),
-              _buildDrawerItem(Icons.chat_bubble_outline, _tr('Chat'), 1),
-              _buildDrawerItem(Icons.description_outlined, _tr('Notices'), 2),
-              _buildDrawerItem(Icons.videocam_outlined, _tr('Meetings'), 3),
-              _buildDrawerItem(Icons.menu_book_outlined, _tr('Library'), 4),
+              _buildDrawerItem(
+                AppIcons.home,
+                AppIcons.homeActive,
+                _tr('Home'),
+                0,
+                AppColors.accent,
+                teal,
+              ),
+              _buildDrawerItem(
+                AppIcons.chat,
+                AppIcons.chatActive,
+                _tr('Chat'),
+                1,
+                AppColors.brandBlue,
+                teal,
+              ),
+              _buildDrawerItem(
+                Icons.campaign_outlined,
+                Icons.campaign,
+                _tr('Notices'),
+                2,
+                AppColors.warning,
+                teal,
+              ),
+              _buildDrawerItem(
+                AppIcons.meetings,
+                AppIcons.meetingsActive,
+                _tr('Meetings'),
+                3,
+                AppColors.brandBlue,
+                teal,
+              ),
+              _buildDrawerItem(
+                AppIcons.library,
+                AppIcons.libraryActive,
+                _tr('Library'),
+                4,
+                AppColors.brandGreen,
+                teal,
+              ),
               ListTile(
-                leading: const Icon(Icons.payments_outlined),
-                title: Text(_tr('Payments')),
-                subtitle: Text(_tr('Monthly fee due: Date not set')),
+                leading: const Icon(
+                  Icons.payments_outlined,
+                  color: AppColors.brandBlue,
+                ),
+                title: Text(
+                  _tr('Payments'),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                ),
+                subtitle: Text(
+                  _tr('Monthly fee due: Date not set'),
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                ),
                 onTap: _openPaymentReminder,
               ),
             ],
           ),
         ),
         body: pages[_index],
-        floatingActionButton: _index == 1 ? null : _buildAiTeacherButton(teal),
+        floatingActionButton: _index == 0 ? _buildAiTeacherButton(teal) : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined),
+              icon: Icon(AppIcons.home),
+              selectedIcon: Icon(AppIcons.homeActive),
               label: _tr('Home'),
             ),
             NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
+              icon: Icon(AppIcons.chat),
+              selectedIcon: Icon(AppIcons.chatActive),
               label: _tr('Chat'),
             ),
             NavigationDestination(
-              icon: Icon(Icons.description_outlined),
+              icon: Icon(Icons.campaign_outlined),
+              selectedIcon: Icon(Icons.campaign),
               label: _tr('Notices'),
             ),
             NavigationDestination(
-              icon: Icon(Icons.videocam_outlined),
+              icon: Icon(AppIcons.meetings),
+              selectedIcon: Icon(AppIcons.meetingsActive),
               label: _tr('Meetings'),
             ),
             NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
+              icon: Icon(AppIcons.library),
+              selectedIcon: Icon(AppIcons.libraryActive),
               label: _tr('Library'),
             ),
           ],
@@ -399,14 +447,17 @@ class _HomeShellState extends State<HomeShell> {
   Widget _buildNotificationButton(List<Notice> notices, {Color? foreground}) {
     final dark = _isDarkMode;
     final iconColor = foreground ?? (dark ? Colors.white : Colors.black87);
+    final meetingNotifications = MockMeetingStore.instance
+        .notificationsForMemberGroup(widget.group.id);
+    final notificationCount = notices.length + meetingNotifications.length;
     return IconButton(
       tooltip: _tr('Notifications'),
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       padding: const EdgeInsets.all(7),
-      onPressed: () => _showNotifications(notices),
+      onPressed: () => _showNotifications(notices, meetingNotifications),
       icon: Badge(
-        isLabelVisible: notices.isNotEmpty,
-        label: Text('${notices.length}'),
+        isLabelVisible: notificationCount > 0,
+        label: Text('$notificationCount'),
         child: Icon(
           Icons.notifications_none_outlined,
           size: 18,
@@ -434,7 +485,10 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  void _showNotifications(List<Notice> notices) {
+  void _showNotifications(
+    List<Notice> notices,
+    List<MockMeetingNotification> meetingNotifications,
+  ) {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -445,7 +499,7 @@ class _HomeShellState extends State<HomeShell> {
             Text(_tr('Notifications')),
           ],
         ),
-        content: notices.isEmpty
+        content: notices.isEmpty && meetingNotifications.isEmpty
             ? Text(
                 _tr('You are all caught up. There are no notifications yet.'),
               )
@@ -460,6 +514,18 @@ class _HomeShellState extends State<HomeShell> {
                         leading: const Icon(Icons.campaign_outlined),
                         title: Text(_tr(notice.title)),
                         subtitle: Text(_tr(notice.body)),
+                      ),
+                    for (final notification in meetingNotifications)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.videocam_outlined),
+                        title: Text(notification.meeting.title),
+                        subtitle: Text(
+                          '${notification.meeting.groupName} · '
+                          '${DateFormat('dd MMM yyyy, h:mm a').format(notification.meeting.scheduledTime)}\n'
+                          '${notification.meeting.meetingUrl}',
+                        ),
+                        isThreeLine: true,
                       ),
                   ],
                 ),
@@ -786,41 +852,46 @@ class _HomeShellState extends State<HomeShell> {
         children: [
           _buildSidebarNavItem(
             0,
-            Icons.home_outlined,
-            Icons.home,
+            AppIcons.home,
+            AppIcons.homeActive,
             'Home',
+            AppColors.accent,
             teal,
           ),
           const SizedBox(height: 6),
           _buildSidebarNavItem(
             1,
-            Icons.chat_bubble_outline,
-            Icons.chat_bubble,
+            AppIcons.chat,
+            AppIcons.chatActive,
             'Chat',
+            AppColors.brandBlue,
             teal,
           ),
           const SizedBox(height: 6),
           _buildSidebarNavItem(
             2,
-            Icons.description_outlined,
-            Icons.description,
+            Icons.campaign_outlined,
+            Icons.campaign,
             'Notices',
+            AppColors.warning,
             teal,
           ),
           const SizedBox(height: 6),
           _buildSidebarNavItem(
             3,
-            Icons.videocam_outlined,
-            Icons.videocam,
+            AppIcons.meetings,
+            AppIcons.meetingsActive,
             'Meetings',
+            AppColors.brandBlue,
             teal,
           ),
           const SizedBox(height: 6),
           _buildSidebarNavItem(
             4,
-            Icons.menu_book_outlined,
-            Icons.menu_book,
+            AppIcons.library,
+            AppIcons.libraryActive,
             'Library',
+            AppColors.brandGreen,
             teal,
           ),
 
@@ -843,9 +914,11 @@ class _HomeShellState extends State<HomeShell> {
     IconData icon,
     IconData activeIcon,
     String label,
+    Color iconColor,
     Color teal,
   ) {
     final isSelected = _index == index;
+    final textColor = _isDarkMode ? AppColors.inkDark : AppColors.inkLight;
 
     return InkWell(
       onTap: () => setState(() => _index = index),
@@ -861,20 +934,16 @@ class _HomeShellState extends State<HomeShell> {
           children: [
             Icon(
               isSelected ? activeIcon : icon,
-              color: isSelected
-                  ? Colors.white
-                  : (_isDarkMode ? Colors.white70 : Colors.black87),
-              size: 20,
+              color: isSelected ? Colors.white : iconColor,
+              size: 22,
             ),
             const SizedBox(width: 14),
             Text(
               label,
               style: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : (_isDarkMode ? Colors.white70 : Colors.black87),
+                color: isSelected ? Colors.white : textColor,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                fontSize: 14,
+                fontSize: 15,
               ),
             ),
           ],
@@ -883,11 +952,39 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  Widget _buildDrawerItem(IconData icon, String label, int index) {
+  Widget _buildDrawerItem(
+    IconData icon,
+    IconData activeIcon,
+    String label,
+    int index,
+    Color iconColor,
+    Color teal,
+  ) {
+    final isSelected = _index == index;
+    final textColor = _isDarkMode ? AppColors.inkDark : AppColors.inkLight;
+
     return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      selected: _index == index,
+      dense: true,
+      minTileHeight: 50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      selected: isSelected,
+      selectedTileColor: _isDarkMode
+          ? teal.withValues(alpha: 0.18)
+          : AppColors.surfaceLight,
+      leading: Icon(
+        isSelected ? activeIcon : icon,
+        size: 24,
+        color: isSelected ? teal : iconColor,
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 16,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
       onTap: () {
         setState(() => _index = index);
         Navigator.pop(context);
