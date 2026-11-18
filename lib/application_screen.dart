@@ -190,23 +190,3 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     );
   }
 }
-
-class _HomeTemp extends StatelessWidget {
-  final Member member;
-  final Group group;
-
-  const _HomeTemp({required this.member, required this.group});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(group.name), actions: const [AppBarLogo()]),
-      body: Center(
-        child: Text(
-          'Welcome, ${member.name}!\n(Home screen அடுத்த படியில்)',
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}

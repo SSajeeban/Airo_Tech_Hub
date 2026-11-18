@@ -26,79 +26,72 @@ class PortalScreen extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Admin option at the top right
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.icon(
-                          onPressed: () => _openAdmin(context),
-                          icon: const Icon(
-                            Icons.admin_panel_settings,
-                            size: 18,
-                          ),
-                          label: const Text('Admin Sign in'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF1B9A85),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton.icon(
+                      onPressed: () => _openAdmin(context),
+                      icon: const Icon(Icons.admin_panel_settings, size: 18),
+                      label: const Text('Admin Sign in'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF1B9A85),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
+                    ),
+                  ),
 
-                      const SizedBox(height: 35),
+                  const SizedBox(height: 24),
 
-                      // App logo
-                      Center(
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          height: 90,
-                        ),
-                      ),
+                  Center(
+                    child: Image.asset('assets/images/logo.png', height: 90),
+                  ),
 
-                      const SizedBox(height: 32),
+                  const SizedBox(height: 24),
 
-                      Text(
-                        tr('SIGN IN TO A PORTAL'),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.w700,
-                          color: teal,
-                        ),
-                      ),
+                  Text(
+                    tr('SIGN IN TO A PORTAL'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.w700,
+                      color: teal,
+                    ),
+                  ),
 
-                      const SizedBox(height: 4),
+                  const SizedBox(height: 4),
 
-                      Text(
-                        tr('Choose your portal'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: navy,
-                        ),
-                      ),
+                  Text(
+                    tr('Choose your portal'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: navy,
+                    ),
+                  ),
 
-                      const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                      // Member card at the center
-                      _PortalCard(
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 440),
+                      child: _PortalCard(
                         tag: 'Students & members',
                         title: 'Member',
                         subtitle: 'Phone sign in',
@@ -106,12 +99,12 @@ class PortalScreen extends StatelessWidget {
                         highlighted: true,
                         onTap: () => _openMember(context),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );

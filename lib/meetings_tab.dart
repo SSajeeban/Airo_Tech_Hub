@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_settings.dart';
+
 class MeetingItem {
   final String id;
   final String title;
@@ -35,6 +37,7 @@ class MeetingsTab extends StatefulWidget {
 }
 
 class _MeetingsTabState extends State<MeetingsTab> {
+  String _tr(String value) => AppSettings.instance.tr(value);
   // Initial empty list matching the exact reference screenshot ("No meetings yet.")
   final List<MeetingItem> _meetings = [];
 
@@ -54,7 +57,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            widget.isTamil ? 'புதிய கூட்டம் அமைக்க' : 'Schedule New Meeting',
+            _tr('Schedule New Meeting'),
             style: TextStyle(fontWeight: FontWeight.bold, color: titleColor),
           ),
           content: Column(
@@ -64,9 +67,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
               TextField(
                 controller: titleController,
                 decoration: InputDecoration(
-                  labelText: widget.isTamil
-                      ? 'கூட்டம் தலைப்பு'
-                      : 'Meeting Title',
+                  labelText: _tr('Meeting Title'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -76,7 +77,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
               TextField(
                 controller: timeController,
                 decoration: InputDecoration(
-                  labelText: widget.isTamil ? 'ஆரம்ப நேரம்' : 'Starts At',
+                  labelText: _tr('Starts At'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -84,17 +85,20 @@ class _MeetingsTabState extends State<MeetingsTab> {
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
-                value: selectedStatus,
+                initialValue: selectedStatus,
                 decoration: InputDecoration(
-                  labelText: widget.isTamil ? 'நிலை' : 'Status',
+                  labelText: _tr('Status'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'Live', child: Text('Live')),
-                  DropdownMenuItem(value: 'Upcoming', child: Text('Upcoming')),
-                  DropdownMenuItem(value: 'Ended', child: Text('Ended')),
+                items: [
+                  DropdownMenuItem(value: 'Live', child: Text(_tr('Live'))),
+                  DropdownMenuItem(
+                    value: 'Upcoming',
+                    child: Text(_tr('Upcoming')),
+                  ),
+                  DropdownMenuItem(value: 'Ended', child: Text(_tr('Ended'))),
                 ],
                 onChanged: (val) {
                   if (val != null) setDialogState(() => selectedStatus = val);
@@ -105,7 +109,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(widget.isTamil ? 'ரத்து' : 'Cancel'),
+              child: Text(_tr('Cancel')),
             ),
             FilledButton(
               onPressed: () {
@@ -124,11 +128,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
-                      widget.isTamil
-                          ? 'கூட்டம் சேர்க்கப்பட்டது!'
-                          : 'Meeting scheduled successfully!',
-                    ),
+                    content: Text(_tr('Meeting scheduled successfully!')),
                   ),
                 );
               },
@@ -138,7 +138,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(widget.isTamil ? 'சேர்' : 'Schedule'),
+              child: Text(_tr('Schedule')),
             ),
           ],
         ),
@@ -193,7 +193,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
             ),
           ),
           TextSpan(
-            text: widget.isTamil ? 'கூட்டங்கள்' : 'Meetings',
+            text: _tr('Meetings'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -213,7 +213,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
           TextButton.icon(
             onPressed: _clearMeetings,
             icon: const Icon(Icons.clear_all, size: 16),
-            label: Text(widget.isTamil ? 'அழி' : 'Clear'),
+            label: Text(_tr('Clear')),
             style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
           ),
         if (_meetings.isEmpty)
@@ -221,14 +221,14 @@ class _MeetingsTabState extends State<MeetingsTab> {
             onPressed: _loadSampleMeetings,
             icon: const Icon(Icons.playlist_add, size: 16, color: teal),
             label: Text(
-              widget.isTamil ? 'மாதிரி கூட்டம்' : 'Load Sample',
+              _tr('Load Sample'),
               style: const TextStyle(color: teal),
             ),
           ),
         FilledButton.icon(
           onPressed: _showNewMeetingDialog,
           icon: const Icon(Icons.add, size: 18),
-          label: Text(widget.isTamil ? 'புதிய கூட்டம்' : 'New Meeting'),
+          label: Text(_tr('New Meeting')),
           style: FilledButton.styleFrom(
             backgroundColor: teal,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -303,7 +303,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       Expanded(
                         flex: isWide ? 4 : 4,
                         child: Text(
-                          widget.isTamil ? 'கூட்டம்' : 'Meeting',
+                          _tr('Meeting'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -314,7 +314,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       Expanded(
                         flex: isWide ? 3 : 3,
                         child: Text(
-                          widget.isTamil ? 'ஆரம்பம்' : 'Starts',
+                          _tr('Starts'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -325,7 +325,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       Expanded(
                         flex: isWide ? 3 : 2,
                         child: Text(
-                          widget.isTamil ? 'நிலை' : 'Status',
+                          _tr('Status'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -336,7 +336,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       Expanded(
                         flex: isWide ? 2 : 2,
                         child: Text(
-                          widget.isTamil ? 'செயல்கள்' : 'Actions',
+                          _tr('Actions'),
                           textAlign: TextAlign.end,
                           style: TextStyle(
                             fontSize: 13,
@@ -357,9 +357,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       vertical: 24,
                     ),
                     child: Text(
-                      widget.isTamil
-                          ? 'கூட்டங்கள் எதுவும் இல்லை.'
-                          : 'No meetings yet.',
+                      _tr('No meetings yet.'),
                       style: TextStyle(
                         fontSize: 14,
                         color: colors.onSurfaceVariant,
@@ -475,7 +473,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                   ),
                 ),
                 child: Text(
-                  widget.isTamil ? 'இணை' : 'Join',
+                  _tr('Join'),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
