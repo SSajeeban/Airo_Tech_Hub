@@ -7,8 +7,6 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
-enum _GroupView { cards, table }
-
 class GroupsScreen extends ConsumerStatefulWidget {
   const GroupsScreen({super.key});
 
@@ -19,7 +17,6 @@ class GroupsScreen extends ConsumerStatefulWidget {
 class _GroupsScreenState extends ConsumerState<GroupsScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  _GroupView _view = _GroupView.cards;
 
   @override
   void dispose() {
@@ -92,42 +89,11 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      isTamil ? 'குழுக்கள்' : 'Groups',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  ToggleButtons(
-                    isSelected: [
-                      _view == _GroupView.cards,
-                      _view == _GroupView.table,
-                    ],
-                    onPressed: (index) => setState(
-                      () => _view = index == 0
-                          ? _GroupView.cards
-                          : _GroupView.table,
-                    ),
-                    borderRadius: BorderRadius.circular(9),
-                    borderColor: colors.outlineVariant,
-                    selectedBorderColor: AppColors.accent,
-                    fillColor: AppColors.accent,
-                    color: colors.onSurface,
-                    selectedColor: Colors.white,
-                    constraints: const BoxConstraints(
-                      minWidth: 68,
-                      minHeight: 40,
-                    ),
-                    children: [
-                      Text(isTamil ? 'அட்டைகள்' : 'Cards'),
-                      Text(isTamil ? 'அட்டவணை' : 'Table'),
-                    ],
-                  ),
-                ],
+              Text(
+                isTamil ? 'குழுக்கள்' : 'Groups',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -183,8 +149,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                     style: TextStyle(color: colors.onSurfaceVariant),
                   ),
                 )
-              : _view == _GroupView.cards
-              ? LayoutBuilder(
+              : LayoutBuilder(
                   builder: (context, constraints) {
                     final columns = constraints.maxWidth >= 1000
                         ? 3
@@ -204,8 +169,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                           _groupCard(filtered[index], isTamil, colors),
                     );
                   },
-                )
-              : _groupTable(filtered, isTamil),
+                ),
         ),
       ],
     );
@@ -314,82 +278,6 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
       iconSize: 18,
       color: color,
       icon: Icon(icon),
-    );
-  }
-
-  Widget _groupTable(List<GroupModel> groups, bool isTamil) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        child: DataTable(
-          columns: [
-            DataColumn(label: Text(isTamil ? 'பெயர்' : 'Name')),
-            DataColumn(label: Text(isTamil ? 'விளக்கம்' : 'Description')),
-            DataColumn(label: Text(isTamil ? 'உறுப்பினர்கள்' : 'Members')),
-            DataColumn(label: Text(isTamil ? 'செயல்கள்' : 'Actions')),
-          ],
-          rows: [
-            for (final group in groups)
-              DataRow(
-                cells: [
-                  DataCell(
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 220),
-                      child: Text(
-                        group.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 260),
-                      child: Text(
-                        group.description.isEmpty ? '—' : group.description,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  DataCell(Text('${group.memberCount}')),
-                  DataCell(
-                    Row(
-                      children: [
-                        _actionButton(
-                          icon: AppIcons.view,
-                          tooltip: isTamil ? 'விவரங்கள்' : 'View details',
-                          onPressed: () =>
-                              context.push('/app/groups/${group.id}'),
-                        ),
-                        _actionButton(
-                          icon: AppIcons.copy,
-                          tooltip: isTamil
-                              ? 'இணைப்பு நகலெடு'
-                              : 'Copy join link',
-                          onPressed: () => _copyJoinLink(group, isTamil),
-                        ),
-                        _actionButton(
-                          icon: AppIcons.edit,
-                          tooltip: isTamil ? 'திருத்து' : 'Edit',
-                          onPressed: () =>
-                              context.push('/app/groups/edit', extra: group),
-                        ),
-                        _actionButton(
-                          icon: AppIcons.delete,
-                          tooltip: isTamil ? 'நீக்கு' : 'Delete',
-                          color: AppColors.danger,
-                          onPressed: () => _deleteGroup(group, isTamil),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

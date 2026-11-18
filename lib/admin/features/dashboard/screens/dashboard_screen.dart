@@ -53,14 +53,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
   }
 
-  String _periodTitle() {
+  String _periodTitle(bool isTamil) {
     switch (_calendarView) {
       case _CalendarView.weekly:
         final start = _startOfWeek(_currentDate);
         final end = start.add(const Duration(days: 6));
+        if (isTamil) {
+          const taMonths = [
+            'ஜன',
+            'பிப்',
+            'மார்',
+            'ஏப்',
+            'மே',
+            'ஜூன்',
+            'ஜூலை',
+            'ஆக',
+            'செப்',
+            'அக்',
+            'நவ',
+            'டிச'
+          ];
+          return '${start.day} ${taMonths[start.month - 1]} – ${end.day} ${taMonths[end.month - 1]} ${end.year}';
+        }
         final f = DateFormat('d MMM');
         return '${f.format(start)} – ${f.format(end)} ${_currentDate.year}';
       case _CalendarView.monthly:
+        if (isTamil) {
+          const taFullMonths = [
+            'ஜனவரி',
+            'பிப்ரவரி',
+            'மார்ச்',
+            'ஏப்ரல்',
+            'மே',
+            'ஜூன்',
+            'ஜூலை',
+            'ஆகஸ்ட்',
+            'செப்டம்பர்',
+            'அக்டோபர்',
+            'நவம்பர்',
+            'டிசம்பர்'
+          ];
+          return '${taFullMonths[_currentDate.month - 1]} ${_currentDate.year}';
+        }
         return DateFormat('MMMM yyyy').format(_currentDate);
       case _CalendarView.yearly:
         return '${_currentDate.year}';
@@ -137,8 +171,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           view: _calendarView,
           currentDate: _currentDate,
           selectedDate: _selectedDate,
-          title: _periodTitle(),
+          title: _periodTitle(isTamil),
           meetings: meetings,
+          isTamil: isTamil,
           onViewChanged: (view) => setState(() {
             _calendarView = view;
           }),
@@ -149,6 +184,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final eventPanel = _EventCard(
           meeting: selectedMeeting,
           selectedDate: _selectedDate,
+          isTamil: isTamil,
         );
 
         return ListView(
@@ -179,7 +215,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ],
             const SizedBox(height: 16),
             _PlanUsageCard(
-              planName: 'Pro',
+              planName: isTamil ? 'புரோ' : 'Pro',
               memberPortalSlug: _accountSlug(displayName),
               groupsUsed: groups.length,
               groupsLimit: 20,
@@ -188,6 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               storageMb: storageMb,
               meetingsUsed: _meetingsInMonth(DateTime.now(), meetings),
               meetingsLimit: 100,
+              isTamil: isTamil,
             ),
           ],
         );
@@ -257,6 +294,7 @@ class _CalendarCard extends StatelessWidget {
     required this.selectedDate,
     required this.title,
     required this.meetings,
+    required this.isTamil,
     required this.onViewChanged,
     required this.onMovePeriod,
     required this.onSelectDate,
@@ -268,6 +306,7 @@ class _CalendarCard extends StatelessWidget {
   final DateTime selectedDate;
   final String title;
   final List<MeetingModel> meetings;
+  final bool isTamil;
   final ValueChanged<_CalendarView> onViewChanged;
   final ValueChanged<int> onMovePeriod;
   final ValueChanged<DateTime> onSelectDate;
@@ -345,19 +384,19 @@ class _CalendarCard extends StatelessWidget {
                   children: [
                     _buildViewButton(
                       _CalendarView.weekly,
-                      'Weekly',
+                      isTamil ? 'வாராந்திர' : 'Weekly',
                       teal,
                       colors.onSurface,
                     ),
                     _buildViewButton(
                       _CalendarView.monthly,
-                      'Monthly',
+                      isTamil ? 'மாதாந்திர' : 'Monthly',
                       teal,
                       colors.onSurface,
                     ),
                     _buildViewButton(
                       _CalendarView.yearly,
-                      'Yearly',
+                      isTamil ? 'வருடாந்திர' : 'Yearly',
                       teal,
                       colors.onSurface,
                     ),
@@ -390,7 +429,7 @@ class _CalendarCard extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Today',
+                      isTamil ? 'இன்று' : 'Today',
                       style: TextStyle(
                         color: colors.onSurface,
                         fontWeight: FontWeight.w600,
@@ -417,6 +456,7 @@ class _CalendarCard extends StatelessWidget {
               currentDate: currentDate,
               selectedDate: selectedDate,
               meetings: meetings,
+              isTamil: isTamil,
               onSelectDate: onSelectDate,
               selectedColor: selectedColor,
               tealColor: teal,
@@ -425,6 +465,7 @@ class _CalendarCard extends StatelessWidget {
               currentDate: currentDate,
               selectedDate: selectedDate,
               meetings: meetings,
+              isTamil: isTamil,
               onSelectDate: onSelectDate,
               selectedColor: selectedColor,
               tealColor: teal,
@@ -432,6 +473,7 @@ class _CalendarCard extends StatelessWidget {
             _CalendarView.yearly => _YearView(
               currentDate: currentDate,
               meetings: meetings,
+              isTamil: isTamil,
               selectedColor: selectedColor,
               tealColor: teal,
               onSelectMonth: (month) {
@@ -500,6 +542,7 @@ class _WeekView extends StatelessWidget {
     required this.currentDate,
     required this.selectedDate,
     required this.meetings,
+    required this.isTamil,
     required this.onSelectDate,
     required this.selectedColor,
     required this.tealColor,
@@ -508,6 +551,7 @@ class _WeekView extends StatelessWidget {
   final DateTime currentDate;
   final DateTime selectedDate;
   final List<MeetingModel> meetings;
+  final bool isTamil;
   final ValueChanged<DateTime> onSelectDate;
   final Color selectedColor;
   final Color tealColor;
@@ -534,6 +578,7 @@ class _WeekView extends StatelessWidget {
               meetingCount: meetings
                   .where((m) => DateUtils.isSameDay(m.scheduledTime, days[i]))
                   .length,
+              isTamil: isTamil,
               selectedColor: selectedColor,
               tealColor: tealColor,
               textColor: colors.onSurface,
@@ -555,6 +600,7 @@ class _DayColumn extends StatelessWidget {
     required this.isSelected,
     required this.isToday,
     required this.meetingCount,
+    required this.isTamil,
     required this.selectedColor,
     required this.tealColor,
     required this.textColor,
@@ -568,6 +614,7 @@ class _DayColumn extends StatelessWidget {
   final bool isSelected;
   final bool isToday;
   final int meetingCount;
+  final bool isTamil;
   final Color selectedColor;
   final Color tealColor;
   final Color textColor;
@@ -576,9 +623,22 @@ class _DayColumn extends StatelessWidget {
   final Color outlineColor;
   final VoidCallback onTap;
 
+  static const _taDayNames = [
+    'திங்',
+    'செவ்',
+    'புதன்',
+    'வியா',
+    'வெள்',
+    'சனி',
+    'ஞாயி',
+  ];
+
   @override
   Widget build(BuildContext context) {
     final hasEvents = meetingCount > 0;
+    final dayLabel = isTamil
+        ? _taDayNames[date.weekday - 1]
+        : DateFormat('EEE').format(date);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -588,7 +648,7 @@ class _DayColumn extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              DateFormat('EEE').format(date),
+              dayLabel,
               style: TextStyle(
                 color: isSelected ? selectedColor : mutedColor,
                 fontSize: 10,
@@ -650,6 +710,7 @@ class _MonthView extends StatelessWidget {
     required this.currentDate,
     required this.selectedDate,
     required this.meetings,
+    required this.isTamil,
     required this.onSelectDate,
     required this.selectedColor,
     required this.tealColor,
@@ -658,9 +719,13 @@ class _MonthView extends StatelessWidget {
   final DateTime currentDate;
   final DateTime selectedDate;
   final List<MeetingModel> meetings;
+  final bool isTamil;
   final ValueChanged<DateTime> onSelectDate;
   final Color selectedColor;
   final Color tealColor;
+
+  static const _enDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  static const _taDays = ['ஞாயி', 'திங்', 'செவ்', 'புதன்', 'வியா', 'வெள்', 'சனி'];
 
   @override
   Widget build(BuildContext context) {
@@ -677,13 +742,12 @@ class _MonthView extends StatelessWidget {
       children: [
         Row(
           children: List.generate(7, (index) {
-            final day = DateTime(2024, 1, 7 + index);
             return Expanded(
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    DateFormat('E').format(day),
+                    isTamil ? _taDays[index] : _enDays[index],
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -777,6 +841,7 @@ class _YearView extends StatelessWidget {
   const _YearView({
     required this.currentDate,
     required this.meetings,
+    required this.isTamil,
     required this.onSelectMonth,
     required this.selectedColor,
     required this.tealColor,
@@ -784,23 +849,18 @@ class _YearView extends StatelessWidget {
 
   final DateTime currentDate;
   final List<MeetingModel> meetings;
+  final bool isTamil;
   final ValueChanged<int> onSelectMonth;
   final Color selectedColor;
   final Color tealColor;
 
-  static const _months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+  static const _enMonths = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  static const _taMonths = [
+    'ஜன', 'பிப்', 'மார்', 'ஏப்', 'மே', 'ஜூன்',
+    'ஜூலை', 'ஆக', 'செப்', 'அக்', 'நவ', 'டிச',
   ];
 
   @override
@@ -843,7 +903,7 @@ class _YearView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  _months[index],
+                  isTamil ? _taMonths[index] : _enMonths[index],
                   style: TextStyle(
                     color: isSelectedMonth ? Colors.white : colors.onSurface,
                     fontWeight: isSelectedMonth
@@ -873,10 +933,45 @@ class _YearView extends StatelessWidget {
 }
 
 class _EventCard extends StatelessWidget {
-  const _EventCard({required this.meeting, required this.selectedDate});
+  const _EventCard({
+    required this.meeting,
+    required this.selectedDate,
+    required this.isTamil,
+  });
 
   final MeetingModel? meeting;
   final DateTime selectedDate;
+  final bool isTamil;
+
+  static const _taDays = [
+    'திங்கள்', 'செவ்வாய்', 'புதன்', 'வியாழன்', 'வெள்ளி', 'சனி', 'ஞாயிறு'
+  ];
+  static const _taFullMonths = [
+    'ஜனவரி', 'பிப்ரவரி', 'மார்ச்', 'ஏப்ரல்', 'மே', 'ஜூன்',
+    'ஜூலை', 'ஆகஸ்ட்', 'செப்டம்பர்', 'அக்டோபர்', 'நவம்பர்', 'டிசம்பர்'
+  ];
+  static const _taShortMonths = [
+    'ஜன', 'பிப்', 'மார்', 'ஏப்', 'மே', 'ஜூன்',
+    'ஜூலை', 'ஆக', 'செப்', 'அக்', 'நவ', 'டிச'
+  ];
+
+  String _formatMeetingDateTime(DateTime dt) {
+    final timeStr = DateFormat('h:mm a').format(dt);
+    if (isTamil) {
+      final dayName = _taDays[dt.weekday - 1];
+      final monthName = _taFullMonths[dt.month - 1];
+      return '$dayName, ${dt.day} $monthName ${dt.year} · $timeStr';
+    }
+    return '${DateFormat('EEE, d MMM yyyy').format(dt)} · $timeStr';
+  }
+
+  String _formatSelectedDate(DateTime dt) {
+    if (isTamil) {
+      final monthName = _taShortMonths[dt.month - 1];
+      return '${dt.day} $monthName ${dt.year}';
+    }
+    return DateFormat('d MMM yyyy').format(dt);
+  }
 
   Future<void> _launchMeeting(BuildContext context) async {
     final selectedMeeting = meeting;
@@ -885,7 +980,13 @@ class _EventCard extends StatelessWidget {
     if (uri == null || !await canLaunchUrl(uri)) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to open the meeting link.')),
+          SnackBar(
+            content: Text(
+              isTamil
+                  ? 'கூட்ட இணைப்பைத் திறக்க முடியவில்லை.'
+                  : 'Unable to open the meeting link.',
+            ),
+          ),
         );
       }
       return;
@@ -902,7 +1003,7 @@ class _EventCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Event',
+              isTamil ? 'நிகழ்வு' : 'Event',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -910,7 +1011,9 @@ class _EventCard extends StatelessWidget {
             const SizedBox(height: 12),
             if (meeting == null)
               Text(
-                'Select a meeting to see the details and join link.',
+                isTamil
+                    ? 'விவரங்கள் மற்றும் இணையும் இணைப்பைப் பார்க்க ஒரு கூட்டத்தைத் தேர்ந்தெடுக்கவும்.'
+                    : 'Select a meeting to see the details and join link.',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.45,
@@ -924,26 +1027,22 @@ class _EventCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(meeting!.groupName),
               const SizedBox(height: 8),
-              Text(
-                '${DateFormat('EEE, d MMM yyyy').format(meeting!.scheduledTime)} · ${DateFormat('h:mm a').format(meeting!.scheduledTime)}',
-              ),
+              Text(_formatMeetingDateTime(meeting!.scheduledTime)),
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () => _launchMeeting(context),
                 icon: const Icon(AppIcons.meetings),
-                label: const Text('Open meeting'),
+                label: Text(isTamil ? 'கூட்டத்தில் இணையவும்' : 'Open meeting'),
               ),
             ],
-            if (meeting == null)
-              const SizedBox(height: 2)
-            else
-              Text(
-                'Selected ${DateFormat('d MMM yyyy').format(selectedDate)}',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+            const SizedBox(height: 12),
+            Text(
+              '${isTamil ? 'தேர்ந்தெடுக்கப்பட்டது' : 'Selected'} ${_formatSelectedDate(selectedDate)}',
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+            ),
           ],
         ),
       ),
@@ -962,6 +1061,7 @@ class _PlanUsageCard extends StatelessWidget {
     required this.storageMb,
     required this.meetingsUsed,
     required this.meetingsLimit,
+    required this.isTamil,
   });
 
   final String planName;
@@ -973,6 +1073,7 @@ class _PlanUsageCard extends StatelessWidget {
   final double storageMb;
   final int meetingsUsed;
   final int meetingsLimit;
+  final bool isTamil;
 
   @override
   Widget build(BuildContext context) {
@@ -983,28 +1084,32 @@ class _PlanUsageCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Plan · $planName',
+              isTamil ? 'திட்டம் · $planName' : 'Plan · $planName',
               style: TextStyle(color: Theme.of(context).colorScheme.secondary),
             ),
             const SizedBox(height: 6),
-            Text('Member portal slug: $memberPortalSlug'),
+            Text(
+              isTamil
+                  ? 'உறுப்பினர் போர்டல் முகவரி: $memberPortalSlug'
+                  : 'Member portal slug: $memberPortalSlug',
+            ),
             const SizedBox(height: 16),
             _UsageMeter(
-              label: 'Groups',
+              label: isTamil ? 'குழுக்கள்' : 'Groups',
               valueLabel: '$groupsUsed / $groupsLimit',
               value: groupsUsed,
               limit: groupsLimit,
             ),
             const SizedBox(height: 13),
             _UsageMeter(
-              label: 'Members',
+              label: isTamil ? 'உறுப்பினர்கள்' : 'Members',
               valueLabel: '$membersUsed / $membersLimit',
               value: membersUsed,
               limit: membersLimit,
             ),
             const SizedBox(height: 13),
             _UsageMeter(
-              label: 'Storage',
+              label: isTamil ? 'சேமிப்பகம்' : 'Storage',
               valueLabel:
                   '${storageMb.toStringAsFixed(storageMb < 10 ? 1 : 0)} MB / 50 GB',
               value: storageMb,
@@ -1012,7 +1117,7 @@ class _PlanUsageCard extends StatelessWidget {
             ),
             const SizedBox(height: 13),
             _UsageMeter(
-              label: 'Meetings this month',
+              label: isTamil ? 'இந்த மாத கூட்டங்கள்' : 'Meetings this month',
               valueLabel: '$meetingsUsed / $meetingsLimit',
               value: meetingsUsed,
               limit: meetingsLimit,
