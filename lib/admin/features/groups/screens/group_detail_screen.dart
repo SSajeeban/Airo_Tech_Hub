@@ -360,8 +360,8 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   Widget _languageSwitch(bool isTamil) {
     final colors = Theme.of(context).colorScheme;
     return Container(
-      height: 36,
-      padding: const EdgeInsets.all(3),
+      height: 32,
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(8),
@@ -398,8 +398,8 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 34,
-        height: 28,
+        width: 28,
+        height: 24,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppColors.accent : Colors.transparent,

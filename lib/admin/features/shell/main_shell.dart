@@ -119,14 +119,25 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
         ),
         titleSpacing: 16,
-        title: Image.asset(
-          'assets/images/logo.png',
-          height: 32,
-          fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => const Icon(
-            Icons.school_outlined,
-            color: AppColors.accent,
-            size: 28,
+        title: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          decoration: isDark
+              ? BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.white, width: 1),
+                )
+              : null,
+          child: Image.asset(
+            'assets/images/logo.png',
+            height: 32,
+            fit: BoxFit.contain,
+            errorBuilder: (_, _, _) => const Icon(
+              Icons.school_outlined,
+              color: AppColors.accent,
+              size: 28,
+            ),
           ),
         ),
         actions: [
@@ -562,8 +573,8 @@ class _MainShellState extends ConsumerState<MainShell> {
     required VoidCallback onTamil,
   }) {
     return Container(
-      height: 36,
-      padding: const EdgeInsets.all(3),
+      height: 32,
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
@@ -600,8 +611,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 34,
-        height: 28,
+        width: 28,
+        height: 24,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppColors.accent : Colors.transparent,
