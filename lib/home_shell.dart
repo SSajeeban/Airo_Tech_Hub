@@ -1,6 +1,11 @@
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:crop_your_image/crop_your_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -40,6 +45,7 @@ class _HomeShellState extends State<HomeShell> {
   bool _isDarkMode = false;
   late String _memberName;
   late String _memberPhone;
+  String? _memberImage;
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   Timer? _timer;
@@ -68,17 +74,20 @@ class _HomeShellState extends State<HomeShell> {
 
   String get _profileNameKey => 'member_${widget.member.id}_name';
   String get _profilePhoneKey => 'member_${widget.member.id}_phone';
+  String get _profileImageKey => 'member_${widget.member.id}_image';
 
   Future<void> _loadSavedProfile() async {
     try {
       final preferences = await SharedPreferences.getInstance();
       final name = preferences.getString(_profileNameKey);
       final phone = preferences.getString(_profilePhoneKey);
-      if (!mounted || (name == null && phone == null)) return;
+      final image = preferences.getString(_profileImageKey);
+      if (!mounted || (name == null && phone == null && image == null)) return;
 
       setState(() {
         _memberName = name ?? _memberName;
         _memberPhone = phone ?? _memberPhone;
+        _memberImage = image ?? _memberImage;
       });
     } catch (error) {
       if (mounted) {
@@ -256,14 +265,21 @@ class _HomeShellState extends State<HomeShell> {
                 ),
                 currentAccountPicture: CircleAvatar(
                   backgroundColor: Colors.white,
-                  child: Text(
-                    _memberName.isNotEmpty ? _memberName[0].toUpperCase() : 'A',
-                    style: const TextStyle(
-                      color: AppColors.accent,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  backgroundImage: _memberImage != null
+                      ? MemoryImage(base64Decode(_memberImage!))
+                      : null,
+                  child: _memberImage == null
+                      ? Text(
+                          _memberName.isNotEmpty
+                              ? _memberName[0].toUpperCase()
+                              : 'A',
+                          style: const TextStyle(
+                            color: AppColors.accent,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
                 ),
                 accountName: Text(
                   _memberName,
@@ -325,6 +341,35 @@ class _HomeShellState extends State<HomeShell> {
                   style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 onTap: _openPaymentReminder,
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(
+                  Icons.switch_account_outlined,
+                  color: Colors.redAccent,
+                ),
+                title: Text(
+                  _isTamil
+                      ? 'சுயவிவரம் மாற்று / வெளியேறு'
+                      : 'Switch profile / Exit',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).pop();
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    '© ${DateTime.now().year} Airo Techhub',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -658,14 +703,19 @@ class _HomeShellState extends State<HomeShell> {
           child: CircleAvatar(
             radius: 16,
             backgroundColor: teal,
-            child: Text(
-              initial,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
+            backgroundImage: _memberImage != null
+                ? MemoryImage(base64Decode(_memberImage!))
+                : null,
+            child: _memberImage == null
+                ? Text(
+                    initial,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  )
+                : null,
           ),
         ),
       ),
@@ -724,25 +774,63 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Future<void> _showProfileDetails() async {
+    final initial = _memberName.isNotEmpty ? _memberName[0].toUpperCase() : 'A';
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(_tr('Personal details')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _profileDetail(_tr('Name'), _memberName),
-            const SizedBox(height: 12),
-            _profileDetail(_tr('Phone'), _memberPhone),
-            const SizedBox(height: 12),
-            _profileDetail(_tr('Group'), widget.group.name),
+            CircleAvatar(
+              radius: 36,
+              backgroundColor: const Color(0xFF1B9A85),
+              backgroundImage: _memberImage != null
+                  ? MemoryImage(base64Decode(_memberImage!))
+                  : null,
+              child: _memberImage == null
+                  ? Text(
+                      initial,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 28,
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _profileDetail(_isTamil ? 'பெயர்' : 'Name', _memberName),
+                  const SizedBox(height: 12),
+                  _profileDetail(_isTamil ? 'தொலைபேசி' : 'Phone', _memberPhone),
+                  const SizedBox(height: 12),
+                  _profileDetail(
+                    _isTamil ? 'குழு' : 'Group',
+                    widget.group.name,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(_tr('Close')),
+          ),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(Icons.switch_account_outlined, size: 16),
+            label: Text(_isTamil ? 'சுயவிவரம் மாற்று' : 'Switch profile'),
           ),
           FilledButton.icon(
             onPressed: () async {
@@ -773,48 +861,150 @@ class _HomeShellState extends State<HomeShell> {
     _nameController.text = _memberName;
     _phoneController.text = _memberPhone;
     final formKey = GlobalKey<FormState>();
+    String? tempImage = _memberImage;
 
     final updated = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(_tr('Edit profile')),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: _tr('Name')),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? (_tr('Enter a name'))
-                    : null,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final initial = _nameController.text.isNotEmpty
+              ? _nameController.text[0].toUpperCase()
+              : 'A';
+          return AlertDialog(
+            title: Text(_isTamil ? 'சுயவிவரத்தைத் திருத்து' : 'Edit profile'),
+            content: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Center(
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 44,
+                            backgroundColor: const Color(0xFF1B9A85),
+                            backgroundImage: tempImage != null
+                                ? MemoryImage(base64Decode(tempImage!))
+                                : null,
+                            child: tempImage == null
+                                ? Text(
+                                    initial,
+                                    style: const TextStyle(
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: InkWell(
+                              onTap: () async {
+                                await _showImagePickerSheet(
+                                  dialogContext,
+                                  hasImage: tempImage != null,
+                                  onImageSelected: (newImage) {
+                                    setDialogState(() {
+                                      tempImage = newImage;
+                                    });
+                                  },
+                                  onImageRemoved: () {
+                                    setDialogState(() {
+                                      tempImage = null;
+                                    });
+                                  },
+                                );
+                              },
+                              customBorder: const CircleBorder(),
+                              child: CircleAvatar(
+                                radius: 15,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary,
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextButton.icon(
+                      onPressed: () async {
+                        await _showImagePickerSheet(
+                          dialogContext,
+                          hasImage: tempImage != null,
+                          onImageSelected: (newImage) {
+                            setDialogState(() {
+                              tempImage = newImage;
+                            });
+                          },
+                          onImageRemoved: () {
+                            setDialogState(() {
+                              tempImage = null;
+                            });
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.photo_camera_outlined, size: 16),
+                      label: Text(
+                        _isTamil ? 'படத்தை மாற்றுக' : 'Change photo',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _nameController,
+                      onChanged: (_) => setDialogState(() {}),
+                      decoration: InputDecoration(
+                        labelText: _isTamil ? 'பெயர்' : 'Name',
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? (_isTamil ? 'பெயரை உள்ளிடவும்' : 'Enter a name')
+                          : null,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: _isTamil ? 'தொலைபேசி' : 'Phone',
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? (_isTamil
+                                ? 'தொலைபேசி எண்ணை உள்ளிடவும்'
+                                : 'Enter a phone number')
+                          : null,
+                    ),
+                  ],
+                ),
               ),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(labelText: _tr('Phone')),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? (_tr('Enter a phone number'))
-                    : null,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(_isTamil ? 'ரத்து' : 'Cancel'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.pop(dialogContext, true);
+                  }
+                },
+                child: Text(_isTamil ? 'சேமி' : 'Save'),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(_tr('Cancel')),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(dialogContext, true);
-              }
-            },
-            child: Text(_tr('Save')),
-          ),
-        ],
+          );
+        },
       ),
     );
 
@@ -825,6 +1015,11 @@ class _HomeShellState extends State<HomeShell> {
         final preferences = await SharedPreferences.getInstance();
         final nameSaved = await preferences.setString(_profileNameKey, name);
         final phoneSaved = await preferences.setString(_profilePhoneKey, phone);
+        if (tempImage != null) {
+          await preferences.setString(_profileImageKey, tempImage!);
+        } else {
+          await preferences.remove(_profileImageKey);
+        }
         if (!nameSaved || !phoneSaved) {
           throw StateError('The profile changes were not saved.');
         }
@@ -833,6 +1028,7 @@ class _HomeShellState extends State<HomeShell> {
           setState(() {
             _memberName = name;
             _memberPhone = phone;
+            _memberImage = tempImage;
           });
         }
       } catch (error) {
@@ -843,6 +1039,82 @@ class _HomeShellState extends State<HomeShell> {
         }
       }
     }
+  }
+
+  Future<void> _showImagePickerSheet(
+    BuildContext context, {
+    required bool hasImage,
+    required ValueChanged<String> onImageSelected,
+    required VoidCallback onImageRemoved,
+  }) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(
+                  _isTamil
+                      ? 'கேலரியில் இருந்து படம் தேர்வு செய்'
+                      : 'Choose photo from device',
+                ),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  try {
+                    final file = await FilePicker.pickFile(
+                      type: FileType.image,
+                    );
+                    if (file != null) {
+                      final bytes = await file.readAsBytes();
+                      if (!mounted) return;
+                      final cropped = await Navigator.push<Uint8List>(
+                        this.context,
+                        MaterialPageRoute(
+                          builder: (_) => _CropScreen(imageBytes: bytes),
+                        ),
+                      );
+                      if (cropped != null)
+                        onImageSelected(base64Encode(cropped));
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(this.context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            _isTamil
+                                ? 'படம் ஏற்றுவதில் பிழை: $e'
+                                : 'Error picking image: $e',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              if (hasImage)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text(
+                    _isTamil ? 'படத்தை நீக்கு' : 'Remove photo',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    onImageRemoved();
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildSidebar(Color navy, Color teal) {
@@ -1167,6 +1439,61 @@ class _UsageRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CropScreen extends StatefulWidget {
+  final Uint8List imageBytes;
+  const _CropScreen({required this.imageBytes});
+
+  @override
+  State<_CropScreen> createState() => _CropScreenState();
+}
+
+class _CropScreenState extends State<_CropScreen> {
+  final CropController _controller = CropController();
+  bool _cropping = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('Crop photo'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _cropping
+                ? null
+                : () {
+                    setState(() => _cropping = true);
+                    _controller.cropCircle();
+                  },
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+      body: Crop(
+        image: widget.imageBytes,
+        controller: _controller,
+        aspectRatio: 1,
+        withCircleUi: true,
+        interactive: true,
+        onCropped: (result) {
+          switch (result) {
+            case CropSuccess(:final croppedImage):
+              Navigator.pop(context, croppedImage);
+            case CropFailure(:final cause):
+              setState(() => _cropping = false);
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text('Crop failed: $cause')));
+          }
+        },
       ),
     );
   }

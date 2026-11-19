@@ -181,6 +181,16 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Text(
+                      '© ${DateTime.now().year} Airo Techhub',
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

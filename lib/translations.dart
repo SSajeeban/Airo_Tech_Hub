@@ -149,6 +149,16 @@ const Map<String, String> tamilTexts = {
   'Thu': 'வியா',
   'Fri': 'வெள்',
   'Sat': 'சனி',
+  'Mobile number': 'கைப்பேசி எண்',
+  'SEND OTP': 'OTP அனுப்புக',
+  'VERIFY OTP': 'OTP சரிபார்க்க',
+  'Verification code': 'சரிபார்ப்புக் குறியீடு',
+  'Enter OTP': 'OTP உள்ளிடவும்',
+  'Back to the site': 'தளத்திற்கு திரும்புக',
+  'Enter your mobile number': 'உங்கள் கைப்பேசி எண்ணை உள்ளிடவும்',
+  'Invalid number or code': 'தவறான எண் அல்லது குறியீடு',
+  'If this number is registered, a code was sent.':
+      'இந்த எண் பதிவு செய்யப்பட்டிருந்தால், குறியீடு அனுப்பப்பட்டது.',
 };
 
 const Map<String, String> sinhalaTexts = {
@@ -300,4 +310,14 @@ const Map<String, String> sinhalaTexts = {
   'Thu': 'බ්‍රහ',
   'Fri': 'සිකු',
   'Sat': 'සෙන',
+  'Mobile number': 'ජංගම දුරකථන අංකය',
+  'SEND OTP': 'OTP යවන්න',
+  'VERIFY OTP': 'OTP තහවුරු කරන්න',
+  'Verification code': 'තහවුරු කිරීමේ කේතය',
+  'Enter OTP': 'OTP ඇතුළත් කරන්න',
+  'Back to the site': 'වෙබ් අඩවියට ආපසු',
+  'Enter your mobile number': 'ඔබගේ ජංගම දුරකථන අංකය ඇතුළත් කරන්න',
+  'Invalid number or code': 'වලංගු නොවන අංකය හෝ කේතය',
+  'If this number is registered, a code was sent.':
+      'මෙම අංකය ලියාපදිංචි කර ඇත්නම්, කේතයක් යවන ලදී.',
 };
