@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 import 'mock_data.dart';
 import 'app_settings.dart';
@@ -179,37 +179,88 @@ class _TimetableBoardState extends State<TimetableBoard> {
         .toList();
   }
 
+  void _showEventsForDate(DateTime date) {
+    final events = _eventsForDate(date);
+
+    if (events.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(AppDateHelper.formatFullDate(date)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: events.length,
+            separatorBuilder: (_, _) => const Divider(),
+            itemBuilder: (context, index) {
+              final event = events[index];
+
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE3F4F0),
+                  child: Icon(Icons.event, color: Color(0xFF1B9A85)),
+                ),
+                title: Text(
+                  event.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  '${event.startTime} - ${event.endTime}\n'
+                  '${event.description}',
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: Color(0xFF1B9A85)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
-
     final hasSelectedDateEvents = _hasEvents(_selectedDate);
 
-    if (isWide) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: hasSelectedDateEvents ? 6 : 1,
-            child: _buildCalendarCard(),
-          ),
-          if (hasSelectedDateEvents) ...[
-            const SizedBox(width: 16),
-            Expanded(flex: 4, child: _buildEventCard()),
-          ],
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildCalendarCard(),
-        if (hasSelectedDateEvents) ...[
-          const SizedBox(height: 16),
-          _buildEventCard(),
-        ],
-      ],
+    // Provide a Material ancestor for all InkWell widgets in this board.
+    return Material(
+      color: Colors.transparent,
+      child: isWide
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: hasSelectedDateEvents ? 6 : 1,
+                  child: _buildCalendarCard(),
+                ),
+                if (hasSelectedDateEvents) ...[
+                  const SizedBox(width: 16),
+                  Expanded(flex: 4, child: _buildEventCard()),
+                ],
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildCalendarCard(),
+                if (hasSelectedDateEvents) ...[
+                  const SizedBox(height: 16),
+                  _buildEventCard(),
+                ],
+              ],
+            ),
     );
   }
 
@@ -288,33 +339,37 @@ class _TimetableBoardState extends State<TimetableBoard> {
           const SizedBox(height: 16),
 
           // View switches + Nav buttons
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            alignment: WrapAlignment.spaceBetween,
-            children: [
-              _buildViewButton(
-                _tr('Weekly'),
-                teal,
-                colors.onSurface,
-                colors.outlineVariant,
-              ),
-              _buildViewButton(
-                _tr('Monthly'),
-                teal,
-                colors.onSurface,
-                colors.outlineVariant,
-              ),
-              _buildViewButton(
-                _tr('Yearly'),
-                teal,
-                colors.onSurface,
-                colors.outlineVariant,
-              ),
+          // View switches + Nav buttons
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 500;
 
-              // Controls: < Today >
-              Row(
+              final viewButtons = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildViewButton(
+                    _tr('Weekly'),
+                    teal,
+                    colors.onSurface,
+                    colors.outlineVariant,
+                  ),
+                  _buildViewButton(
+                    _tr('Monthly'),
+                    teal,
+                    colors.onSurface,
+                    colors.outlineVariant,
+                  ),
+                  _buildViewButton(
+                    _tr('Yearly'),
+                    teal,
+                    colors.onSurface,
+                    colors.outlineVariant,
+                  ),
+                ],
+              );
+
+              final navControls = Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildNavIconButton(
@@ -354,8 +409,27 @@ class _TimetableBoardState extends State<TimetableBoard> {
                     colors.outlineVariant,
                   ),
                 ],
-              ),
-            ],
+              );
+
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    viewButtons,
+                    const SizedBox(height: 10),
+                    Align(alignment: Alignment.center, child: navControls),
+                  ],
+                );
+              }
+
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                alignment: WrapAlignment.spaceBetween,
+                children: [...viewButtons.children, navControls],
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -429,16 +503,19 @@ class _TimetableBoardState extends State<TimetableBoard> {
     Color iconColor,
     Color borderColor,
   ) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(7),
-        decoration: BoxDecoration(
-          border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(8),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 18, color: iconColor),
         ),
-        child: Icon(icon, size: 18, color: iconColor),
       ),
     );
   }

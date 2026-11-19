@@ -1324,7 +1324,10 @@ class _HomeTab extends StatelessWidget {
         const SizedBox(height: 20),
 
         // TIMETABLE BOARD (WEEKLY / MONTHLY / YEARLY) & EVENT BOARD
-        TimetableBoard(group: group, member: member),
+        Material(
+          color: Colors.transparent,
+          child: TimetableBoard(group: group, member: member),
+        ),
 
         const SizedBox(height: 20),
 

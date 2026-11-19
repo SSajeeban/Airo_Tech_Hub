@@ -50,7 +50,7 @@ class UserProfile {
       email: json['email'] as String? ?? '',
       displayName:
           json['displayName'] as String? ?? json['name'] as String? ?? '',
-      role: UserRole.fromString(json['role'] as String? ?? 'unknown'),
+      role: UserRole.fromString(json['role'] as String? ?? ''),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+
 import 'translations.dart';
 
 class AppSettings extends ChangeNotifier {
