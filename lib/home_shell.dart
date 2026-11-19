@@ -17,6 +17,7 @@ import 'mock_data.dart';
 import 'library_tab.dart';
 import 'mock_meeting_store.dart';
 import 'timetable_board.dart';
+import 'app_settings.dart';
 
 class HomeShell extends StatefulWidget {
   final Member member;
@@ -29,9 +30,12 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
+  String _tr(String value) => AppSettings.instance.tr(value);
   int _index = 0;
   bool _sidebarExpanded = true;
-  bool _isTamil = false;
+  String get _language => AppSettings.instance.language;
+  bool get _isTamil => AppSettings.instance.isTamil;
+
   bool _isDarkMode = false;
   late String _memberName;
   late String _memberPhone;
@@ -200,7 +204,7 @@ class _HomeShellState extends State<HomeShell> {
           leadingWidth: 48,
           leading: Builder(
             builder: (context) => IconButton(
-              tooltip: _isTamil ? 'மெனு' : 'Menu',
+              tooltip: _tr('Menu'),
               icon: const Icon(Icons.menu),
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
@@ -216,7 +220,7 @@ class _HomeShellState extends State<HomeShell> {
             _buildCompactClock(),
             _buildNotificationButton(notices),
             _buildThemeButton(),
-            _buildLanguageButton(),
+            _buildLanguageToggle(teal),
             const SizedBox(width: 4),
             _buildProfileAvatar(teal),
             const SizedBox(width: 8),
@@ -255,7 +259,7 @@ class _HomeShellState extends State<HomeShell> {
               _buildDrawerItem(
                 AppIcons.home,
                 AppIcons.homeActive,
-                'Home',
+                _tr('Home'),
                 0,
                 AppColors.accent,
                 teal,
@@ -263,7 +267,7 @@ class _HomeShellState extends State<HomeShell> {
               _buildDrawerItem(
                 AppIcons.chat,
                 AppIcons.chatActive,
-                'Chat',
+                _tr('Chat'),
                 1,
                 AppColors.brandBlue,
                 teal,
@@ -271,7 +275,7 @@ class _HomeShellState extends State<HomeShell> {
               _buildDrawerItem(
                 Icons.campaign_outlined,
                 Icons.campaign,
-                'Notices',
+                _tr('Notices'),
                 2,
                 AppColors.warning,
                 teal,
@@ -279,7 +283,7 @@ class _HomeShellState extends State<HomeShell> {
               _buildDrawerItem(
                 AppIcons.meetings,
                 AppIcons.meetingsActive,
-                'Meetings',
+                _tr('Meetings'),
                 3,
                 AppColors.brandBlue,
                 teal,
@@ -287,7 +291,7 @@ class _HomeShellState extends State<HomeShell> {
               _buildDrawerItem(
                 AppIcons.library,
                 AppIcons.libraryActive,
-                'Library',
+                _tr('Library'),
                 4,
                 AppColors.brandGreen,
                 teal,
@@ -298,13 +302,11 @@ class _HomeShellState extends State<HomeShell> {
                   color: AppColors.brandBlue,
                 ),
                 title: Text(
-                  _isTamil ? 'கட்டணங்கள்' : 'Payments',
+                  _tr('Payments'),
                   style: TextStyle(color: theme.colorScheme.onSurface),
                 ),
                 subtitle: Text(
-                  _isTamil
-                      ? 'மாதக் கட்டணம்: தேதி அமைக்கப்படவில்லை'
-                      : 'Monthly fee due: Date not set',
+                  _tr('Monthly fee due: Date not set'),
                   style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 onTap: _openPaymentReminder,
@@ -318,31 +320,31 @@ class _HomeShellState extends State<HomeShell> {
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: (i) => setState(() => _index = i),
-          destinations: const [
+          destinations: [
             NavigationDestination(
               icon: Icon(AppIcons.home),
               selectedIcon: Icon(AppIcons.homeActive),
-              label: 'Home',
+              label: _tr('Home'),
             ),
             NavigationDestination(
               icon: Icon(AppIcons.chat),
               selectedIcon: Icon(AppIcons.chatActive),
-              label: 'Chat',
+              label: _tr('Chat'),
             ),
             NavigationDestination(
               icon: Icon(Icons.campaign_outlined),
               selectedIcon: Icon(Icons.campaign),
-              label: 'Notices',
+              label: _tr('Notices'),
             ),
             NavigationDestination(
               icon: Icon(AppIcons.meetings),
               selectedIcon: Icon(AppIcons.meetingsActive),
-              label: 'Meetings',
+              label: _tr('Meetings'),
             ),
             NavigationDestination(
               icon: Icon(AppIcons.library),
               selectedIcon: Icon(AppIcons.libraryActive),
-              label: 'Library',
+              label: _tr('Library'),
             ),
           ],
         ),
@@ -399,7 +401,7 @@ class _HomeShellState extends State<HomeShell> {
           _buildNotificationButton(notices, foreground: foreground),
           const SizedBox(width: 10),
 
-          // Language Selector [ EN | த ]
+          // Language Selector [ EN | த | සි ]
           _buildLanguageToggle(teal),
           const SizedBox(width: 10),
 
@@ -449,7 +451,7 @@ class _HomeShellState extends State<HomeShell> {
         .notificationsForMemberGroup(widget.group.id);
     final notificationCount = notices.length + meetingNotifications.length;
     return IconButton(
-      tooltip: _isTamil ? 'அறிவிப்புகள்' : 'Notifications',
+      tooltip: _tr('Notifications'),
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       padding: const EdgeInsets.all(7),
       onPressed: () => _showNotifications(notices, meetingNotifications),
@@ -470,8 +472,8 @@ class _HomeShellState extends State<HomeShell> {
     final iconColor = foreground ?? (dark ? Colors.white : Colors.black87);
     return IconButton(
       tooltip: dark
-          ? (_isTamil ? 'ஒளி பயன்முறை' : 'Switch to light mode')
-          : (_isTamil ? 'இருள் பயன்முறை' : 'Switch to dark mode'),
+          ? (_tr('Switch to light mode'))
+          : (_tr('Switch to dark mode')),
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       padding: const EdgeInsets.all(7),
       icon: Icon(
@@ -480,14 +482,6 @@ class _HomeShellState extends State<HomeShell> {
         color: iconColor,
       ),
       onPressed: () => setState(() => _isDarkMode = !_isDarkMode),
-    );
-  }
-
-  Widget _buildLanguageButton() {
-    return IconButton(
-      tooltip: _isTamil ? 'Switch to English' : 'தமிழுக்கு மாறவும்',
-      icon: const Icon(Icons.translate, size: 20),
-      onPressed: () => setState(() => _isTamil = !_isTamil),
     );
   }
 
@@ -502,14 +496,12 @@ class _HomeShellState extends State<HomeShell> {
           children: [
             const Icon(Icons.notifications_none_outlined),
             const SizedBox(width: 8),
-            Text(_isTamil ? 'அறிவிப்புகள்' : 'Notifications'),
+            Text(_tr('Notifications')),
           ],
         ),
         content: notices.isEmpty && meetingNotifications.isEmpty
             ? Text(
-                _isTamil
-                    ? 'தற்போது புதிய அறிவிப்புகள் இல்லை.'
-                    : 'You are all caught up. There are no notifications yet.',
+                _tr('You are all caught up. There are no notifications yet.'),
               )
             : SizedBox(
                 width: 360,
@@ -520,8 +512,8 @@ class _HomeShellState extends State<HomeShell> {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.campaign_outlined),
-                        title: Text(notice.title),
-                        subtitle: Text(notice.body),
+                        title: Text(_tr(notice.title)),
+                        subtitle: Text(_tr(notice.body)),
                       ),
                     for (final notification in meetingNotifications)
                       ListTile(
@@ -541,7 +533,7 @@ class _HomeShellState extends State<HomeShell> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(_isTamil ? 'மூடு' : 'Close'),
+            child: Text(_tr('Close')),
           ),
         ],
       ),
@@ -560,30 +552,20 @@ class _HomeShellState extends State<HomeShell> {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-          _isTamil ? 'மாதக் கட்டண நினைவூட்டல்' : 'Monthly fee reminder',
-        ),
+        title: Text(_tr('Monthly fee reminder')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _isTamil
-                  ? 'கட்டணம் செலுத்த வேண்டிய தேதி: அமைக்கப்படவில்லை.'
-                  : 'Monthly fee due: Date not set.',
-            ),
+            Text(_tr('Monthly fee due: Date not set.')),
             const SizedBox(height: 8),
-            Text(
-              _isTamil
-                  ? 'கட்டணத் தேதியையும் செலுத்தும் இணைப்பையும் உங்கள் ஆசிரியரிடம் கேளுங்கள்.'
-                  : 'Ask your teacher for your due date and payment link.',
-            ),
+            Text(_tr('Ask your teacher for your due date and payment link.')),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(_isTamil ? 'மூடு' : 'Close'),
+            child: Text(_tr('Close')),
           ),
           FilledButton(
             onPressed: () {
@@ -591,14 +573,14 @@ class _HomeShellState extends State<HomeShell> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    _isTamil
-                        ? 'ஆன்லைன் கட்டணம் இன்னும் அமைக்கப்படவில்லை. உங்கள் ஆசிரியரைத் தொடர்புகொள்ளவும்.'
-                        : 'Online payment is not set up yet. Please contact your teacher.',
+                    _tr(
+                      'Online payment is not set up yet. Please contact your teacher.',
+                    ),
                   ),
                 ),
               );
             },
-            child: Text(_isTamil ? 'இப்போது செலுத்து' : 'Pay now'),
+            child: Text(_tr('Pay now')),
           ),
         ],
       ),
@@ -606,6 +588,33 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Widget _buildLanguageToggle(Color teal) {
+    Widget languageOption(String value, String label) {
+      final selected = _language == value;
+      return InkWell(
+        onTap: () {
+          setState(() {
+            AppSettings.instance.setLanguage(value);
+          });
+        },
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          decoration: BoxDecoration(
+            color: selected ? Colors.grey.shade300 : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F9),
@@ -616,34 +625,9 @@ class _HomeShellState extends State<HomeShell> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          InkWell(
-            onTap: () => setState(() => _isTamil = false),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: !_isTamil ? Colors.grey.shade300 : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                'EN',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: () => setState(() => _isTamil = true),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: _isTamil ? Colors.grey.shade300 : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                'த',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
+          languageOption('English', 'EN'),
+          languageOption('Tamil', 'த'),
+          languageOption('Sinhala', 'සි'),
         ],
       ),
     );
@@ -652,10 +636,10 @@ class _HomeShellState extends State<HomeShell> {
   Widget _buildProfileAvatar(Color teal) {
     final initial = _memberName.isNotEmpty ? _memberName[0].toUpperCase() : 'A';
     return Tooltip(
-      message: _isTamil ? 'சுயவிவரம்' : 'Profile',
+      message: _tr('Profile'),
       child: Semantics(
         button: true,
-        label: _isTamil ? 'சுயவிவரம்' : 'Profile',
+        label: _tr('Profile'),
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: _showProfileDetails,
@@ -686,7 +670,7 @@ class _HomeShellState extends State<HomeShell> {
   Widget _buildAiTeacherButton(Color teal) {
     return FloatingActionButton(
       heroTag: 'member-ai-teacher',
-      tooltip: _isTamil ? 'AI ஆசிரியர்' : 'AI Teacher',
+      tooltip: _tr('AI Teacher'),
       backgroundColor: teal,
       foregroundColor: Colors.white,
       shape: const CircleBorder(),
@@ -698,7 +682,13 @@ class _HomeShellState extends State<HomeShell> {
   Future<void> _openAiTeacher() async {
     try {
       final storage = await StorageService.init();
-      await storage.setLanguage(_isTamil ? 'ta' : 'en');
+      await storage.setLanguage(
+        _language == 'Tamil'
+            ? 'ta'
+            : _language == 'Sinhala'
+            ? 'si'
+            : 'en',
+      );
       if (!mounted) return;
 
       await Navigator.of(context).push<void>(
@@ -725,22 +715,22 @@ class _HomeShellState extends State<HomeShell> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(_isTamil ? 'தனிப்பட்ட விவரங்கள்' : 'Personal details'),
+        title: Text(_tr('Personal details')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _profileDetail(_isTamil ? 'பெயர்' : 'Name', _memberName),
+            _profileDetail(_tr('Name'), _memberName),
             const SizedBox(height: 12),
-            _profileDetail(_isTamil ? 'தொலைபேசி' : 'Phone', _memberPhone),
+            _profileDetail(_tr('Phone'), _memberPhone),
             const SizedBox(height: 12),
-            _profileDetail(_isTamil ? 'குழு' : 'Group', widget.group.name),
+            _profileDetail(_tr('Group'), widget.group.name),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(_isTamil ? 'மூடு' : 'Close'),
+            child: Text(_tr('Close')),
           ),
           FilledButton.icon(
             onPressed: () async {
@@ -748,7 +738,7 @@ class _HomeShellState extends State<HomeShell> {
               await _editProfile();
             },
             icon: const Icon(Icons.edit_outlined),
-            label: Text(_isTamil ? 'திருத்து' : 'Edit profile'),
+            label: Text(_tr('Edit profile')),
           ),
         ],
       ),
@@ -775,7 +765,7 @@ class _HomeShellState extends State<HomeShell> {
     final updated = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(_isTamil ? 'சுயவிவரத்தைத் திருத்து' : 'Edit profile'),
+        title: Text(_tr('Edit profile')),
         content: Form(
           key: formKey,
           child: Column(
@@ -783,23 +773,17 @@ class _HomeShellState extends State<HomeShell> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: _isTamil ? 'பெயர்' : 'Name',
-                ),
+                decoration: InputDecoration(labelText: _tr('Name')),
                 validator: (value) => value == null || value.trim().isEmpty
-                    ? (_isTamil ? 'பெயரை உள்ளிடவும்' : 'Enter a name')
+                    ? (_tr('Enter a name'))
                     : null,
               ),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: _isTamil ? 'தொலைபேசி' : 'Phone',
-                ),
+                decoration: InputDecoration(labelText: _tr('Phone')),
                 validator: (value) => value == null || value.trim().isEmpty
-                    ? (_isTamil
-                          ? 'தொலைபேசி எண்ணை உள்ளிடவும்'
-                          : 'Enter a phone number')
+                    ? (_tr('Enter a phone number'))
                     : null,
               ),
             ],
@@ -808,7 +792,7 @@ class _HomeShellState extends State<HomeShell> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(_isTamil ? 'ரத்து' : 'Cancel'),
+            child: Text(_tr('Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -816,7 +800,7 @@ class _HomeShellState extends State<HomeShell> {
                 Navigator.pop(dialogContext, true);
               }
             },
-            child: Text(_isTamil ? 'சேமி' : 'Save'),
+            child: Text(_tr('Save')),
           ),
         ],
       ),
@@ -1019,7 +1003,7 @@ class _HomeTab extends StatelessWidget {
     required this.group,
     required this.isTamil,
   });
-
+  String _tr(String value) => AppSettings.instance.tr(value);
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -1040,7 +1024,7 @@ class _HomeTab extends StatelessWidget {
 
         // Notice board Title
         Text(
-          isTamil ? 'அறிவிப்பு பலகை' : 'Notice board',
+          _tr('Notice board'),
           style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 15,
@@ -1051,9 +1035,7 @@ class _HomeTab extends StatelessWidget {
         // Notice Board Content
         if (notices.isEmpty)
           Text(
-            isTamil
-                ? 'உங்களுக்கான அறிவிப்புகள் எதுவும் இல்லை.'
-                : 'No notices for you yet.',
+            _tr('No notices for you yet.'),
             style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
           )
         else
@@ -1070,10 +1052,10 @@ class _HomeTab extends StatelessWidget {
                   child: ListTile(
                     dense: true,
                     title: Text(
-                      n.title,
+                      _tr(n.title),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(n.body),
+                    subtitle: Text(_tr(n.body)),
                   ),
                 ),
             ],
@@ -1082,7 +1064,10 @@ class _HomeTab extends StatelessWidget {
         const SizedBox(height: 20),
 
         // TIMETABLE BOARD (WEEKLY / MONTHLY / YEARLY) & EVENT BOARD
-        TimetableBoard(group: group, member: member),
+        Material(
+          color: Colors.transparent,
+          child: TimetableBoard(group: group, member: member),
+        ),
 
         const SizedBox(height: 20),
 
@@ -1113,20 +1098,21 @@ class _HomeTab extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Your groups: ${group.name}',
+                '${_tr('Your groups')}: ${group.name}',
                 style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
               ),
               const SizedBox(height: 16),
-              // Groups usage row (e.g. 1 / 20 from reference picture)
-              const _UsageRow(label: 'Groups', used: 1, total: 20),
-              const _UsageRow(label: 'Members', used: 22, total: 25),
-              const _UsageRow(
-                label: 'Storage',
+
+              // Groups usage rows
+              _UsageRow(label: _tr('Groups'), used: 1, total: 20),
+              _UsageRow(label: _tr('Members'), used: 22, total: 25),
+              _UsageRow(
+                label: _tr('Storage'),
                 used: 0,
                 total: 2,
                 text: '0 B / 2.0 GB',
               ),
-              const _UsageRow(label: 'Meetings this month', used: 0, total: 10),
+              _UsageRow(label: _tr('Meetings this month'), used: 0, total: 10),
             ],
           ),
         ),

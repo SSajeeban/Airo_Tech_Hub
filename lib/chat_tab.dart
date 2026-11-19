@@ -1,8 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'admin/core/constants/app_icons.dart';
-
-import 'admin/core/constants/app_icons.dart';
+import 'app_settings.dart';
 
 enum _PresenceStatus {
   online,
@@ -25,6 +24,7 @@ class ChatTab extends StatefulWidget {
 }
 
 class _ChatTabState extends State<ChatTab> {
+  String _tr(String value) => AppSettings.instance.tr(value);
   String _filter = 'Chats';
   _PresenceStatus _presenceStatus = _PresenceStatus.online;
   bool _isPresenceMenuOpen = false;
@@ -40,14 +40,14 @@ class _ChatTabState extends State<ChatTab> {
   ];
 
   String _statusLabel(_PresenceStatus status) => switch (status) {
-    _PresenceStatus.online => 'Online',
-    _PresenceStatus.available => 'Available',
-    _PresenceStatus.busy => 'Busy',
-    _PresenceStatus.doNotDisturb => 'Do not disturb',
-    _PresenceStatus.beRightBack => 'Be right back',
-    _PresenceStatus.appearAway => 'Appear away',
-    _PresenceStatus.appearOffline => 'Appear offline',
-    _PresenceStatus.reset => 'Reset status',
+    _PresenceStatus.online => _tr('Online'),
+    _PresenceStatus.available => _tr('Available'),
+    _PresenceStatus.busy => _tr('Busy'),
+    _PresenceStatus.doNotDisturb => _tr('Do not disturb'),
+    _PresenceStatus.beRightBack => _tr('Be right back'),
+    _PresenceStatus.appearAway => _tr('Appear away'),
+    _PresenceStatus.appearOffline => _tr('Appear offline'),
+    _PresenceStatus.reset => _tr('Reset status'),
   };
 
   Color _statusColor(_PresenceStatus status) => switch (status) {
@@ -74,13 +74,13 @@ class _ChatTabState extends State<ChatTab> {
           child: Row(
             children: [
               Text(
-                'Chat',
+                _tr('Chat'),
                 style: Theme.of(context).textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const Spacer(),
               IconButton(
-                tooltip: 'Channels',
+                tooltip: _tr('Channels'),
                 visualDensity: VisualDensity.compact,
                 onPressed: () => setState(() => _filter = 'Channels'),
                 icon: Icon(
@@ -89,7 +89,7 @@ class _ChatTabState extends State<ChatTab> {
                 ),
               ),
               IconButton(
-                tooltip: 'New chat',
+                tooltip: _tr('New chat'),
                 visualDensity: VisualDensity.compact,
                 onPressed: () => setState(() => _filter = 'Chats'),
                 icon: Icon(
@@ -104,7 +104,7 @@ class _ChatTabState extends State<ChatTab> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Search',
+              hintText: _tr('Search'),
               prefixIcon: const Icon(AppIcons.search),
               filled: true,
               fillColor: colors.surfaceContainerHighest,
@@ -139,7 +139,7 @@ class _ChatTabState extends State<ChatTab> {
                             vertical: 6,
                           ),
                           child: Text(
-                            f,
+                            _tr(f),
                             style: TextStyle(
                               color: _filter == f
                                   ? Colors.white
@@ -161,8 +161,8 @@ class _ChatTabState extends State<ChatTab> {
           child: Center(
             child: Text(
               _filter == 'Chats'
-                  ? 'No chats yet. Start a conversation.'
-                  : 'Nothing in $_filter yet.',
+                  ? _tr('No chats yet. Start a conversation.')
+                  : _tr('Nothing in this section yet.'),
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
           ),
@@ -206,7 +206,7 @@ class _ChatTabState extends State<ChatTab> {
                   ),
                 ),
                 PopupMenuButton<_PresenceStatus>(
-                  tooltip: 'Change status',
+                  tooltip: _tr('Change status'),
                   initialValue: _presenceStatus,
                   onOpened: () => setState(() => _isPresenceMenuOpen = true),
                   onCanceled: () => setState(() => _isPresenceMenuOpen = false),
@@ -304,7 +304,7 @@ class _ChatTabState extends State<ChatTab> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    'Member',
+                    _tr('Member'),
                     style: TextStyle(
                       color: colors.onSurfaceVariant,
                       fontSize: 14,
@@ -342,7 +342,7 @@ class _ChatTabState extends State<ChatTab> {
         value: _PresenceStatus.reset,
         height: 44,
         child: Text(
-          'Reset status',
+          _tr('Reset status'),
           style: TextStyle(color: colors.onSurfaceVariant),
         ),
       ),

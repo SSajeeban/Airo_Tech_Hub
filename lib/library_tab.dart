@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'app_settings.dart';
+
 class LibraryTab extends StatefulWidget {
   const LibraryTab({super.key});
 
@@ -40,12 +42,13 @@ class _LibraryTabState extends State<LibraryTab> {
   Widget build(BuildContext context) {
     const teal = Color(0xFF1B9A85);
     final colors = Theme.of(context).colorScheme;
+    final translate = AppSettings.instance.tr;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          'Library',
+          translate('Library'),
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -58,7 +61,7 @@ class _LibraryTabState extends State<LibraryTab> {
               child: OutlinedButton.icon(
                 onPressed: () => _pick(true),
                 icon: const Icon(Icons.calendar_today, size: 16),
-                label: Text('From: ${_fmt(_from)}'),
+                label: Text('${translate('From')}: ${_fmt(_from)}'),
               ),
             ),
             const SizedBox(width: 8),
@@ -66,7 +69,7 @@ class _LibraryTabState extends State<LibraryTab> {
               child: OutlinedButton.icon(
                 onPressed: () => _pick(false),
                 icon: const Icon(Icons.calendar_today, size: 16),
-                label: Text('To: ${_fmt(_to)}'),
+                label: Text('${translate('To')}: ${_fmt(_to)}'),
               ),
             ),
           ],
@@ -97,7 +100,7 @@ class _LibraryTabState extends State<LibraryTab> {
           ),
           child: Center(
             child: Text(
-              'Nothing in this folder.',
+              translate('Nothing in this folder.'),
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
           ),

@@ -11,6 +11,7 @@ import 'package:invetory_system/meetings_tab.dart';
 import 'package:invetory_system/mock_data.dart';
 import 'package:invetory_system/mock_meeting_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart' as flutter;
 
 void main() {
   setUp(() {

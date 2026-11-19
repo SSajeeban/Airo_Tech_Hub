@@ -54,8 +54,9 @@ class UserProfile {
     return UserProfile(
       id: json['id'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      displayName: json['displayName'] as String? ?? json['name'] as String? ?? '',
-      role: UserRole.fromString(json['role'] as String? ?? 'Unknown'),
+      displayName:
+          json['displayName'] as String? ?? json['name'] as String? ?? '',
+      role: UserRole.fromString(json['role'] as String? ?? ''),
     );
   }
 

@@ -132,7 +132,6 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
       meetingUrl: 'https://meet.jit.si/$id',
       isLive: _isInstantMeeting,
     );
-
     ref.read(meetingsProvider.notifier).update((state) => [meeting, ...state]);
     MockMeetingStore.instance.publishMeeting(
       meeting,
@@ -167,6 +166,13 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = ref.watch(sessionProvider)?.user.role;
+
+    if (userRole != UserRole.subscriber) {
+      return const Scaffold(
+        body: Center(child: Text('Only admins can access meetings.')),
+      );
+    }
     final meetings = ref.watch(meetingsProvider);
     final groups = ref.watch(groupsProvider);
     final isTamil = ref.watch(languageProvider) == 'ta';
@@ -291,10 +297,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
               child: InputDecorator(
                 decoration: _inputDecoration(
                   isDark,
-                  suffixIcon: const Icon(
-                    AppIcons.calendar,
-                    size: 18,
-                  ),
+                  suffixIcon: const Icon(AppIcons.calendar, size: 18),
                 ),
                 child: Text(
                   _startsAt == null
