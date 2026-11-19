@@ -304,6 +304,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: _languageSwitch(isTamil),
+              ),
+              const SizedBox(height: 12),
               _breadcrumb(group, isTamil, colors),
               const SizedBox(height: 12),
               _joinLinkCard(group, joinLink, isTamil, colors),
@@ -346,6 +351,66 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                 child: Text(isTamil ? 'குழுவை நீக்கு' : 'Delete group'),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _languageSwitch(bool isTamil) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _languageSegment(
+            label: 'EN',
+            selected: !isTamil,
+            onTap: () =>
+                ref.read(languageProvider.notifier).setLanguage('en'),
+          ),
+          const SizedBox(width: 2),
+          _languageSegment(
+            label: 'த',
+            selected: isTamil,
+            onTap: () =>
+                ref.read(languageProvider.notifier).setLanguage('ta'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _languageSegment({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(6),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        width: 34,
+        height: 28,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : AppColors.accent,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

@@ -152,25 +152,17 @@ class _MainShellState extends ConsumerState<MainShell> {
             ),
             onPressed: () => context.push('/app/notices'),
           ),
-          IconButton(
-            tooltip: isTamil ? 'Switch to English' : 'தமிழுக்கு மாறவும்',
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.translate, size: 19, color: AppColors.accent),
-                const SizedBox(width: 4),
-                Text(
-                  isTamil ? 'த' : 'EN',
-                  style: const TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Center(
+              child: _languageSwitch(
+                isTamil: isTamil,
+                onEnglish: () =>
+                    ref.read(languageProvider.notifier).setLanguage('en'),
+                onTamil: () =>
+                    ref.read(languageProvider.notifier).setLanguage('ta'),
+              ),
             ),
-            onPressed: () =>
-                ref.read(languageProvider.notifier).toggleLanguage(),
           ),
           IconButton(
             tooltip: isDark ? 'Light theme' : 'Dark theme',
@@ -560,6 +552,69 @@ class _MainShellState extends ConsumerState<MainShell> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _languageSwitch({
+    required bool isTamil,
+    required VoidCallback onEnglish,
+    required VoidCallback onTamil,
+  }) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _languageSegment(
+            label: 'EN',
+            selected: !isTamil,
+            onTap: onEnglish,
+          ),
+          const SizedBox(width: 2),
+          _languageSegment(
+            label: 'த',
+            selected: isTamil,
+            onTap: onTamil,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _languageSegment({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(6),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        width: 34,
+        height: 28,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : AppColors.accent,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }
