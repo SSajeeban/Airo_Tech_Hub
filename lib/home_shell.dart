@@ -344,6 +344,18 @@ class _HomeShellState extends State<HomeShell> {
                   Navigator.of(context).pop();
                 },
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    '© ${DateTime.now().year} Airo Techhub',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
