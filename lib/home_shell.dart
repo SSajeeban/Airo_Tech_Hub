@@ -1,3 +1,4 @@
+
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
@@ -210,10 +211,24 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ),
           title: MediaQuery.sizeOf(context).width >= 420
-              ? Image.asset(
-                  'assets/images/logo.png',
-                  height: 28,
-                  errorBuilder: (_, _, _) => Text(widget.group.name),
+              ? Container(
+                  height: 36,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 3,
+                  ),
+                  decoration: _isDarkMode
+                      ? BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white, width: 1),
+                        )
+                      : null,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    height: 28,
+                    errorBuilder: (_, _, _) => Text(widget.group.name),
+                  ),
                 )
               : null,
           actions: [
@@ -360,32 +375,37 @@ class _HomeShellState extends State<HomeShell> {
       color: _isDarkMode ? const Color(0xFF1F2937) : Colors.white,
       child: Row(
         children: [
-          // Sidebar Toggle Button
           IconButton(
             icon: Icon(Icons.menu, color: foreground),
             onPressed: () =>
                 setState(() => _sidebarExpanded = !_sidebarExpanded),
           ),
           const SizedBox(width: 8),
-
-          // Logo
-          Image.asset(
-            'assets/images/logo.png',
-            height: 32,
-            errorBuilder: (_, _, _) => const Text(
-              'AIRO TECHHUB',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1B9A85),
-                letterSpacing: 1.2,
+          Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: _isDarkMode
+                ? BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.white, width: 1),
+                  )
+                : null,
+            child: Image.asset(
+              'assets/images/logo.png',
+              height: 32,
+              errorBuilder: (_, _, _) => const Text(
+                'AIRO TECHHUB',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1B9A85),
+                  letterSpacing: 1.2,
+                ),
               ),
             ),
           ),
-
           const Spacer(),
-
-          // Live Clock (e.g. "10 Nov 2026 | 15:25:35")
           Text(
             _currentTime,
             style: TextStyle(
@@ -396,20 +416,12 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ),
           const SizedBox(width: 16),
-
-          // Notification Bell
           _buildNotificationButton(notices, foreground: foreground),
           const SizedBox(width: 10),
-
-          // Language Selector [ EN | த | සි ]
           _buildLanguageToggle(teal),
           const SizedBox(width: 10),
-
-          // Dark Mode Toggle Icon
           _buildThemeButton(foreground: foreground),
           const SizedBox(width: 14),
-
-          // User Profile: Name and Avatar
           Text(
             _memberName,
             style: TextStyle(
@@ -894,9 +906,7 @@ class _HomeShellState extends State<HomeShell> {
             AppColors.brandGreen,
             teal,
           ),
-
           const Spacer(),
-          // Footer from reference picture: "© 2026 Airo Techhub"
           Padding(
             padding: const EdgeInsets.only(left: 8, bottom: 8),
             child: Text(
@@ -1003,7 +1013,9 @@ class _HomeTab extends StatelessWidget {
     required this.group,
     required this.isTamil,
   });
+
   String _tr(String value) => AppSettings.instance.tr(value);
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -1012,7 +1024,6 @@ class _HomeTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       children: [
-        // Member Name Header
         Text(
           member.name,
           style: const TextStyle(
@@ -1021,8 +1032,6 @@ class _HomeTab extends StatelessWidget {
           ).copyWith(color: colors.onSurface),
         ),
         const SizedBox(height: 12),
-
-        // Notice board Title
         Text(
           _tr('Notice board'),
           style: const TextStyle(
@@ -1031,8 +1040,6 @@ class _HomeTab extends StatelessWidget {
           ).copyWith(color: colors.onSurface),
         ),
         const SizedBox(height: 4),
-
-        // Notice Board Content
         if (notices.isEmpty)
           Text(
             _tr('No notices for you yet.'),
@@ -1060,18 +1067,12 @@ class _HomeTab extends StatelessWidget {
                 ),
             ],
           ),
-
         const SizedBox(height: 20),
-
-        // TIMETABLE BOARD (WEEKLY / MONTHLY / YEARLY) & EVENT BOARD
         Material(
           color: Colors.transparent,
           child: TimetableBoard(group: group, member: member),
         ),
-
         const SizedBox(height: 20),
-
-        // Profile / Groups Usage Card
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -1102,8 +1103,6 @@ class _HomeTab extends StatelessWidget {
                 style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
               ),
               const SizedBox(height: 16),
-
-              // Groups usage rows
               _UsageRow(label: _tr('Groups'), used: 1, total: 20),
               _UsageRow(label: _tr('Members'), used: 22, total: 25),
               _UsageRow(
