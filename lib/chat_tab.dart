@@ -1,5 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'admin/core/constants/app_icons.dart';
+
+import 'admin/core/constants/app_icons.dart';
+
 enum _PresenceStatus {
   online,
   available,
@@ -75,22 +79,23 @@ class _ChatTabState extends State<ChatTab> {
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const Spacer(),
-              Icon(
-                Icons.open_in_full,
-                color: colors.onSurfaceVariant,
-                size: 20,
+              IconButton(
+                tooltip: 'Channels',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => setState(() => _filter = 'Channels'),
+                icon: Icon(
+                  AppIcons.groups,
+                  color: _filter == 'Channels' ? teal : colors.onSurfaceVariant,
+                ),
               ),
-              const SizedBox(width: 20),
-              Icon(
-                Icons.chat_bubble_outline,
-                color: colors.onSurfaceVariant,
-                size: 20,
-              ),
-              const SizedBox(width: 20),
-              Icon(
-                Icons.groups_outlined,
-                color: colors.onSurfaceVariant,
-                size: 20,
+              IconButton(
+                tooltip: 'New chat',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => setState(() => _filter = 'Chats'),
+                icon: Icon(
+                  AppIcons.conversation,
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -100,7 +105,7 @@ class _ChatTabState extends State<ChatTab> {
           child: TextField(
             decoration: InputDecoration(
               hintText: 'Search',
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: const Icon(AppIcons.search),
               filled: true,
               fillColor: colors.surfaceContainerHighest,
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
@@ -119,15 +124,32 @@ class _ChatTabState extends State<ChatTab> {
               children: [
                 for (final f in filters)
                   Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(f),
-                      selected: _filter == f,
-                      selectedColor: teal,
-                      labelStyle: TextStyle(
-                        color: _filter == f ? Colors.white : colors.onSurface,
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Material(
+                      color: _filter == f
+                          ? teal
+                          : colors.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(20),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => setState(() => _filter = f),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          child: Text(
+                            f,
+                            style: TextStyle(
+                              color: _filter == f
+                                  ? Colors.white
+                                  : colors.onSurface,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ),
-                      onSelected: (_) => setState(() => _filter = f),
                     ),
                   ),
               ],

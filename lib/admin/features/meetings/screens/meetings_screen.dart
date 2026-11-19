@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
+import '../../../models/user_session.dart';
+import '../../../../mock_meeting_store.dart';
 
 class MeetingsScreen extends ConsumerStatefulWidget {
   const MeetingsScreen({super.key});
@@ -73,6 +76,20 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
   }
 
   void _createMeeting(List<GroupModel> groups) {
+    final isTamil = ref.read(languageProvider) == 'ta';
+    if (ref.read(sessionProvider)?.user.role != UserRole.subscriber) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isTamil
+                ? 'நிர்வாகிகள் மட்டுமே கூட்டங்களைத் திட்டமிடலாம்.'
+                : 'Only admins can schedule meetings.',
+          ),
+        ),
+      );
+      return;
+    }
+
     final title = _titleController.text.trim();
     final sessionId = _sessionIdController.text.trim().toUpperCase();
     if (title.isEmpty) {
@@ -94,10 +111,17 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
       return;
     }
 
+    GroupModel? selectedGroup;
+    for (final group in groups) {
+      if (group.name == _selectedGroup) {
+        selectedGroup = group;
+        break;
+      }
+    }
+    selectedGroup ??= groups.isEmpty ? null : groups.first;
     final groupName = _isInstantMeeting
         ? 'General Session'
-        : (_selectedGroup ??
-              (groups.isEmpty ? 'General Session' : groups.first.name));
+        : (selectedGroup?.name ?? 'General Session');
     final id = _isInstantMeeting ? sessionId : _generateSessionId();
     final meeting = MeetingModel(
       id: id,
@@ -110,6 +134,12 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     );
 
     ref.read(meetingsProvider.notifier).update((state) => [meeting, ...state]);
+    MockMeetingStore.instance.publishMeeting(
+      meeting,
+      recipientGroupIds: MockMeetingStore.memberGroupIdsForAdminGroup(
+        _isInstantMeeting ? null : selectedGroup?.id,
+      ),
+    );
     _titleController.clear();
     setState(() {
       _startsAt = null;
@@ -140,18 +170,38 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     final meetings = ref.watch(meetingsProvider);
     final groups = ref.watch(groupsProvider);
     final isTamil = ref.watch(languageProvider) == 'ta';
+    final canManageMeetings =
+        ref.watch(sessionProvider)?.user.role == UserRole.subscriber;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     _selectedGroup ??= groups.isEmpty ? null : groups.first.name;
     if (_sessionIdController.text.isEmpty) {
       _sessionIdController.text = _generateSessionId();
     }
 
+    if (!canManageMeetings) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              isTamil
+                  ? 'நிர்வாகிகள் மட்டுமே கூட்டங்களை அணுகலாம்.'
+                  : 'Only admins can access meetings.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _formCard(groups, isDark, isTamil),
-          const SizedBox(height: 16),
+          if (canManageMeetings) ...[
+            _formCard(groups, isDark, isTamil),
+            const SizedBox(height: 16),
+          ],
           _meetingsTable(meetings, isDark, isTamil),
         ],
       ),
@@ -372,7 +422,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                     child: _headerText(isTamil ? 'நிலை' : 'Status', isDark),
                   ),
                   SizedBox(
-                    width: 120,
+                    width: 128,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: _headerText(
@@ -470,7 +520,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
           ),
           Expanded(flex: 1, child: _statusChip(meeting, isDark, isTamil)),
           SizedBox(
-            width: 120,
+            width: 128,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

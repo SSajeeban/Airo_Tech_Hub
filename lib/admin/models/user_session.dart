@@ -7,10 +7,16 @@ enum UserRole {
   static UserRole fromString(String role) {
     switch (role.toLowerCase()) {
       case 'platformadmin':
+      case 'platform_admin':
+      case 'platform admin':
         return UserRole.platformAdmin;
       case 'groupmember':
+      case 'member':
+      case 'student':
         return UserRole.groupMember;
       case 'subscriber':
+      case 'admin':
+      case 'teacher':
         return UserRole.subscriber;
       default:
         return UserRole.unknown;
@@ -48,9 +54,8 @@ class UserProfile {
     return UserProfile(
       id: json['id'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      displayName:
-          json['displayName'] as String? ?? json['name'] as String? ?? '',
-      role: UserRole.fromString(json['role'] as String? ?? 'unknown'),
+      displayName: json['displayName'] as String? ?? json['name'] as String? ?? '',
+      role: UserRole.fromString(json['role'] as String? ?? 'Unknown'),
     );
   }
 
