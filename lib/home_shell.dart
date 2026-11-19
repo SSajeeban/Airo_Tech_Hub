@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -213,7 +213,7 @@ class _HomeShellState extends State<HomeShell> {
               ? Image.asset(
                   'assets/images/logo.png',
                   height: 28,
-                  errorBuilder: (_, __, ___) => Text(widget.group.name),
+                  errorBuilder: (_, _, _) => Text(widget.group.name),
                 )
               : null,
           actions: [
@@ -372,7 +372,7 @@ class _HomeShellState extends State<HomeShell> {
           Image.asset(
             'assets/images/logo.png',
             height: 32,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'AIRO TECHHUB',
               style: TextStyle(
                 fontSize: 18,
@@ -1064,7 +1064,10 @@ class _HomeTab extends StatelessWidget {
         const SizedBox(height: 20),
 
         // TIMETABLE BOARD (WEEKLY / MONTHLY / YEARLY) & EVENT BOARD
-        TimetableBoard(group: group, member: member),
+        Material(
+          color: Colors.transparent,
+          child: TimetableBoard(group: group, member: member),
+        ),
 
         const SizedBox(height: 20),
 

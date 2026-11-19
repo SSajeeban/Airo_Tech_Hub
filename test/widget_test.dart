@@ -31,7 +31,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const AiroApp());
-    expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.byType(AiroApp), findsOneWidget);
   });
 
   testWidgets('Timetable transitions smoothly when language changes', (

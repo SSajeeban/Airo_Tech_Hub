@@ -1,6 +1,8 @@
 import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
+
 import '../constants/api_endpoints.dart';
 import '../services/storage_service.dart';
 import '../../models/site_content.dart';
@@ -11,17 +13,17 @@ class ApiClient {
   final StorageService _storage;
 
   ApiClient(this._storage)
-      : _dio = Dio(
-          BaseOptions(
-            baseUrl: ApiEndpoints.baseUrl,
-            connectTimeout: const Duration(seconds: 12),
-            receiveTimeout: const Duration(seconds: 12),
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-          ),
-        ) {
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: ApiEndpoints.baseUrl,
+          connectTimeout: const Duration(seconds: 12),
+          receiveTimeout: const Duration(seconds: 12),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
+      ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -60,12 +62,14 @@ class ApiClient {
         showSubscriberCta: true,
         subscriberCtaLabel: 'Register as a subscriber',
         subscriberCtaLabelTa: 'சந்தாதாரராக பதிவு செய்யுங்கள்',
-        subscriberCtaDetail: 'Open a workspace, then invite members into your groups.',
+        subscriberCtaDetail:
+            'Open a workspace, then invite members into your groups.',
         subscriberCtaDetailTa: 'ஒரு பணித்தளத்தைத் திறந்து, உங்கள் குழுக்களுக்கு உறுப்பினர்களை அழையுங்கள்.',
         showMemberCta: true,
         memberCtaLabel: 'Join your group',
         memberCtaLabelTa: 'உங்கள் குழுவில் சேருங்கள்',
-        memberCtaDetail: 'Members register with the code from their group admin.',
+        memberCtaDetail:
+            'Members register with the code from their group admin.',
         memberCtaDetailTa: 'உறுப்பினர்கள் தங்கள் குழு நிர்வாகி கொடுத்த குறியீட்டுடன் பதிவு செய்கிறார்கள்.',
         services: [],
         features: [],
@@ -74,7 +78,8 @@ class ApiClient {
         aiTitle: 'AI Teacher',
         aiTitleTa: 'AI ஆசிரியர்',
         aiBody: 'Ask a question, set an exam, or write notes. It works in English and Tamil.',
-        aiBodyTa: 'கேள்வி கேளுங்கள், தேர்வு அமையுங்கள், அல்லது குறிப்பு எழுதுங்கள்.',
+        aiBodyTa:
+            'கேள்வி கேளுங்கள், தேர்வு அமையுங்கள், அல்லது குறிப்பு எழுதுங்கள்.',
         privacyPolicy: '',
         privacyPolicyTa: '',
         cookiePolicy: '',
@@ -91,19 +96,19 @@ class ApiClient {
     try {
       final response = await _dio.post(
         ApiEndpoints.login,
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final session = UserSession.fromJson(response.data as Map<String, dynamic>);
+        final session = UserSession.fromJson(
+          response.data as Map<String, dynamic>,
+        );
         await _storage.saveSession(session);
         return session;
       }
       throw Exception('Sign in failed with status ${response.statusCode}');
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? e.message ?? 'Invalid credentials.';
+      final msg =
+          e.response?.data?['message'] ?? e.message ?? 'Invalid credentials.';
       throw Exception(msg);
     }
   }
@@ -124,14 +129,79 @@ class ApiClient {
         },
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final session = UserSession.fromJson(response.data as Map<String, dynamic>);
+        final session = UserSession.fromJson(
+          response.data as Map<String, dynamic>,
+        );
         await _storage.saveSession(session);
         return session;
       }
       throw Exception('Registration failed.');
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? e.message ?? 'Registration failed.';
+      final msg =
+          e.response?.data?['message'] ?? e.message ?? 'Registration failed.';
       throw Exception(msg);
+    }
+  }
+
+  Future<UserSession> updateProfile({
+    required String displayName,
+    required String email,
+  }) async {
+    try {
+      final response = await _dio.put(
+        ApiEndpoints.applicationsMineProfile,
+        data: {'displayName': displayName, 'email': email},
+      );
+      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['user'] is Map<String, dynamic>) {
+          final session = UserSession.fromJson(data);
+          await _storage.saveSession(session);
+          return session;
+        }
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? e.response?.data['message']
+          : null;
+      throw Exception(message ?? 'Could not update profile.');
+    }
+    throw Exception('Could not update profile.');
+  }
+
+  Future<void> uploadOrganizationLogo({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    try {
+      await _dio.post(
+        ApiEndpoints.applicationsMineLogo,
+        data: FormData.fromMap({
+          'logo': MultipartFile.fromBytes(bytes, filename: fileName),
+        }),
+      );
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? e.response?.data['message']
+          : null;
+      throw Exception(message ?? 'Could not upload organization logo.');
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _dio.post(
+        ApiEndpoints.changePassword,
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? e.response?.data['message']
+          : null;
+      throw Exception(message ?? 'Could not change password.');
     }
   }
 
@@ -144,13 +214,11 @@ class ApiClient {
     try {
       final response = await _dio.post(
         ApiEndpoints.aiTeacherAsk,
-        data: {
-          'prompt': prompt,
-          'taskType': taskType,
-          'language': language,
-        },
+        data: {'prompt': prompt, 'taskType': taskType, 'language': language},
       );
-      return response.data['answer'] ?? response.data['result'] ?? 'Response generated successfully.';
+      return response.data['answer'] ??
+          response.data['result'] ??
+          'Response generated successfully.';
     } catch (_) {
       // Clean fallback response simulating the AI Teacher response
       if (language == 'ta') {
@@ -171,4 +239,3 @@ class ApiClient {
     }
   }
 }
-

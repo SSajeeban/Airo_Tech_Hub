@@ -50,16 +50,18 @@ class PortalScreen extends StatelessWidget {
                 children: [
                   // Top logo and Admin button
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 100,
-                        height: 48,
-                        fit: BoxFit.contain,
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 100,
+                          height: 48,
+                          fit: BoxFit.contain,
+                        ),
                       ),
-
+                      const Spacer(),
                       FilledButton.icon(
                         onPressed: () => _openAdmin(context),
                         icon: const Icon(Icons.admin_panel_settings, size: 18),
@@ -68,8 +70,8 @@ class PortalScreen extends StatelessWidget {
                           backgroundColor: teal,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
+                            horizontal: 16,
+                            vertical: 12,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -79,7 +81,7 @@ class PortalScreen extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 48),
 
                   // Portal heading
                   Text(
@@ -105,7 +107,7 @@ class PortalScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   // Member card
                   _PortalCard(
@@ -281,9 +283,9 @@ class _PortalCard extends StatelessWidget {
               ),
             ),
 
-            const Text(
-              'Phone sign in',
-              style: TextStyle(color: teal, fontWeight: FontWeight.w600),
+            Text(
+              tr(subtitle),
+              style: const TextStyle(color: teal, fontWeight: FontWeight.w600),
             ),
 
             const SizedBox(height: 8),

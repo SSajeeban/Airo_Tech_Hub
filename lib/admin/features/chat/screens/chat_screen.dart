@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
@@ -19,24 +20,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ChatMessage(
       id: 'msg_1',
       senderName: 'Academic Coordinator',
-      text:
-          'Good morning everyone! Please make sure to download the Calculus assignment from the Library tab before today\'s 5:30 PM session.',
+      text: 'Good morning everyone! Please make sure to download the Calculus assignment from the Library tab before today\'s 5:30 PM session.',
       timestamp: DateTime.now().subtract(const Duration(hours: 3)),
       isMe: false,
     ),
     ChatMessage(
       id: 'msg_2',
       senderName: 'Kavindu Perera',
-      text:
-          'Thank you Sir! Is the formula cheat sheet included in the same folder?',
+      text: 'Thank you Sir! Is the formula cheat sheet included in the same folder?',
       timestamp: DateTime.now().subtract(const Duration(hours: 2, minutes: 40)),
       isMe: false,
     ),
     ChatMessage(
       id: 'msg_3',
       senderName: 'You',
-      text:
-          'Yes Kavindu, both the assignment set and the formula sheet are uploaded in the Combined Mathematics folder.',
+      text: 'Yes Kavindu, both the assignment set and the formula sheet are uploaded in the Combined Mathematics folder.',
       timestamp: DateTime.now().subtract(const Duration(hours: 2, minutes: 15)),
       isMe: true,
     ),
@@ -52,6 +50,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   static const _channelName = 'Advanced Mathematics Cohort 2026';
   int _selectedTab = 2;
   bool _isChannelOpen = false;
+  late String _chatStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _chatStatus = ref.read(storageServiceProvider).getChatStatus();
+  }
 
   @override
   void dispose() {
@@ -190,10 +195,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Expanded(
             child: Text(
               isTamil ? 'அரட்டை' : 'Chat',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
             ),
           ),
           IconButton(
@@ -393,6 +396,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         .map((part) => part[0].toUpperCase())
         .join();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final statusColor = _statusColor(_chatStatus);
+    final statusLabel = _statusLabel(_chatStatus, isTamil);
 
     return InkWell(
       onTap: () => _showStatusMenu(context, displayName, initials),
@@ -428,7 +433,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: AppColors.success,
+                      color: statusColor,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: isDark ? AppColors.cardDark : Colors.white,
@@ -454,9 +459,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                   Text(
-                    isTamil ? 'செயலில்' : 'Available',
-                    style: const TextStyle(
-                      color: AppColors.mutedLight,
+                    statusLabel,
+                    style: TextStyle(
+                      color: isDark
+                          ? AppColors.mutedDark
+                          : AppColors.mutedLight,
                       fontSize: 12,
                     ),
                   ),
@@ -473,6 +480,58 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'busy':
+      case 'do-not-disturb':
+        return status == 'busy' ? Colors.redAccent : Colors.red;
+      case 'be-right-back':
+      case 'appear-away':
+        return Colors.amber;
+      case 'appear-offline':
+        return const Color(0xFF94A3B8);
+      case 'available':
+      default:
+        return AppColors.success;
+    }
+  }
+
+  String _statusLabel(String status, bool isTamil) {
+    if (isTamil) {
+      switch (status) {
+        case 'busy':
+          return 'பிஸியாக';
+        case 'do-not-disturb':
+          return 'தொந்தரவு செய்யாதீர்கள்';
+        case 'be-right-back':
+          return 'விரைவில் திரும்புவேன்';
+        case 'appear-away':
+          return 'வெளியில் இருக்கிறேன்';
+        case 'appear-offline':
+          return 'ஆஃப்லைனாகத் தோன்ற';
+        case 'available':
+        default:
+          return 'செயலில்';
+      }
+    }
+
+    switch (status) {
+      case 'busy':
+        return 'Busy';
+      case 'do-not-disturb':
+        return 'Do not disturb';
+      case 'be-right-back':
+        return 'Be right back';
+      case 'appear-away':
+        return 'Appear away';
+      case 'appear-offline':
+        return 'Appear offline';
+      case 'available':
+      default:
+        return 'Available';
+    }
+  }
+
   Future<void> _showStatusMenu(
     BuildContext context,
     String displayName,
@@ -485,7 +544,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       anchor.size.bottomRight(Offset.zero),
       ancestor: overlay,
     );
-    await showMenu<String>(
+    final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromRect(
         Rect.fromPoints(topLeft, bottomRight),
@@ -528,43 +587,80 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ),
         const PopupMenuDivider(),
-        const PopupMenuItem(
+        PopupMenuItem(
+          value: 'available',
           child: _StatusMenuRow(
             color: AppColors.success,
             label: 'Available',
-            selected: true,
+            selected: _chatStatus == 'available',
           ),
         ),
-        const PopupMenuItem(
-          child: _StatusMenuRow(color: Colors.redAccent, label: 'Busy'),
+        PopupMenuItem(
+          value: 'busy',
+          child: _StatusMenuRow(
+            color: Colors.redAccent,
+            label: 'Busy',
+            selected: _chatStatus == 'busy',
+          ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
+          value: 'do-not-disturb',
           child: _StatusMenuRow(
             color: Colors.red,
             label: 'Do not disturb',
             showMinus: true,
+            selected: _chatStatus == 'do-not-disturb',
           ),
         ),
-        const PopupMenuItem(
-          child: _StatusMenuRow(color: Colors.amber, label: 'Be right back'),
+        PopupMenuItem(
+          value: 'be-right-back',
+          child: _StatusMenuRow(
+            color: Colors.amber,
+            label: 'Be right back',
+            selected: _chatStatus == 'be-right-back',
+          ),
         ),
-        const PopupMenuItem(
-          child: _StatusMenuRow(color: Colors.amber, label: 'Appear away'),
+        PopupMenuItem(
+          value: 'appear-away',
+          child: _StatusMenuRow(
+            color: Colors.amber,
+            label: 'Appear away',
+            selected: _chatStatus == 'appear-away',
+          ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
+          value: 'appear-offline',
           child: _StatusMenuRow(
             color: Color(0xFF94A3B8),
             label: 'Appear offline',
+            selected: _chatStatus == 'appear-offline',
           ),
         ),
         const PopupMenuDivider(),
-        const PopupMenuItem(
+        const PopupMenuItem<String>(
+          value: 'reset',
           child: Text(
             'Reset status',
             style: TextStyle(color: AppColors.mutedLight),
           ),
         ),
       ],
+    );
+
+    if (selected == null) return;
+    final status = selected == 'reset' ? 'available' : selected;
+    await ref.read(storageServiceProvider).setChatStatus(status);
+    if (!mounted) return;
+    setState(() => _chatStatus = status);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          selected == 'reset'
+              ? 'Status reset to Available.'
+              : 'Status changed to ${_statusLabel(status, false)}.',
+        ),
+      ),
     );
   }
 
@@ -587,9 +683,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ? 'செய்தி அனுப்ப அரட்டையைத் தேர்ந்தெடுக்கவும்'
                   : 'Pick a chat to start messaging',
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 6),
             Text(
