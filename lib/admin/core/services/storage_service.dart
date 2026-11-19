@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../models/user_session.dart';
 
 class StorageService {
@@ -7,6 +9,9 @@ class StorageService {
   static const String _keyUser = 'airotech_user';
   static const String _keyLanguage = 'airotech_language';
   static const String _keyTheme = 'airotech_theme';
+  static const String _keyOrganizationName = 'airotech_organization_name';
+  static const String _keyOrganizationLogo = 'airotech_organization_logo';
+  static const String _keyChatStatus = 'airotech_chat_status';
 
   final SharedPreferences _prefs;
 
@@ -29,10 +34,7 @@ class StorageService {
     if (token != null && userJson != null) {
       try {
         final map = jsonDecode(userJson) as Map<String, dynamic>;
-        return UserSession(
-          token: token,
-          user: UserProfile.fromJson(map),
-        );
+        return UserSession(token: token, user: UserProfile.fromJson(map));
       } catch (_) {
         return null;
       }
@@ -52,5 +54,16 @@ class StorageService {
   // Theme: 'system', 'light', 'dark'
   String getThemeMode() => _prefs.getString(_keyTheme) ?? 'system';
   Future<void> setThemeMode(String theme) => _prefs.setString(_keyTheme, theme);
-}
 
+  String getOrganizationName() => _prefs.getString(_keyOrganizationName) ?? '';
+  Future<void> setOrganizationName(String name) =>
+      _prefs.setString(_keyOrganizationName, name);
+
+  String getOrganizationLogo() => _prefs.getString(_keyOrganizationLogo) ?? '';
+  Future<void> setOrganizationLogo(String base64) =>
+      _prefs.setString(_keyOrganizationLogo, base64);
+
+  String getChatStatus() => _prefs.getString(_keyChatStatus) ?? 'available';
+  Future<void> setChatStatus(String status) =>
+      _prefs.setString(_keyChatStatus, status);
+}

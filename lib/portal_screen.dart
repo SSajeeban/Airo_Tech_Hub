@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'admin/admin_entry.dart';
 import 'app_settings.dart';
@@ -36,41 +36,40 @@ class PortalScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Admin option at the top right
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton.icon(
-                          onPressed: () => _openAdmin(context),
-                          icon: const Icon(
-                            Icons.admin_panel_settings,
-                            size: 18,
-                          ),
-                          label: const Text('Admin Sign in'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF1B9A85),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              height: 38,
                             ),
                           ),
-                        ),
+                          const Spacer(),
+                          FilledButton.icon(
+                            onPressed: () => _openAdmin(context),
+                            icon: const Icon(
+                              Icons.admin_panel_settings,
+                              size: 18,
+                            ),
+                            label: const Text('Admin Sign in'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF1B9A85),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
 
-                      const SizedBox(height: 35),
-
-                      // App logo
-                      Center(
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          height: 90,
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 48),
 
                       Text(
                         tr('SIGN IN TO A PORTAL'),

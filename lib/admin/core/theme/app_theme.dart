@@ -1,20 +1,38 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../constants/app_colors.dart';
 
 class AppTheme {
   AppTheme._();
 
-  static TextTheme _buildTextTheme(Brightness brightness, {bool isTamil = false}) {
-    final baseColor = brightness == Brightness.light ? AppColors.inkLight : AppColors.inkDark;
-    final headingColor = brightness == Brightness.light ? AppColors.headingLight : AppColors.headingDark;
+  static TextTheme _buildTextTheme(
+    Brightness brightness, {
+    bool isTamil = false,
+  }) {
+    final baseColor = brightness == Brightness.light
+        ? AppColors.inkLight
+        : AppColors.inkDark;
+    final headingColor = brightness == Brightness.light
+        ? AppColors.headingLight
+        : AppColors.headingDark;
 
-    TextTheme theme;
-    if (isTamil) {
-      theme = GoogleFonts.notoSansTamilTextTheme();
-    } else {
-      theme = GoogleFonts.interTextTheme();
-    }
+    final fontFamily = isTamil ? 'Noto Sans Tamil' : 'Inter';
+    final theme = TextTheme(
+      displayLarge: TextStyle(fontFamily: fontFamily),
+      displayMedium: TextStyle(fontFamily: fontFamily),
+      headlineLarge: TextStyle(fontFamily: fontFamily),
+      headlineMedium: TextStyle(fontFamily: fontFamily),
+      headlineSmall: TextStyle(fontFamily: fontFamily),
+      titleLarge: TextStyle(fontFamily: fontFamily),
+      titleMedium: TextStyle(fontFamily: fontFamily),
+      titleSmall: TextStyle(fontFamily: fontFamily),
+      bodyLarge: TextStyle(fontFamily: fontFamily),
+      bodyMedium: TextStyle(fontFamily: fontFamily),
+      bodySmall: TextStyle(fontFamily: fontFamily),
+      labelLarge: TextStyle(fontFamily: fontFamily),
+      labelMedium: TextStyle(fontFamily: fontFamily),
+      labelSmall: TextStyle(fontFamily: fontFamily),
+    );
 
     return theme.copyWith(
       displayLarge: theme.displayLarge?.copyWith(
@@ -43,16 +61,12 @@ class AppTheme {
         color: headingColor,
         fontWeight: FontWeight.w600,
       ),
-      bodyLarge: theme.bodyLarge?.copyWith(
-        color: baseColor,
-        height: 1.5,
-      ),
-      bodyMedium: theme.bodyMedium?.copyWith(
-        color: baseColor,
-        height: 1.4,
-      ),
+      bodyLarge: theme.bodyLarge?.copyWith(color: baseColor, height: 1.5),
+      bodyMedium: theme.bodyMedium?.copyWith(color: baseColor, height: 1.4),
       bodySmall: theme.bodySmall?.copyWith(
-        color: brightness == Brightness.light ? AppColors.mutedLight : AppColors.mutedDark,
+        color: brightness == Brightness.light
+            ? AppColors.mutedLight
+            : AppColors.mutedDark,
       ),
     );
   }
@@ -99,7 +113,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.cardLight,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.lineLight),
@@ -127,10 +144,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -141,10 +155,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -199,7 +210,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceDark,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.lineDark),
@@ -226,10 +240,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -240,10 +251,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(

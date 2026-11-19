@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -218,7 +218,7 @@ class _HomeShellState extends State<HomeShell> {
               ? Image.asset(
                   'assets/images/logo.png',
                   height: 28,
-                  errorBuilder: (_, __, ___) => Text(widget.group.name),
+                  errorBuilder: (_, _, _) => Text(widget.group.name),
                 )
               : null,
           actions: [
@@ -403,7 +403,7 @@ class _HomeShellState extends State<HomeShell> {
           Image.asset(
             'assets/images/logo.png',
             height: 32,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'AIRO TECHHUB',
               style: TextStyle(
                 fontSize: 18,

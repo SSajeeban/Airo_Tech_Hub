@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'mock_data.dart';
 
@@ -168,7 +168,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
           child: ListView.separated(
             shrinkWrap: true,
             itemCount: events.length,
-            separatorBuilder: (_, __) => const Divider(),
+            separatorBuilder: (_, _) => const Divider(),
             itemBuilder: (context, index) {
               final event = events[index];
 
