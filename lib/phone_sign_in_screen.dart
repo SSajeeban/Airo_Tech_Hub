@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'application_screen.dart';
@@ -23,13 +24,22 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
   }
 
   void _sendCode() {
-    if (_phoneController.text.trim().isEmpty) {
+    final phone = _phoneController.text.trim();
+
+    if (phone.isEmpty) {
       _showMessage('Enter your mobile number');
       return;
     }
+
+    if (phone.length != 10) {
+      _showMessage('Enter a valid 10-digit mobile number');
+      return;
+    }
+
     setState(() {
       _codeSent = true;
     });
+
     _showMessage('If this number is registered, a code was sent.');
   }
 
@@ -98,7 +108,11 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                         const SizedBox(height: 8),
                         TextField(
                           controller: _phoneController,
-                          keyboardType: TextInputType.phone,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(10),
+                          ],
                           decoration: InputDecoration(
                             hintText: '07XXXXXXXX',
                             contentPadding: const EdgeInsets.symmetric(
