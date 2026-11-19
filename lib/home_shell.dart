@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1058,7 +1059,15 @@ class _HomeShellState extends State<HomeShell> {
                     );
                     if (file != null) {
                       final bytes = await file.readAsBytes();
-                      onImageSelected(base64Encode(bytes));
+                      if (!mounted) return;
+                      final cropped = await Navigator.push<Uint8List>(
+                        this.context,
+                        MaterialPageRoute(
+                          builder: (_) => _CropScreen(imageBytes: bytes),
+                        ),
+                      );
+                      if (cropped != null)
+                        onImageSelected(base64Encode(cropped));
                     }
                   } catch (e) {
                     if (mounted) {
@@ -1427,6 +1436,61 @@ class _UsageRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CropScreen extends StatefulWidget {
+  final Uint8List imageBytes;
+  const _CropScreen({required this.imageBytes});
+
+  @override
+  State<_CropScreen> createState() => _CropScreenState();
+}
+
+class _CropScreenState extends State<_CropScreen> {
+  final CropController _controller = CropController();
+  bool _cropping = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('Crop photo'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _cropping
+                ? null
+                : () {
+                    setState(() => _cropping = true);
+                    _controller.cropCircle();
+                  },
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+      body: Crop(
+        image: widget.imageBytes,
+        controller: _controller,
+        aspectRatio: 1,
+        withCircleUi: true,
+        interactive: true,
+        onCropped: (result) {
+          switch (result) {
+            case CropSuccess(:final croppedImage):
+              Navigator.pop(context, croppedImage);
+            case CropFailure(:final cause):
+              setState(() => _cropping = false);
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text('Crop failed: $cause')));
+          }
+        },
       ),
     );
   }
