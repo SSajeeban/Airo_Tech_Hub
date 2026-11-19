@@ -54,9 +54,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   void _joinGroup() {
     final code = _codeController.text.trim();
+
     final message = code.length == 8
-        ? 'Code: $code (இதை அடுத்த படிகளில் இணைப்போம்)'
-        : 'Class code 8 எழுத்துகள் இருக்க வேண்டும்';
+        ? '${tr('Code')}: $code'
+        : tr('Class code must be 8 characters');
+
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
   }
@@ -77,6 +79,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 24),
+
                   const Text(
                     'AIRO',
                     textAlign: TextAlign.center,
@@ -86,28 +89,35 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       color: navy,
                     ),
                   ),
+
                   const Text(
                     'TECHHUB',
                     textAlign: TextAlign.center,
                     style: TextStyle(letterSpacing: 6, color: navy),
                   ),
+
                   const SizedBox(height: 32),
-                  const Text(
-                    'Join your teacher\'s class',
+
+                  Text(
+                    tr('Join your teacher\'s class'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
                       color: navy,
                     ),
                   ),
+
                   const SizedBox(height: 8),
-                  const Text(
-                    'Enter the code from your group admin.',
+
+                  Text(
+                    tr('Enter the code from your group admin.'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54),
+                    style: const TextStyle(color: Colors.black54),
                   ),
+
                   const SizedBox(height: 24),
+
                   Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(
@@ -123,39 +133,45 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             textCapitalization: TextCapitalization.characters,
                             maxLength: 8,
                             decoration: InputDecoration(
-                              labelText: 'Class code',
+                              labelText: tr('Class code'),
                               hintText: 'ABCD2345',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                           ),
+
                           const SizedBox(height: 8),
+
                           FilledButton(
                             onPressed: _joinGroup,
                             style: FilledButton.styleFrom(
                               backgroundColor: teal,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
-                            child: const Text('Join your group'),
+                            child: Text(tr('Join your group')),
                           ),
                         ],
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 20),
-                  const Text(
-                    'Already in a class?',
+
+                  Text(
+                    tr('Already in a class?'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54),
+                    style: const TextStyle(color: Colors.black54),
                   ),
+
                   const SizedBox(height: 8),
+
                   OutlinedButton(
                     onPressed: () {},
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Sign in with your phone'),
+                    child: Text(tr('Sign in with your phone')),
                   ),
                 ],
               ),

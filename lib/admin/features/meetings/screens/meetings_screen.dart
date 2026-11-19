@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
+import '../../../models/user_session.dart';
+import '../../../../mock_meeting_store.dart';
 
 class MeetingsScreen extends ConsumerStatefulWidget {
   const MeetingsScreen({super.key});
@@ -108,7 +111,21 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
       meetingUrl: 'https://meet.jit.si/$id',
       isLive: _isInstantMeeting,
     );
+    String? adminGroupId;
 
+    for (final group in groups) {
+      if (group.name == groupName) {
+        adminGroupId = group.id;
+        break;
+      }
+    }
+
+    MockMeetingStore.instance.publishMeeting(
+      meeting,
+      recipientGroupIds: MockMeetingStore.memberGroupIdsForAdminGroup(
+        adminGroupId,
+      ),
+    );
     ref.read(meetingsProvider.notifier).update((state) => [meeting, ...state]);
     _titleController.clear();
     setState(() {
@@ -137,6 +154,13 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = ref.watch(sessionProvider)?.user.role;
+
+    if (userRole != UserRole.subscriber) {
+      return const Scaffold(
+        body: Center(child: Text('Only admins can access meetings.')),
+      );
+    }
     final meetings = ref.watch(meetingsProvider);
     final groups = ref.watch(groupsProvider);
     final isTamil = ref.watch(languageProvider) == 'ta';
@@ -241,10 +265,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
               child: InputDecorator(
                 decoration: _inputDecoration(
                   isDark,
-                  suffixIcon: const Icon(
-                    AppIcons.calendar,
-                    size: 18,
-                  ),
+                  suffixIcon: const Icon(AppIcons.calendar, size: 18),
                 ),
                 child: Text(
                   _startsAt == null
@@ -372,7 +393,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                     child: _headerText(isTamil ? 'நிலை' : 'Status', isDark),
                   ),
                   SizedBox(
-                    width: 120,
+                    width: 124,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: _headerText(
@@ -470,7 +491,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
           ),
           Expanded(flex: 1, child: _statusChip(meeting, isDark, isTamil)),
           SizedBox(
-            width: 120,
+            width: 124,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
