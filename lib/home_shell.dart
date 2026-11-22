@@ -234,7 +234,9 @@ class _HomeShellState extends State<HomeShell> {
           ),
           title: MediaQuery.sizeOf(context).width >= 420
               ? Image.asset(
-                  'assets/images/logo.png',
+                  _isDarkMode
+                      ? 'assets/images/logo_dark.png'
+                      : 'assets/images/logo.png',
                   height: 28,
                   errorBuilder: (_, _, _) => Text(widget.group.name),
                 )
@@ -426,7 +428,9 @@ class _HomeShellState extends State<HomeShell> {
           ),
           const SizedBox(width: 8),
           Image.asset(
-            'assets/images/logo.png',
+            _isDarkMode
+                ? 'assets/images/logo_dark.png'
+                : 'assets/images/logo.png',
             height: 36,
             errorBuilder: (_, _, _) => const Text(
               'AIRO TECHHUB',
