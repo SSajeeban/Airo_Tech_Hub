@@ -121,6 +121,7 @@ class _HomeShellState extends State<HomeShell> {
         .toList();
     final isDark = _isDarkMode;
     final theme = ThemeData(
+      brightness: isDark ? Brightness.dark : Brightness.light,
       colorScheme:
           ColorScheme.fromSeed(
             seedColor: teal,
@@ -131,6 +132,13 @@ class _HomeShellState extends State<HomeShell> {
                 ? const Color(0xFF374151)
                 : const Color(0xFFF1F5F9),
             outline: isDark ? const Color(0xFF4B5563) : const Color(0xFFE2E8F0),
+            outlineVariant: isDark
+                ? const Color(0xFF374151)
+                : const Color(0xFFE2E8F0),
+            onSurface: isDark ? Colors.white : const Color(0xFF1F2937),
+            onSurfaceVariant: isDark
+                ? const Color(0xFF9CA3AF)
+                : const Color(0xFF6B7280),
           ),
       scaffoldBackgroundColor: isDark
           ? const Color(0xFF111827)
@@ -143,7 +151,12 @@ class _HomeShellState extends State<HomeShell> {
     );
 
     final pages = <Widget>[
-      _HomeTab(member: _currentMember, group: widget.group, isTamil: _isTamil),
+      _HomeTab(
+        member: _currentMember,
+        group: widget.group,
+        isTamil: _isTamil,
+        isDark: isDark,
+      ),
       ChatTab(memberName: _memberName),
       NoticesTab(
         notices: MockDb.notices
@@ -220,24 +233,10 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ),
           title: MediaQuery.sizeOf(context).width >= 420
-              ? Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 3,
-                  ),
-                  decoration: _isDarkMode
-                      ? BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.white, width: 1),
-                        )
-                      : null,
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    height: 28,
-                    errorBuilder: (_, _, _) => Text(widget.group.name),
-                  ),
+              ? Image.asset(
+                  'assets/images/logo.png',
+                  height: 28,
+                  errorBuilder: (_, _, _) => Text(widget.group.name),
                 )
               : null,
           actions: [
@@ -426,27 +425,16 @@ class _HomeShellState extends State<HomeShell> {
                 setState(() => _sidebarExpanded = !_sidebarExpanded),
           ),
           const SizedBox(width: 8),
-          Container(
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-            decoration: _isDarkMode
-                ? BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.white, width: 1),
-                  )
-                : null,
-            child: Image.asset(
-              'assets/images/logo.png',
-              height: 32,
-              errorBuilder: (_, _, _) => const Text(
-                'AIRO TECHHUB',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1B9A85),
-                  letterSpacing: 1.2,
-                ),
+          Image.asset(
+            'assets/images/logo.png',
+            height: 36,
+            errorBuilder: (_, _, _) => const Text(
+              'AIRO TECHHUB',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1B9A85),
+                letterSpacing: 1.2,
               ),
             ),
           ),
@@ -538,7 +526,11 @@ class _HomeShellState extends State<HomeShell> {
         size: 18,
         color: iconColor,
       ),
-      onPressed: () => setState(() => _isDarkMode = !_isDarkMode),
+      onPressed: () {
+        setState(() => _isDarkMode = !_isDarkMode);
+        AppSettings.instance.themeMode =
+            _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+      },
     );
   }
 
@@ -654,18 +646,24 @@ class _HomeShellState extends State<HomeShell> {
           });
         },
         borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.grey.shade300 : Colors.transparent,
+            color: selected ? teal : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
             label,
             style: TextStyle(
               fontSize: 11,
-              fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-              color: Colors.black87,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected
+                  ? Colors.white
+                  : (_isDarkMode
+                      ? const Color(0xFF9CA3AF)
+                      : const Color(0xFF475569)),
             ),
           ),
         ),
@@ -674,9 +672,11 @@ class _HomeShellState extends State<HomeShell> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: _isDarkMode ? const Color(0xFF111827) : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: _isDarkMode ? const Color(0xFF374151) : Colors.grey.shade300,
+        ),
       ),
       padding: const EdgeInsets.all(2),
       child: Row(
@@ -1279,11 +1279,13 @@ class _HomeTab extends StatelessWidget {
   final Member member;
   final Group group;
   final bool isTamil;
+  final bool isDark;
 
   const _HomeTab({
     required this.member,
     required this.group,
     required this.isTamil,
+    required this.isDark,
   });
 
   String _tr(String value) => AppSettings.instance.tr(value);
@@ -1326,15 +1328,25 @@ class _HomeTab extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(color: Colors.grey.shade200),
+                    side: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF374151)
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: ListTile(
                     dense: true,
                     title: Text(
                       _tr(n.title),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colors.onSurface,
+                      ),
                     ),
-                    subtitle: Text(_tr(n.body)),
+                    subtitle: Text(
+                      _tr(n.body),
+                      style: TextStyle(color: colors.onSurfaceVariant),
+                    ),
                   ),
                 ),
             ],
@@ -1342,7 +1354,11 @@ class _HomeTab extends StatelessWidget {
         const SizedBox(height: 20),
         Material(
           color: Colors.transparent,
-          child: TimetableBoard(group: group, member: member),
+          child: TimetableBoard(
+            group: group,
+            member: member,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 20),
         Container(
