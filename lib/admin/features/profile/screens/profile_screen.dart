@@ -2,11 +2,14 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image/image.dart' as img;
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/app_providers.dart';
+import '../widgets/profile_photo_editor_dialog.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -24,14 +27,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _contactController = TextEditingController();
   final _emailController = TextEditingController();
   final _organizationController = TextEditingController();
-  String _organizationLogoBase64 = '';
+  String _profilePhotoBase64 = '';
 
   @override
   void initState() {
     super.initState();
     final storage = ref.read(storageServiceProvider);
     _organizationController.text = storage.getOrganizationName();
-    _organizationLogoBase64 = storage.getOrganizationLogo();
+    _profilePhotoBase64 = storage.getProfilePhoto();
 
     final session = ref.read(sessionProvider);
     if (session != null) {
@@ -67,7 +70,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final base64 = base64Encode(bytes);
     await ref.read(storageServiceProvider).setOrganizationLogo(base64);
     if (!mounted) return;
-    setState(() => _organizationLogoBase64 = base64);
 
     try {
       await ref
@@ -81,6 +83,158 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Logo saved locally: $error')));
+    }
+  }
+
+  Future<void> _pickProfilePhoto() async {
+    final result = await FilePicker.pickFile(type: FileType.image);
+    if (result == null) return;
+
+    final bytes = await result.readAsBytes();
+    if (!mounted) return;
+    if (bytes.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(languageProvider) == 'ta'
+                ? 'தேர்ந்தெடுத்த படத்தைப் படிக்க முடியவில்லை.'
+                : 'Could not read the selected image.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await _editProfilePhoto(bytes);
+  }
+
+  Future<void> _editProfilePhoto(Uint8List bytes) async {
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(languageProvider) == 'ta'
+                ? 'இந்தப் படத்தைத் திறக்க முடியவில்லை.'
+                : 'Could not open this image.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final orientedImage = img.bakeOrientation(decoded);
+    final previewScale =
+        orientedImage.width > 1024 || orientedImage.height > 1024
+        ? 1024 /
+              (orientedImage.width > orientedImage.height
+                  ? orientedImage.width
+                  : orientedImage.height)
+        : 1.0;
+    final previewImage = previewScale == 1
+        ? orientedImage
+        : img.copyResize(
+            orientedImage,
+            width: (orientedImage.width * previewScale).round(),
+            height: (orientedImage.height * previewScale).round(),
+          );
+    final previewBytes = Uint8List.fromList(img.encodeJpg(previewImage));
+    final croppedBytes = await showDialog<Uint8List>(
+      context: context,
+      builder: (context) => ProfilePhotoEditorDialog(
+        image: orientedImage,
+        previewBytes: previewBytes,
+        isTamil: ref.read(languageProvider) == 'ta',
+      ),
+    );
+    if (croppedBytes == null || !mounted) return;
+
+    final encodedPhoto = base64Encode(croppedBytes);
+    await ref.read(storageServiceProvider).setProfilePhoto(encodedPhoto);
+    if (!mounted) return;
+    setState(() => _profilePhotoBase64 = encodedPhoto);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ref.read(languageProvider) == 'ta'
+              ? 'சுயவிவரப் படம் புதுப்பிக்கப்பட்டது.'
+              : 'Profile photo updated.',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showProfilePhotoOptions() async {
+    final isTamil = ref.read(languageProvider) == 'ta';
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_profilePhotoBase64.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.visibility_outlined),
+                title: Text(isTamil ? 'படத்தைப் பார்க்க' : 'View photo'),
+                onTap: () => Navigator.pop(context, 'view'),
+              ),
+            if (_profilePhotoBase64.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.crop_outlined),
+                title: Text(isTamil ? 'படத்தைத் திருத்து' : 'Edit photo'),
+                onTap: () => Navigator.pop(context, 'edit'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(
+                _profilePhotoBase64.isEmpty
+                    ? (isTamil ? 'படத்தைச் சேர்' : 'Add photo')
+                    : (isTamil ? 'படத்தை மாற்று' : 'Change photo'),
+              ),
+              onTap: () => Navigator.pop(context, 'change'),
+            ),
+            if (_profilePhotoBase64.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: Text(
+                  isTamil ? 'படத்தை நீக்கு' : 'Remove photo',
+                  style: const TextStyle(color: Colors.red),
+                ),
+                onTap: () => Navigator.pop(context, 'remove'),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (action == 'view') {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: ClipOval(
+              child: Image.memory(
+                base64Decode(_profilePhotoBase64),
+                fit: BoxFit.cover,
+                width: 280,
+                height: 280,
+              ),
+            ),
+          ),
+        ),
+      );
+    } else if (action == 'change') {
+      await _pickProfilePhoto();
+    } else if (action == 'edit') {
+      await _editProfilePhoto(base64Decode(_profilePhotoBase64));
+    } else if (action == 'remove') {
+      await ref.read(storageServiceProvider).setProfilePhoto('');
+      if (!mounted) return;
+      setState(() => _profilePhotoBase64 = '');
     }
   }
 
@@ -248,24 +402,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Center(
               child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 46,
-                    backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-                    backgroundImage: _organizationLogoBase64.isNotEmpty
-                        ? MemoryImage(base64Decode(_organizationLogoBase64))
-                        : null,
-                    child: _organizationLogoBase64.isEmpty
-                        ? Text(
-                            session?.user.displayName.isNotEmpty == true
-                                ? session!.user.displayName[0].toUpperCase()
-                                : 'A',
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.accent,
-                            ),
-                          )
-                        : null,
+                  InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _showProfilePhotoOptions,
+                    child: CircleAvatar(
+                      radius: 46,
+                      backgroundColor: AppColors.accent.withValues(alpha: 0.15),
+                      backgroundImage: _profilePhotoBase64.isNotEmpty
+                          ? MemoryImage(base64Decode(_profilePhotoBase64))
+                          : null,
+                      child: _profilePhotoBase64.isEmpty
+                          ? Text(
+                              session?.user.displayName.isNotEmpty == true
+                                  ? session!.user.displayName[0].toUpperCase()
+                                  : 'A',
+                              style: const TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.accent,
+                              ),
+                            )
+                          : null,
+                    ),
                   ),
 
                   Positioned(
@@ -281,7 +439,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           size: 16,
                           color: Colors.white,
                         ),
-                        onPressed: _pickOrganizationLogo,
+                        onPressed: _showProfilePhotoOptions,
                       ),
                     ),
                   ),

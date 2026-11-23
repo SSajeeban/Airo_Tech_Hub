@@ -64,8 +64,14 @@ class AppDateHelper {
 class TimetableBoard extends StatefulWidget {
   final Group group;
   final Member member;
+  final bool? isDark;
 
-  const TimetableBoard({super.key, required this.group, required this.member});
+  const TimetableBoard({
+    super.key,
+    required this.group,
+    required this.member,
+    this.isDark,
+  });
 
   @override
   State<TimetableBoard> createState() => _TimetableBoardState();
@@ -75,6 +81,11 @@ class _TimetableBoardState extends State<TimetableBoard> {
   String _tr(String value) => AppSettings.instance.tr(value);
   late DateTime _selectedDate;
   String _viewMode = 'Weekly'; // 'Weekly', 'Monthly', 'Yearly'
+
+  bool get _isDark =>
+      widget.isDark ??
+      (Theme.of(context).brightness == Brightness.dark ||
+          AppSettings.instance.themeMode == ThemeMode.dark);
 
   @override
   void initState() {
@@ -200,9 +211,12 @@ class _TimetableBoardState extends State<TimetableBoard> {
 
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFFE3F4F0),
-                  child: Icon(Icons.event, color: Color(0xFF1B9A85)),
+                leading: CircleAvatar(
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF1B9A85).withValues(alpha: 0.2)
+                          : const Color(0xFFE3F4F0),
+                  child: const Icon(Icons.event, color: Color(0xFF1B9A85)),
                 ),
                 title: Text(
                   event.title,
@@ -265,8 +279,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
   }
 
   Widget _buildCalendarCard() {
+    final dark = _isDark;
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 450),
+      duration: const Duration(milliseconds: 300),
       switchInCurve: Curves.easeInOutCubic,
       switchOutCurve: Curves.easeInOutCubic,
       transitionBuilder: (child, animation) {
@@ -286,7 +301,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
         );
       },
       child: _buildCalendarCardContent(
-        key: ValueKey(AppSettings.instance.language),
+        key: ValueKey('${AppSettings.instance.language}_$dark'),
       ),
     );
   }
@@ -294,10 +309,19 @@ class _TimetableBoardState extends State<TimetableBoard> {
   Widget _buildCalendarCardContent({required Key key}) {
     const navy = Color(0xFF1F2A5A);
     const teal = Color(0xFF1B9A85);
-    final colors = Theme.of(context).colorScheme;
-    final selectedColor = Theme.of(context).brightness == Brightness.dark
-        ? teal
-        : navy;
+    final isDark = _isDark;
+
+    // Palette explicitly tuned for dark/light theme to match home page background
+    final cardBg = isDark ? const Color(0xFF1F2937) : Colors.white;
+    final cardBorder =
+        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? Colors.white : const Color(0xFF1F2937);
+    final textSecondary =
+        isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
+    final dayBoxBg = isDark ? const Color(0xFF111827) : Colors.white;
+    final dayBoxBorder =
+        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
+    final selectedColor = isDark ? teal : navy;
 
     final startOfWeek = _getStartOfWeek(_selectedDate);
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
@@ -313,12 +337,12 @@ class _TimetableBoardState extends State<TimetableBoard> {
         MediaQuery.of(context).size.width < 400 ? 12 : 20,
       ),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: cardBg,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.outlineVariant),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -327,18 +351,17 @@ class _TimetableBoardState extends State<TimetableBoard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Date range (e.g. "8 Nov – 14 Nov 2026")
+          // Header: Date range (e.g. "22 Nov – 28 Nov 2026")
           Text(
             weekRangeText,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: colors.onSurface,
+              color: textPrimary,
             ),
           ),
           const SizedBox(height: 16),
 
-          // View switches + Nav buttons
           // View switches + Nav buttons
           LayoutBuilder(
             builder: (context, constraints) {
@@ -351,20 +374,23 @@ class _TimetableBoardState extends State<TimetableBoard> {
                   _buildViewButton(
                     _tr('Weekly'),
                     teal,
-                    colors.onSurface,
-                    colors.outlineVariant,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
                   ),
                   _buildViewButton(
                     _tr('Monthly'),
                     teal,
-                    colors.onSurface,
-                    colors.outlineVariant,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
                   ),
                   _buildViewButton(
                     _tr('Yearly'),
                     teal,
-                    colors.onSurface,
-                    colors.outlineVariant,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
                   ),
                 ],
               );
@@ -375,8 +401,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
                   _buildNavIconButton(
                     Icons.chevron_left,
                     _onPrev,
-                    colors.onSurface,
-                    colors.outlineVariant,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
                   ),
                   const SizedBox(width: 6),
                   OutlinedButton(
@@ -387,7 +414,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
                         vertical: 8,
                       ),
                       minimumSize: Size.zero,
-                      side: BorderSide(color: colors.outlineVariant),
+                      backgroundColor:
+                          isDark ? const Color(0xFF111827) : Colors.transparent,
+                      side: BorderSide(color: cardBorder),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -395,7 +424,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                     child: Text(
                       _tr('Today'),
                       style: TextStyle(
-                        color: colors.onSurface,
+                        color: textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -405,8 +434,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
                   _buildNavIconButton(
                     Icons.chevron_right,
                     _onNext,
-                    colors.onSurface,
-                    colors.outlineVariant,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
                   ),
                 ],
               );
@@ -438,23 +468,25 @@ class _TimetableBoardState extends State<TimetableBoard> {
             _buildWeeklyDaysRow(
               startOfWeek,
               selectedColor,
-              colors.onSurface,
-              colors.onSurfaceVariant,
-              colors.surface,
-              colors.outlineVariant,
+              textPrimary,
+              textSecondary,
+              dayBoxBg,
+              dayBoxBorder,
             )
           else if (_viewMode == 'Monthly')
             _buildMonthlyView(
               selectedColor,
-              colors.onSurface,
-              colors.onSurfaceVariant,
-              colors.outlineVariant,
+              textPrimary,
+              textSecondary,
+              dayBoxBorder,
+              dayBoxBg,
             )
           else
             _buildYearlyView(
               selectedColor,
-              colors.onSurface,
-              colors.surfaceContainerHighest,
+              textPrimary,
+              dayBoxBg,
+              dayBoxBorder,
             ),
         ],
       ),
@@ -465,8 +497,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
     String label,
     Color teal,
     Color textColor,
-    Color borderColor,
-  ) {
+    Color borderColor, [
+    Color? unselectedBg,
+  ]) {
     final englishLabel = label == _tr('Weekly')
         ? 'Weekly'
         : label == _tr('Monthly')
@@ -481,7 +514,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
         curve: Curves.easeInOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? teal : Colors.transparent,
+          color: isSelected ? teal : (unselectedBg ?? Colors.transparent),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: isSelected ? teal : borderColor, width: 1),
         ),
@@ -501,8 +534,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
     IconData icon,
     VoidCallback onPressed,
     Color iconColor,
-    Color borderColor,
-  ) {
+    Color borderColor, [
+    Color? bgColor,
+  ]) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -511,6 +545,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
         child: Container(
           padding: const EdgeInsets.all(7),
           decoration: BoxDecoration(
+            color: bgColor ?? Colors.transparent,
             border: Border.all(color: borderColor),
             borderRadius: BorderRadius.circular(8),
           ),
@@ -641,6 +676,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
     Color textColor,
     Color mutedColor,
     Color outlineColor,
+    Color dayBgColor,
   ) {
     final firstDay = DateTime(_selectedDate.year, _selectedDate.month, 1);
     final daysInMonth = DateTime(
@@ -701,7 +737,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                 duration: const Duration(milliseconds: 260),
                 curve: Curves.easeInOutCubic,
                 decoration: BoxDecoration(
-                  color: isSelected ? selectedColor : Colors.transparent,
+                  color: isSelected ? selectedColor : dayBgColor,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected ? selectedColor : outlineColor,
@@ -754,6 +790,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
     Color selectedColor,
     Color textColor,
     Color surfaceColor,
+    Color outlineColor,
   ) {
     return GridView.builder(
       shrinkWrap: true,
@@ -784,9 +821,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
               color: isSelectedMonth ? selectedColor : surfaceColor,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isSelectedMonth
-                    ? selectedColor
-                    : Theme.of(context).colorScheme.outlineVariant,
+                color: isSelectedMonth ? selectedColor : outlineColor,
               ),
             ),
             child: Column(
@@ -823,19 +858,27 @@ class _TimetableBoardState extends State<TimetableBoard> {
 
   Widget _buildEventCard() {
     const teal = Color(0xFF1B9A85);
-    final colors = Theme.of(context).colorScheme;
+    final isDark = _isDark;
+    final cardBg = isDark ? const Color(0xFF1F2937) : Colors.white;
+    final cardBorder =
+        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
+    final itemBg =
+        isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFC);
+    final textPrimary = isDark ? Colors.white : const Color(0xFF1F2937);
+    final textSecondary =
+        isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
     final events = _eventsForDate(_selectedDate);
 
     return Container(
       padding: const EdgeInsets.all(16),
       constraints: const BoxConstraints(minHeight: 150),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: cardBg,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.outlineVariant),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -849,7 +892,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: colors.onSurface,
+              color: textPrimary,
             ),
           ),
           const SizedBox(height: 5),
@@ -865,7 +908,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
           if (events.isEmpty)
             Text(
               _tr('No events scheduled for this date.'),
-              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(color: textSecondary, fontSize: 13),
             )
           else
             ...events.map(
@@ -873,9 +916,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colors.surfaceContainerHighest,
+                  color: itemBg,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.outlineVariant),
+                  border: Border.all(color: cardBorder),
                 ),
                 child: Row(
                   children: [
@@ -889,7 +932,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                             event.title,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              color: colors.onSurface,
+                              color: textPrimary,
                               fontSize: 13,
                             ),
                           ),
@@ -897,7 +940,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                           Text(
                             '${event.startTime} - ${event.endTime}',
                             style: TextStyle(
-                              color: colors.onSurfaceVariant,
+                              color: textSecondary,
                               fontSize: 11,
                             ),
                           ),
@@ -905,7 +948,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                           Text(
                             event.description,
                             style: TextStyle(
-                              color: colors.onSurfaceVariant,
+                              color: textSecondary,
                               fontSize: 12,
                             ),
                           ),

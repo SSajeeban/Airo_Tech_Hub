@@ -11,6 +11,7 @@ class StorageService {
   static const String _keyTheme = 'airotech_theme';
   static const String _keyOrganizationName = 'airotech_organization_name';
   static const String _keyOrganizationLogo = 'airotech_organization_logo';
+  static const String _keyProfilePhoto = 'airotech_profile_photo';
   static const String _keyChatStatus = 'airotech_chat_status';
 
   final SharedPreferences _prefs;
@@ -62,6 +63,10 @@ class StorageService {
   String getOrganizationLogo() => _prefs.getString(_keyOrganizationLogo) ?? '';
   Future<void> setOrganizationLogo(String base64) =>
       _prefs.setString(_keyOrganizationLogo, base64);
+
+  String getProfilePhoto() => _prefs.getString(_keyProfilePhoto) ?? '';
+  Future<void> setProfilePhoto(String base64) =>
+      _prefs.setString(_keyProfilePhoto, base64);
 
   String getChatStatus() => _prefs.getString(_keyChatStatus) ?? 'available';
   Future<void> setChatStatus(String status) =>
