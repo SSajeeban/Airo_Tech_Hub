@@ -9,6 +9,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart';
+import 'app_lock.dart';
 
 import 'admin/core/constants/app_colors.dart';
 import 'admin/core/constants/app_icons.dart';
@@ -49,6 +51,12 @@ class _HomeShellState extends State<HomeShell> {
   late final TextEditingController _phoneController;
   Timer? _timer;
   String _currentTime = '';
+  final LocalAuthentication _auth = LocalAuthentication();
+  bool _fingerprintEnabled = false;
+  bool _securityEnabled = false;
+  bool _locked = false;
+  LockType _lockType = LockType.none;
+  AppLockStore get _lockStore => AppLockStore('${widget.member.id}');
 
   @override
   void initState() {
@@ -59,6 +67,7 @@ class _HomeShellState extends State<HomeShell> {
     _phoneController = TextEditingController(text: _memberPhone);
     MockMeetingStore.instance.addListener(_onMeetingsChanged);
     unawaited(_loadSavedProfile());
+    unawaited(_startLockCheck());
     _updateClock();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateClock());
   }
@@ -96,6 +105,97 @@ class _HomeShellState extends State<HomeShell> {
       }
     }
   }
+  String get _fingerprintKey => 'member_${widget.member.id}_fingerprint';
+  String get _securityKey => 'member_${widget.member.id}_security';
+
+  Future<void> _loadFingerprintSetting() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final enabled = preferences.getBool(_fingerprintKey) ?? false;
+      if (!mounted) return;
+      final type = await _lockStore.loadType();
+      if (!mounted) return;
+      setState(() {
+        _fingerprintEnabled = enabled;
+        _lockType = type;
+        _securityEnabled = type != LockType.none;
+      });
+    } catch (_) {}
+  }
+
+
+  Future<bool> _authenticate(String reason, {bool biometricOnly = false}) async {
+    try {
+      final supported = await _auth.isDeviceSupported();
+      if (!supported) return false;
+      return await _auth.authenticate(
+        localizedReason: reason,
+        biometricOnly: biometricOnly,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _toggleFingerprint(bool value) async {
+    final ok = await _authenticate(value ? 'Turn on fingerprint lock' : 'Turn off fingerprint lock', biometricOnly: true);
+    if (!ok) return false;
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setBool(_fingerprintKey, value);
+    } catch (_) {
+      return false;
+    }
+    if (mounted) setState(() => _fingerprintEnabled = value);
+    return true;
+  }
+
+
+  Future<bool> _toggleSecurity(bool value) async {
+    final ok = await _authenticate(value ? 'Turn on app security' : 'Turn off app security');
+    if (!ok) return false;
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setBool(_securityKey, value);
+    } catch (_) {
+      return false;
+    }
+    if (mounted) setState(() => _securityEnabled = value);
+    return true;
+  }
+
+
+  Future<void> _startLockCheck() async {
+    await _loadFingerprintSetting();
+    if (!mounted) return;
+    if (_lockType == LockType.none) return;
+    setState(() => _locked = true);
+    if (_fingerprintEnabled) await _unlockWithFingerprint();
+  }
+
+  Future<void> _unlockWithFingerprint() async {
+    final ok = await _authenticate('Unlock Airo Tech Hub', biometricOnly: true);
+    if (!mounted) return;
+    if (ok) setState(() => _locked = false);
+  }
+
+  Future<void> _changeScreenLock() async {
+    final changed = await configureScreenLock(context, _lockStore);
+    if (!changed || !mounted) return;
+    final type = await _lockStore.loadType();
+    if (!mounted) return;
+    if (type == LockType.none && _fingerprintEnabled) {
+      final p = await SharedPreferences.getInstance();
+      await p.setBool(_fingerprintKey, false);
+    }
+    setState(() {
+      _lockType = type;
+      _securityEnabled = type != LockType.none;
+      if (type == LockType.none) _fingerprintEnabled = false;
+    });
+  }
+
+
 
   @override
   void dispose() {
@@ -187,6 +287,16 @@ class _HomeShellState extends State<HomeShell> {
       ),
       useMaterial3: true,
     );
+
+    if (_locked) {
+      return LockUnlockScreen(
+        type: _lockType,
+        store: _lockStore,
+        onUnlocked: () => setState(() => _locked = false),
+        onExit: () => Navigator.of(context).pop(),
+        onFingerprint: _fingerprintEnabled ? _unlockWithFingerprint : null,
+      );
+    }
 
     final pages = <Widget>[
       _HomeTab(
@@ -378,6 +488,20 @@ class _HomeShellState extends State<HomeShell> {
                   style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 onTap: _openPaymentReminder,
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.settings_outlined,
+                  color: AppColors.brandBlue,
+                ),
+                title: Text(
+                  _tr('Settings'),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showSettings();
+                },
               ),
               const Divider(),
               ListTile(
@@ -829,7 +953,7 @@ class _HomeShellState extends State<HomeShell> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(_tr('Personal details')),
-        content: Column(
+        content: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -868,19 +992,11 @@ class _HomeShellState extends State<HomeShell> {
               ),
             ),
           ],
-        ),
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(_tr('Close')),
-          ),
-          OutlinedButton.icon(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(Icons.switch_account_outlined, size: 16),
-            label: Text(_isTamil ? 'சுயவிவரம் மாற்று' : 'Switch profile'),
           ),
           FilledButton.icon(
             onPressed: () async {
@@ -889,6 +1005,65 @@ class _HomeShellState extends State<HomeShell> {
             },
             icon: const Icon(Icons.edit_outlined),
             label: Text(_tr('Edit profile')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSettings() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(_tr('Settings')),
+        content: SingleChildScrollView(
+          child: StatefulBuilder(
+            builder: (context, setLocal) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(_tr('Edit profile')),
+                  onTap: () async {
+                    Navigator.pop(dialogContext);
+                    await _editProfile();
+                  },
+                ),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.lock_outline),
+                  title: Text(_tr('Security')),
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_tr('Screen lock type')),
+                      subtitle: Text(lockTypeLabel(_lockType)),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        await _changeScreenLock();
+                        setLocal(() {});
+                      },
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_tr('Fingerprint')),
+                      value: _fingerprintEnabled,
+                      onChanged: !_securityEnabled ? null : (v) async {
+                        await _toggleFingerprint(v);
+                        setLocal(() {});
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(_tr('Close')),
           ),
         ],
       ),
