@@ -158,6 +158,11 @@ void main() {
       ),
     );
 
+    final calendarRect = tester.getRect(
+      find.byKey(ValueKey(AppSettings.instance.language)),
+    );
+    final nextArrowRect = tester.getRect(find.byIcon(Icons.chevron_right));
+    expect(nextArrowRect.center.dx, lessThan(calendarRect.center.dx));
     expect(tester.takeException(), isNull);
   });
 }

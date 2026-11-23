@@ -134,6 +134,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final notices = ref.watch(noticesProvider);
     final libraryItems = ref.watch(libraryItemsProvider);
     final isTamil = ref.watch(languageProvider) == 'ta';
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark =
+        themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final displayName = session?.user.displayName.trim().isNotEmpty == true
         ? session!.user.displayName.trim()
         : 'Educator';
@@ -174,6 +179,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           title: _periodTitle(isTamil),
           meetings: meetings,
           isTamil: isTamil,
+          isDark: isDark,
           onViewChanged: (view) => setState(() {
             _calendarView = view;
           }),
@@ -288,6 +294,7 @@ class _CalendarCard extends StatelessWidget {
     required this.title,
     required this.meetings,
     required this.isTamil,
+    required this.isDark,
     required this.onViewChanged,
     required this.onMovePeriod,
     required this.onSelectDate,
@@ -300,6 +307,7 @@ class _CalendarCard extends StatelessWidget {
   final String title;
   final List<MeetingModel> meetings;
   final bool isTamil;
+  final bool isDark;
   final ValueChanged<_CalendarView> onViewChanged;
   final ValueChanged<int> onMovePeriod;
   final ValueChanged<DateTime> onSelectDate;
@@ -309,11 +317,20 @@ class _CalendarCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const navy = Color(0xFF1F2A5A);
     const teal = Color(0xFF1B9A85);
-    final colors = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = Theme.of(context).colorScheme.copyWith(
+      brightness: isDark ? Brightness.dark : Brightness.light,
+      surface: isDark ? AppColors.cardDark : AppColors.cardLight,
+      surfaceContainerHighest: isDark
+          ? AppColors.surfaceDark
+          : AppColors.surfaceLight,
+      onSurface: isDark ? AppColors.inkDark : AppColors.inkLight,
+      onSurfaceVariant: isDark ? AppColors.mutedDark : AppColors.mutedLight,
+      outlineVariant: isDark ? AppColors.lineDark : AppColors.lineLight,
+    );
     final selectedColor = isDark ? teal : navy;
 
     return Container(
+      key: const ValueKey('dashboard-calendar-card'),
       padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 400 ? 12 : 20),
       decoration: BoxDecoration(
         color: colors.surface,
@@ -448,6 +465,7 @@ class _CalendarCard extends StatelessWidget {
               selectedDate: selectedDate,
               meetings: meetings,
               isTamil: isTamil,
+              colors: colors,
               onSelectDate: onSelectDate,
               selectedColor: selectedColor,
               tealColor: teal,
@@ -457,6 +475,7 @@ class _CalendarCard extends StatelessWidget {
               selectedDate: selectedDate,
               meetings: meetings,
               isTamil: isTamil,
+              colors: colors,
               onSelectDate: onSelectDate,
               selectedColor: selectedColor,
               tealColor: teal,
@@ -465,6 +484,7 @@ class _CalendarCard extends StatelessWidget {
               currentDate: currentDate,
               meetings: meetings,
               isTamil: isTamil,
+              colors: colors,
               selectedColor: selectedColor,
               tealColor: teal,
               onSelectMonth: (month) {
@@ -535,6 +555,7 @@ class _WeekView extends StatelessWidget {
     required this.selectedDate,
     required this.meetings,
     required this.isTamil,
+    required this.colors,
     required this.onSelectDate,
     required this.selectedColor,
     required this.tealColor,
@@ -544,6 +565,7 @@ class _WeekView extends StatelessWidget {
   final DateTime selectedDate;
   final List<MeetingModel> meetings;
   final bool isTamil;
+  final ColorScheme colors;
   final ValueChanged<DateTime> onSelectDate;
   final Color selectedColor;
   final Color tealColor;
@@ -556,7 +578,6 @@ class _WeekView extends StatelessWidget {
       currentDate.day - currentDate.weekday % 7,
     );
     final days = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
-    final colors = Theme.of(context).colorScheme;
 
     return Row(
       children: [
@@ -700,6 +721,7 @@ class _MonthView extends StatelessWidget {
     required this.selectedDate,
     required this.meetings,
     required this.isTamil,
+    required this.colors,
     required this.onSelectDate,
     required this.selectedColor,
     required this.tealColor,
@@ -709,6 +731,7 @@ class _MonthView extends StatelessWidget {
   final DateTime selectedDate;
   final List<MeetingModel> meetings;
   final bool isTamil;
+  final ColorScheme colors;
   final ValueChanged<DateTime> onSelectDate;
   final Color selectedColor;
   final Color tealColor;
@@ -733,7 +756,6 @@ class _MonthView extends StatelessWidget {
       0,
     ).day;
     final startWeekday = firstOfMonth.weekday % 7;
-    final colors = Theme.of(context).colorScheme;
 
     return Column(
       children: [
@@ -839,6 +861,7 @@ class _YearView extends StatelessWidget {
     required this.currentDate,
     required this.meetings,
     required this.isTamil,
+    required this.colors,
     required this.onSelectMonth,
     required this.selectedColor,
     required this.tealColor,
@@ -847,6 +870,7 @@ class _YearView extends StatelessWidget {
   final DateTime currentDate;
   final List<MeetingModel> meetings;
   final bool isTamil;
+  final ColorScheme colors;
   final ValueChanged<int> onSelectMonth;
   final Color selectedColor;
   final Color tealColor;
@@ -882,8 +906,6 @@ class _YearView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

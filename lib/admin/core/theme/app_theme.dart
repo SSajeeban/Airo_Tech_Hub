@@ -176,6 +176,10 @@ class AppTheme {
       brightness: Brightness.dark,
       primaryColor: AppColors.accent,
       scaffoldBackgroundColor: AppColors.bgDark,
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: AppColors.cardDark,
+        contentTextStyle: TextStyle(color: AppColors.inkDark),
+      ),
       colorScheme: const ColorScheme.dark(
         primary: AppColors.accent,
         primaryContainer: AppColors.accentHover,

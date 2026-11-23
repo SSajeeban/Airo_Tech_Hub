@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'mock_data.dart';
 import 'app_settings.dart';
@@ -331,7 +331,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
           Text(
             weekRangeText,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: colors.onSurface,
             ),
@@ -417,7 +417,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                   children: [
                     viewButtons,
                     const SizedBox(height: 10),
-                    Align(alignment: Alignment.center, child: navControls),
+                    Align(alignment: Alignment.centerLeft, child: navControls),
                   ],
                 );
               }

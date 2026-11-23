@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -111,6 +110,44 @@ class _HomeShellState extends State<HomeShell> {
     if (mounted) setState(() {});
   }
 
+  ThemeData _buildMemberTheme() {
+    const teal = Color(0xFF1B9A85);
+    final isDark = _isDarkMode;
+    final colorScheme =
+        ColorScheme.fromSeed(
+          seedColor: teal,
+          brightness: isDark ? Brightness.dark : Brightness.light,
+        ).copyWith(
+          surface: isDark ? const Color(0xFF1F2937) : const Color(0xFFFFFFFF),
+          surfaceContainerHighest: isDark
+              ? const Color(0xFF374151)
+              : const Color(0xFFF1F5F9),
+          outline: isDark ? const Color(0xFF4B5563) : const Color(0xFFE2E8F0),
+        );
+
+    return ThemeData(
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: isDark
+          ? const Color(0xFF111827)
+          : const Color(0xFFF8FAFB),
+      cardTheme: CardThemeData(
+        color: isDark ? const Color(0xFF1F2937) : Colors.white,
+        surfaceTintColor: Colors.transparent,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: isDark ? colorScheme.surface : null,
+        contentTextStyle: isDark
+            ? TextStyle(color: colorScheme.onSurface)
+            : null,
+      ),
+      useMaterial3: true,
+    );
+  }
+
+  Widget _memberThemedDialog(Widget dialog) {
+    return Theme(data: _buildMemberTheme(), child: dialog);
+  }
+
   @override
   Widget build(BuildContext context) {
     const navy = Color(0xFF1F2A5A);
@@ -119,28 +156,7 @@ class _HomeShellState extends State<HomeShell> {
     final notices = MockDb.notices
         .where((notice) => notice.groupId == widget.group.id)
         .toList();
-    final isDark = _isDarkMode;
-    final theme = ThemeData(
-      colorScheme:
-          ColorScheme.fromSeed(
-            seedColor: teal,
-            brightness: isDark ? Brightness.dark : Brightness.light,
-          ).copyWith(
-            surface: isDark ? const Color(0xFF1F2937) : const Color(0xFFFFFFFF),
-            surfaceContainerHighest: isDark
-                ? const Color(0xFF374151)
-                : const Color(0xFFF1F5F9),
-            outline: isDark ? const Color(0xFF4B5563) : const Color(0xFFE2E8F0),
-          ),
-      scaffoldBackgroundColor: isDark
-          ? const Color(0xFF111827)
-          : const Color(0xFFF8FAFB),
-      cardTheme: CardThemeData(
-        color: isDark ? const Color(0xFF1F2937) : Colors.white,
-        surfaceTintColor: Colors.transparent,
-      ),
-      useMaterial3: true,
-    );
+    final theme = _buildMemberTheme();
 
     final pages = <Widget>[
       _HomeTab(member: _currentMember, group: widget.group, isTamil: _isTamil),
@@ -149,8 +165,6 @@ class _HomeShellState extends State<HomeShell> {
         notices: MockDb.notices
             .where((n) => n.groupId == widget.group.id)
             .toList(),
-        group: widget.group,
-        member: _currentMember,
       ),
       MeetingsTab(
         memberName: _memberName,
@@ -364,10 +378,7 @@ class _HomeShellState extends State<HomeShell> {
                 child: Center(
                   child: Text(
                     '© ${DateTime.now().year} Airo Techhub',
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                   ),
                 ),
               ),
@@ -548,51 +559,53 @@ class _HomeShellState extends State<HomeShell> {
   ) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.notifications_none_outlined),
-            const SizedBox(width: 8),
-            Text(_tr('Notifications')),
+      builder: (dialogContext) => _memberThemedDialog(
+        AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.notifications_none_outlined),
+              const SizedBox(width: 8),
+              Text(_tr('Notifications')),
+            ],
+          ),
+          content: notices.isEmpty && meetingNotifications.isEmpty
+              ? Text(
+                  _tr('You are all caught up. There are no notifications yet.'),
+                )
+              : SizedBox(
+                  width: 360,
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final notice in notices)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.campaign_outlined),
+                          title: Text(_tr(notice.title)),
+                          subtitle: Text(_tr(notice.body)),
+                        ),
+                      for (final notification in meetingNotifications)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.videocam_outlined),
+                          title: Text(notification.meeting.title),
+                          subtitle: Text(
+                            '${notification.meeting.groupName} · '
+                            '${DateFormat('dd MMM yyyy, h:mm a').format(notification.meeting.scheduledTime)}\n'
+                            '${notification.meeting.meetingUrl}',
+                          ),
+                          isThreeLine: true,
+                        ),
+                    ],
+                  ),
+                ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(_tr('Close')),
+            ),
           ],
         ),
-        content: notices.isEmpty && meetingNotifications.isEmpty
-            ? Text(
-                _tr('You are all caught up. There are no notifications yet.'),
-              )
-            : SizedBox(
-                width: 360,
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    for (final notice in notices)
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.campaign_outlined),
-                        title: Text(_tr(notice.title)),
-                        subtitle: Text(_tr(notice.body)),
-                      ),
-                    for (final notification in meetingNotifications)
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.videocam_outlined),
-                        title: Text(notification.meeting.title),
-                        subtitle: Text(
-                          '${notification.meeting.groupName} · '
-                          '${DateFormat('dd MMM yyyy, h:mm a').format(notification.meeting.scheduledTime)}\n'
-                          '${notification.meeting.meetingUrl}',
-                        ),
-                        isThreeLine: true,
-                      ),
-                  ],
-                ),
-              ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(_tr('Close')),
-          ),
-        ],
       ),
     );
   }
@@ -608,43 +621,55 @@ class _HomeShellState extends State<HomeShell> {
   void _showPaymentReminder() {
     showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(_tr('Monthly fee reminder')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_tr('Monthly fee due: Date not set.')),
-            const SizedBox(height: 8),
-            Text(_tr('Ask your teacher for your due date and payment link.')),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(_tr('Close')),
+      builder: (dialogContext) => _memberThemedDialog(
+        AlertDialog(
+          title: Text(_tr('Monthly fee reminder')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_tr('Monthly fee due: Date not set.')),
+              const SizedBox(height: 8),
+              Text(_tr('Ask your teacher for your due date and payment link.')),
+            ],
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    _tr(
-                      'Online payment is not set up yet. Please contact your teacher.',
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(_tr('Close')),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      _tr(
+                        'Online payment is not set up yet. Please contact your teacher.',
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-            child: Text(_tr('Pay now')),
-          ),
-        ],
+                );
+              },
+              child: Text(_tr('Pay now')),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildLanguageToggle(Color teal) {
+    final backgroundColor = _isDarkMode
+        ? const Color(0xFF374151)
+        : const Color(0xFFF1F5F9);
+    final borderColor = _isDarkMode
+        ? const Color(0xFF4B5563)
+        : const Color(0xFFE2E8F0);
+    final selectedColor = _isDarkMode
+        ? teal.withValues(alpha: 0.32)
+        : teal.withValues(alpha: 0.16);
+
     Widget languageOption(String value, String label) {
       final selected = _language == value;
       return InkWell(
@@ -657,7 +682,7 @@ class _HomeShellState extends State<HomeShell> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.grey.shade300 : Colors.transparent,
+            color: selected ? selectedColor : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
@@ -665,7 +690,11 @@ class _HomeShellState extends State<HomeShell> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-              color: Colors.black87,
+              color: selected
+                  ? (_isDarkMode ? Colors.white : const Color(0xFF1E293B))
+                  : (_isDarkMode
+                        ? const Color(0xFFCBD5E1)
+                        : const Color(0xFF64748B)),
             ),
           ),
         ),
@@ -673,10 +702,11 @@ class _HomeShellState extends State<HomeShell> {
     }
 
     return Container(
+      key: const ValueKey('member-language-switch'),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: borderColor),
       ),
       padding: const EdgeInsets.all(2),
       child: Row(
@@ -756,10 +786,10 @@ class _HomeShellState extends State<HomeShell> {
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
           builder: (_) => Theme(
-            data: Theme.of(context),
+            data: _buildMemberTheme(),
             child: ProviderScope(
               overrides: [storageServiceProvider.overrideWithValue(storage)],
-              child: const AiTeacherScreen(),
+              child: const Scaffold(body: AiTeacherScreen()),
             ),
           ),
         ),

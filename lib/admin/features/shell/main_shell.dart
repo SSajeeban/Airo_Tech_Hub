@@ -91,6 +91,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = _calculateSelectedIndex(context);
+    final isDashboardRoute = GoRouterState.of(context).uri.path == '/app';
     final session = ref.watch(sessionProvider);
     final isTamil = ref.watch(languageProvider) == 'ta';
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -413,7 +414,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               ],
             )
           : widget.child,
-      floatingActionButton: selectedIndex == 0
+      floatingActionButton: isDashboardRoute
           ? FloatingActionButton(
               heroTag: 'ai-teacher-fab',
               tooltip: isTamil ? 'AI ஆசிரியர்' : 'AI Teacher',

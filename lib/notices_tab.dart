@@ -1,15 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'mock_data.dart';
-import 'timetable_board.dart';
 import 'app_settings.dart';
 
 class NoticesTab extends StatelessWidget {
   final List<Notice> notices;
-  final Group? group;
-  final Member? member;
 
-  const NoticesTab({super.key, required this.notices, this.group, this.member});
+  const NoticesTab({super.key, required this.notices});
 
   @override
   Widget build(BuildContext context) {
@@ -48,9 +45,6 @@ class NoticesTab extends StatelessWidget {
                 subtitle: Text(translate(n.body)),
               ),
             ),
-        const SizedBox(height: 24),
-        if (group != null && member != null)
-          TimetableBoard(group: group!, member: member!),
       ],
     );
   }
