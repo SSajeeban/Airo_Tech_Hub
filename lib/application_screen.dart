@@ -5,6 +5,7 @@ import 'mock_data.dart';
 import 'app_logo.dart';
 import 'portal_screen.dart';
 import 'phone_sign_in_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApplicationScreen extends StatefulWidget {
   final Member member;
@@ -57,6 +58,9 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     );
 
     if (confirm == true && mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('signed_in_phone');
+      if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(

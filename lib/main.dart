@@ -3,13 +3,22 @@ import 'package:material_ui/material_ui.dart';
 import 'app_settings.dart';
 import 'phone_sign_in_screen.dart';
 import 'portal_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'application_screen.dart';
+import 'mock_data.dart';
 
-void main() {
-  runApp(const AiroApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final phone = prefs.getString('signed_in_phone');
+  final member = phone == null ? null : MockDb.findMemberByPhone(phone);
+  runApp(AiroApp(startMember: member));
 }
 
 class AiroApp extends StatelessWidget {
-  const AiroApp({super.key});
+  const AiroApp({super.key, this.startMember});
+
+  final Member? startMember;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +39,9 @@ class AiroApp extends StatelessWidget {
             brightness: Brightness.dark,
           ),
         ),
-        home: const PortalScreen(memberPage: PhoneSignInScreen()),
+        home: startMember != null
+            ? ApplicationScreen(member: startMember!)
+            : const PortalScreen(memberPage: PhoneSignInScreen()),
       ),
     );
   }

@@ -9,6 +9,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart';
+import 'app_lock.dart';
 
 import 'admin/core/constants/app_colors.dart';
 import 'admin/core/constants/app_icons.dart';
@@ -47,8 +49,16 @@ class _HomeShellState extends State<HomeShell> {
   String? _memberImage;
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
+  static const List<String> _extraFields = ['email', 'dob', 'gender', 'address', 'bio', 'parentName', 'parentPhone', 'school'];
+  final Map<String, String> _extra = {};
   Timer? _timer;
   String _currentTime = '';
+  final LocalAuthentication _auth = LocalAuthentication();
+  bool _fingerprintEnabled = false;
+  bool _securityEnabled = false;
+  bool _locked = false;
+  LockType _lockType = LockType.none;
+  AppLockStore get _lockStore => AppLockStore('${widget.member.id}');
 
   @override
   void initState() {
@@ -59,6 +69,7 @@ class _HomeShellState extends State<HomeShell> {
     _phoneController = TextEditingController(text: _memberPhone);
     MockMeetingStore.instance.addListener(_onMeetingsChanged);
     unawaited(_loadSavedProfile());
+    unawaited(_startLockCheck());
     _updateClock();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateClock());
   }
@@ -74,6 +85,7 @@ class _HomeShellState extends State<HomeShell> {
   String get _profileNameKey => 'member_${widget.member.id}_name';
   String get _profilePhoneKey => 'member_${widget.member.id}_phone';
   String get _profileImageKey => 'member_${widget.member.id}_image';
+  String _extraKey(String field) => 'member_${widget.member.id}_extra_$field';
 
   Future<void> _loadSavedProfile() async {
     try {
@@ -81,12 +93,18 @@ class _HomeShellState extends State<HomeShell> {
       final name = preferences.getString(_profileNameKey);
       final phone = preferences.getString(_profilePhoneKey);
       final image = preferences.getString(_profileImageKey);
-      if (!mounted || (name == null && phone == null && image == null)) return;
+      final loaded = <String, String>{};
+      for (final field in _extraFields) {
+        final v = preferences.getString(_extraKey(field));
+        if (v != null) loaded[field] = v;
+      }
+      if (!mounted) return;
 
       setState(() {
         _memberName = name ?? _memberName;
         _memberPhone = phone ?? _memberPhone;
         _memberImage = image ?? _memberImage;
+        _extra.addAll(loaded);
       });
     } catch (error) {
       if (mounted) {
@@ -96,6 +114,97 @@ class _HomeShellState extends State<HomeShell> {
       }
     }
   }
+  String get _fingerprintKey => 'member_${widget.member.id}_fingerprint';
+  String get _securityKey => 'member_${widget.member.id}_security';
+
+  Future<void> _loadFingerprintSetting() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final enabled = preferences.getBool(_fingerprintKey) ?? false;
+      if (!mounted) return;
+      final type = await _lockStore.loadType();
+      if (!mounted) return;
+      setState(() {
+        _fingerprintEnabled = enabled;
+        _lockType = type;
+        _securityEnabled = type != LockType.none;
+      });
+    } catch (_) {}
+  }
+
+
+  Future<bool> _authenticate(String reason, {bool biometricOnly = false}) async {
+    try {
+      final supported = await _auth.isDeviceSupported();
+      if (!supported) return false;
+      return await _auth.authenticate(
+        localizedReason: reason,
+        biometricOnly: biometricOnly,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _toggleFingerprint(bool value) async {
+    final ok = await _authenticate(value ? 'Turn on fingerprint lock' : 'Turn off fingerprint lock', biometricOnly: true);
+    if (!ok) return false;
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setBool(_fingerprintKey, value);
+    } catch (_) {
+      return false;
+    }
+    if (mounted) setState(() => _fingerprintEnabled = value);
+    return true;
+  }
+
+
+  Future<bool> _toggleSecurity(bool value) async {
+    final ok = await _authenticate(value ? 'Turn on app security' : 'Turn off app security');
+    if (!ok) return false;
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setBool(_securityKey, value);
+    } catch (_) {
+      return false;
+    }
+    if (mounted) setState(() => _securityEnabled = value);
+    return true;
+  }
+
+
+  Future<void> _startLockCheck() async {
+    await _loadFingerprintSetting();
+    if (!mounted) return;
+    if (_lockType == LockType.none) return;
+    setState(() => _locked = true);
+    if (_fingerprintEnabled) await _unlockWithFingerprint();
+  }
+
+  Future<void> _unlockWithFingerprint() async {
+    final ok = await _authenticate('Unlock Airo Tech Hub', biometricOnly: true);
+    if (!mounted) return;
+    if (ok) setState(() => _locked = false);
+  }
+
+  Future<void> _changeScreenLock() async {
+    final changed = await configureScreenLock(context, _lockStore);
+    if (!changed || !mounted) return;
+    final type = await _lockStore.loadType();
+    if (!mounted) return;
+    if (type == LockType.none && _fingerprintEnabled) {
+      final p = await SharedPreferences.getInstance();
+      await p.setBool(_fingerprintKey, false);
+    }
+    setState(() {
+      _lockType = type;
+      _securityEnabled = type != LockType.none;
+      if (type == LockType.none) _fingerprintEnabled = false;
+    });
+  }
+
+
 
   @override
   void dispose() {
@@ -188,6 +297,16 @@ class _HomeShellState extends State<HomeShell> {
       useMaterial3: true,
     );
 
+    if (_locked) {
+      return LockUnlockScreen(
+        type: _lockType,
+        store: _lockStore,
+        onUnlocked: () => setState(() => _locked = false),
+        onExit: () => Navigator.of(context).pop(),
+        onFingerprint: _fingerprintEnabled ? _unlockWithFingerprint : null,
+      );
+    }
+
     final pages = <Widget>[
       _HomeTab(
         member: _currentMember,
@@ -268,15 +387,14 @@ class _HomeShellState extends State<HomeShell> {
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
           ),
-          title: MediaQuery.sizeOf(context).width >= 420
-              ? Image.asset(
+          titleSpacing: 0,
+          title: Image.asset(
                   _isDarkMode
                       ? 'assets/images/logo_dark.png'
                       : 'assets/images/logo.png',
                   height: 28,
                   errorBuilder: (_, _, _) => Text(widget.group.name),
-                )
-              : null,
+          ),
           actions: [
             _buildCompactClock(),
             _buildNotificationButton(notices),
@@ -378,6 +496,20 @@ class _HomeShellState extends State<HomeShell> {
                   style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 onTap: _openPaymentReminder,
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.settings_outlined,
+                  color: AppColors.brandBlue,
+                ),
+                title: Text(
+                  _tr('Settings'),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showSettings();
+                },
               ),
               const Divider(),
               ListTile(
@@ -514,7 +646,7 @@ class _HomeShellState extends State<HomeShell> {
     final time =
         '${twoDigits(now.hour)}:${twoDigits(now.minute)}:${twoDigits(now.second)}';
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -534,8 +666,8 @@ class _HomeShellState extends State<HomeShell> {
     final notificationCount = notices.length + meetingNotifications.length;
     return IconButton(
       tooltip: _tr('Notifications'),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      padding: const EdgeInsets.all(7),
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 36),
+      padding: const EdgeInsets.all(4),
       onPressed: () => _showNotifications(notices, meetingNotifications),
       icon: Badge(
         isLabelVisible: notificationCount > 0,
@@ -556,8 +688,8 @@ class _HomeShellState extends State<HomeShell> {
       tooltip: dark
           ? (_tr('Switch to light mode'))
           : (_tr('Switch to dark mode')),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      padding: const EdgeInsets.all(7),
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 36),
+      padding: const EdgeInsets.all(4),
       icon: Icon(
         dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
         size: 18,
@@ -829,7 +961,7 @@ class _HomeShellState extends State<HomeShell> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(_tr('Personal details')),
-        content: Column(
+        content: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -868,19 +1000,11 @@ class _HomeShellState extends State<HomeShell> {
               ),
             ),
           ],
-        ),
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(_tr('Close')),
-          ),
-          OutlinedButton.icon(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(Icons.switch_account_outlined, size: 16),
-            label: Text(_isTamil ? 'சுயவிவரம் மாற்று' : 'Switch profile'),
           ),
           FilledButton.icon(
             onPressed: () async {
@@ -889,6 +1013,65 @@ class _HomeShellState extends State<HomeShell> {
             },
             icon: const Icon(Icons.edit_outlined),
             label: Text(_tr('Edit profile')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSettings() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(_tr('Settings')),
+        content: SingleChildScrollView(
+          child: StatefulBuilder(
+            builder: (context, setLocal) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(_tr('Edit profile')),
+                  onTap: () async {
+                    Navigator.pop(dialogContext);
+                    await _editProfile();
+                  },
+                ),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.lock_outline),
+                  title: Text(_tr('Security')),
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_tr('Screen lock type')),
+                      subtitle: Text(lockTypeLabel(_lockType)),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        await _changeScreenLock();
+                        setLocal(() {});
+                      },
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_tr('Fingerprint')),
+                      value: _fingerprintEnabled,
+                      onChanged: !_securityEnabled ? null : (v) async {
+                        await _toggleFingerprint(v);
+                        setLocal(() {});
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(_tr('Close')),
           ),
         ],
       ),
@@ -910,6 +1093,9 @@ class _HomeShellState extends State<HomeShell> {
   Future<void> _editProfile() async {
     _nameController.text = _memberName;
     _phoneController.text = _memberPhone;
+    final extraCtrls = <String, TextEditingController>{
+      for (final k in _extraFields) k: TextEditingController(text: _extra[k] ?? ''),
+    };
     final formKey = GlobalKey<FormState>();
     String? tempImage = _memberImage;
 
@@ -1035,6 +1221,7 @@ class _HomeShellState extends State<HomeShell> {
                                 : 'Enter a phone number')
                           : null,
                     ),
+                    ..._buildExtraFields(extraCtrls, setDialogState),
                   ],
                 ),
               ),
@@ -1070,6 +1257,9 @@ class _HomeShellState extends State<HomeShell> {
         } else {
           await preferences.remove(_profileImageKey);
         }
+        for (final k in _extraFields) {
+          await preferences.setString(_extraKey(k), extraCtrls[k]!.text.trim());
+        }
         if (!nameSaved || !phoneSaved) {
           throw StateError('The profile changes were not saved.');
         }
@@ -1079,6 +1269,7 @@ class _HomeShellState extends State<HomeShell> {
             _memberName = name;
             _memberPhone = phone;
             _memberImage = tempImage;
+            _extra..clear()..addAll({for (final k in _extraFields) k: extraCtrls[k]!.text.trim()});
           });
         }
       } catch (error) {
@@ -1089,6 +1280,27 @@ class _HomeShellState extends State<HomeShell> {
         }
       }
     }
+  }
+
+  List<Widget> _buildExtraFields(Map<String, TextEditingController> c, StateSetter setS) {
+    return [
+      const SizedBox(height: 8),
+      TextFormField(controller: c['email'], keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: _tr('Email (optional)')), validator: (v) => (v == null || v.trim().isEmpty || v.contains('@')) ? null : 'Enter a valid email'),
+      const SizedBox(height: 8),
+      TextFormField(controller: c['dob'], readOnly: true, decoration: InputDecoration(labelText: _tr('Date of birth'), suffixIcon: const Icon(Icons.calendar_today, size: 18)), onTap: () async { final d = await showDatePicker(context: context, initialDate: DateTime(2010), firstDate: DateTime(1950), lastDate: DateTime.now()); if (d != null) { c['dob']!.text = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}'; setS(() {}); } }),
+      const SizedBox(height: 8),
+      DropdownButtonFormField<String>(initialValue: ['Male', 'Female', 'Other'].contains(c['gender']!.text) ? c['gender']!.text : null, decoration: InputDecoration(labelText: _tr('Gender (optional)')), items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(), onChanged: (v) { c['gender']!.text = v ?? ''; setS(() {}); }),
+      const SizedBox(height: 8),
+      TextFormField(controller: c['address'], decoration: InputDecoration(labelText: _tr('Address / City'))),
+      const SizedBox(height: 8),
+      TextFormField(controller: c['bio'], maxLines: 2, maxLength: 120, decoration: InputDecoration(labelText: _tr('About me'))),
+      const SizedBox(height: 8),
+      TextFormField(controller: c['parentName'], decoration: InputDecoration(labelText: _tr('Parent / Guardian name'))),
+      const SizedBox(height: 8),
+      TextFormField(controller: c['parentPhone'], keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: _tr('Parent / Guardian phone')), validator: (v) => (v == null || v.trim().isEmpty || RegExp(r'^0\d{9}$').hasMatch(v.trim())) ? null : 'Enter 10 digits starting with 0'),
+      const SizedBox(height: 8),
+      TextFormField(controller: c['school'], decoration: InputDecoration(labelText: _tr('School name'))),
+    ];
   }
 
   Future<void> _showImagePickerSheet(
