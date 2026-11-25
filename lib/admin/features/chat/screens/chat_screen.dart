@@ -335,28 +335,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildChannelTile(BuildContext context, bool isTamil) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ListTile(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      selected: _isChannelOpen,
-      selectedTileColor: isDark
-          ? AppColors.accent.withValues(alpha: 0.18)
-          : AppColors.accentLight,
-      leading: CircleAvatar(
-        backgroundColor: AppColors.accentLight,
-        child: const Icon(Icons.tag, color: AppColors.accent, size: 20),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        selected: _isChannelOpen,
+        selectedTileColor: isDark
+            ? AppColors.accent.withValues(alpha: 0.18)
+            : AppColors.accentLight,
+        leading: CircleAvatar(
+          backgroundColor: AppColors.accentLight,
+          child: const Icon(Icons.tag, color: AppColors.accent, size: 20),
+        ),
+        title: Text(
+          _channelName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          isTamil ? '42 பேர் செயலில்' : '42 active',
+          style: const TextStyle(fontSize: 12),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+        onTap: () => setState(() => _isChannelOpen = true),
       ),
-      title: Text(
-        _channelName,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(
-        isTamil ? '42 பேர் செயலில்' : '42 active',
-        style: const TextStyle(fontSize: 12),
-      ),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
-      onTap: () => setState(() => _isChannelOpen = true),
     );
   }
 
