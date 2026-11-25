@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'app_settings.dart';
 import 'application_screen.dart';
 import 'mock_data.dart';
-import 'translations.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PhoneSignInScreen extends StatefulWidget {
@@ -55,7 +55,8 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
   }
 
   void _showMessage(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(text))));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(tr(text))));
   }
 
   Widget _buildLanguageSelector(Color teal) {
@@ -79,7 +80,9 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? Colors.white : const Color(0xFF475569),
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -88,7 +91,7 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: const Color(0xFFCBD5E1)),
       ),
@@ -113,7 +116,7 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
     return ListenableBuilder(
       listenable: AppSettings.instance,
       builder: (context, _) => Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
@@ -140,8 +143,10 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                                 ),
                                 child: Text(
                                   tr('Home'),
-                                  style: const TextStyle(
-                                    color: Color(0xFF64748B),
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -178,16 +183,20 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                                   Text(
                                     tr('Sign in with your phone'),
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Color(0xFF64748B),
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                       fontSize: 16,
                                     ),
                                   ),
                                   const SizedBox(height: 32),
                                   Text(
                                     tr('Mobile number'),
-                                    style: const TextStyle(
-                                      color: Color(0xFF475569),
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -195,6 +204,11 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                                   const SizedBox(height: 8),
                                   TextField(
                                     controller: _phoneController,
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
                                     keyboardType: TextInputType.number,
                                     inputFormatters: [
                                       FilteringTextInputFormatter.digitsOnly,
@@ -202,14 +216,16 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                                     ],
                                     decoration: InputDecoration(
                                       hintText: '07XXXXXXXX',
-                                      hintStyle: const TextStyle(
-                                        color: Color(0xFF94A3B8),
+                                      hintStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                       ),
                                       contentPadding:
                                           const EdgeInsets.symmetric(
-                                        horizontal: 14,
-                                        vertical: 12,
-                                      ),
+                                            horizontal: 14,
+                                            vertical: 12,
+                                          ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                         borderSide: const BorderSide(
@@ -229,8 +245,10 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                                     const SizedBox(height: 18),
                                     Text(
                                       tr('Verification code'),
-                                      style: const TextStyle(
-                                        color: Color(0xFF475569),
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -238,28 +256,37 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                                     const SizedBox(height: 8),
                                     TextField(
                                       controller: _codeController,
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
                                       keyboardType: TextInputType.number,
                                       maxLength: 6,
                                       decoration: InputDecoration(
                                         hintText: tr('Enter OTP'),
-                                        hintStyle: const TextStyle(
-                                          color: Color(0xFF94A3B8),
+                                        hintStyle: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                         ),
                                         contentPadding:
                                             const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                          vertical: 12,
-                                        ),
+                                              horizontal: 14,
+                                              vertical: 12,
+                                            ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                           borderSide: const BorderSide(
                                             color: Color(0xFFCBD5E1),
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                           borderSide: const BorderSide(
                                             color: teal,
                                             width: 1.5,
@@ -268,9 +295,13 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                                       ),
                                     ),
                                     Text(
-                                      tr('If this number is registered, a code was sent.'),
-                                      style: const TextStyle(
-                                        color: Color(0xFF64748B),
+                                      tr(
+                                        'If this number is registered, a code was sent.',
+                                      ),
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -279,21 +310,23 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                                   SizedBox(
                                     height: 48,
                                     child: FilledButton(
-                                      onPressed:
-                                          _codeSent ? _verify : _sendCode,
+                                      onPressed: _codeSent
+                                          ? _verify
+                                          : _sendCode,
                                       style: FilledButton.styleFrom(
                                         backgroundColor: teal,
                                         foregroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                       ),
                                       child: Text(
                                         _codeSent
                                             ? tr('VERIFY OTP')
                                             : tr('SEND OTP'),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 15,
                                         ),
@@ -322,8 +355,10 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                         child: Center(
                           child: Text(
                             '© 2026 Airo Techhub',
-                            style: const TextStyle(
-                              color: Color(0xFF64748B),
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                               fontSize: 12,
                             ),
                           ),

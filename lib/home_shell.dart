@@ -25,6 +25,7 @@ import 'library_tab.dart';
 import 'mock_meeting_store.dart';
 import 'timetable_board.dart';
 import 'app_settings.dart';
+import 'attendance_screen.dart';
 
 class HomeShell extends StatefulWidget {
   final Member member;
@@ -43,7 +44,7 @@ class _HomeShellState extends State<HomeShell> {
   String get _language => AppSettings.instance.language;
   bool get _isTamil => AppSettings.instance.isTamil;
 
-  bool _isDarkMode = false;
+  bool get _isDarkMode => AppSettings.instance.themeMode == ThemeMode.dark;
   late String _memberName;
   late String _memberPhone;
   String? _memberImage;
@@ -480,6 +481,27 @@ class _HomeShellState extends State<HomeShell> {
               ),
               ListTile(
                 leading: const Icon(
+                  Icons.calendar_today_outlined,
+                  color: AppColors.brandBlue,
+                ),
+                title: Text(
+                  _tr('My Attendance'),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                ),
+                onTap: () {
+                  final navigator = Navigator.of(context);
+                  navigator.pop();
+                  navigator.push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          AttendanceScreen(groupName: widget.group.name),
+                    ),
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(
                   Icons.payments_outlined,
                   color: AppColors.brandBlue,
                 ),
@@ -683,10 +705,7 @@ class _HomeShellState extends State<HomeShell> {
         color: iconColor,
       ),
       onPressed: () {
-        setState(() => _isDarkMode = !_isDarkMode);
-        AppSettings.instance.themeMode = _isDarkMode
-            ? ThemeMode.dark
-            : ThemeMode.light;
+        setState(() => AppSettings.instance.toggleTheme());
       },
     );
   }
@@ -1546,7 +1565,7 @@ class _HomeShellState extends State<HomeShell> {
             ),
             const SizedBox(width: 14),
             Text(
-              label,
+              _tr(label),
               style: TextStyle(
                 color: isSelected ? Colors.white : textColor,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
