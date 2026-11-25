@@ -988,12 +988,12 @@ class _HomeShellState extends State<HomeShell> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _profileDetail(_isTamil ? 'பெயர்' : 'Name', _memberName),
+                  _profileDetail(_tr('Name'), _memberName),
                   const SizedBox(height: 12),
-                  _profileDetail(_isTamil ? 'தொலைபேசி' : 'Phone', _memberPhone),
+                  _profileDetail(_tr('Phone'), _memberPhone),
                   const SizedBox(height: 12),
                   _profileDetail(
-                    _isTamil ? 'குழு' : 'Group',
+                    _tr('Group'),
                     widget.group.name,
                   ),
                 ],
