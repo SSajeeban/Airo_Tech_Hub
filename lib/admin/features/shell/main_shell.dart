@@ -9,6 +9,22 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/providers/app_providers.dart';
 
+String _adminText(
+  String language,
+  String english,
+  String tamil,
+  String sinhala,
+) {
+  switch (language) {
+    case 'ta':
+      return tamil;
+    case 'si':
+      return sinhala;
+    default:
+      return english;
+  }
+}
+
 class MainShell extends ConsumerStatefulWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
@@ -42,6 +58,20 @@ class _MainShellState extends ConsumerState<MainShell> {
     'அக்',
     'நவ',
     'டிச',
+  ];
+  static const _siShortMonths = [
+    'ජන',
+    'පෙබ',
+    'මාර්',
+    'අප්‍රේ',
+    'මැයි',
+    'ජූනි',
+    'ජූලි',
+    'අගෝ',
+    'සැප්',
+    'ඔක්',
+    'නොවැ',
+    'දෙසැ',
   ];
 
   @override
@@ -116,7 +146,12 @@ class _MainShellState extends ConsumerState<MainShell> {
         toolbarHeight: screenWidth >= 1000 ? 72 : null,
         leading: Builder(
           builder: (context) => IconButton(
-            tooltip: isTamil ? 'வழிசெலுத்தல் மெனு' : 'Open navigation menu',
+            tooltip: _adminText(
+              currentLang,
+              'Open navigation menu',
+              'வழிசெலுத்தல் மெனு',
+              'සංචාලන මෙනුව විවෘත කරන්න',
+            ),
             icon: const Icon(Icons.menu_rounded),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
@@ -125,15 +160,11 @@ class _MainShellState extends ConsumerState<MainShell> {
         title: Container(
           height: 40,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          decoration: isDark
-              ? BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.white, width: 1),
-                )
-              : null,
+          decoration: BoxDecoration(
+            color: isDark ? Colors.transparent : Colors.white,
+          ),
           child: Image.asset(
-            'assets/images/logo.png',
+            isDark ? 'assets/images/logo_dark.png' : 'assets/images/logo.png',
             height: 32,
             fit: BoxFit.contain,
             errorBuilder: (_, _, _) => const Icon(
@@ -149,6 +180,8 @@ class _MainShellState extends ConsumerState<MainShell> {
               child: Text(
                 isTamil
                     ? '${_now.day.toString().padLeft(2, '0')} ${_taShortMonths[_now.month - 1]} ${_now.year}  |  ${DateFormat('HH:mm:ss').format(_now)}'
+                    : isSinhala
+                    ? '${_now.day.toString().padLeft(2, '0')} ${_siShortMonths[_now.month - 1]} ${_now.year}  |  ${DateFormat('HH:mm:ss').format(_now)}'
                     : DateFormat('dd MMM yyyy  |  HH:mm:ss').format(_now),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w600,
@@ -159,7 +192,12 @@ class _MainShellState extends ConsumerState<MainShell> {
             const SizedBox(width: 8),
           ],
           IconButton(
-            tooltip: isTamil ? 'அறிவிப்புகள்' : 'Notifications',
+            tooltip: _adminText(
+              currentLang,
+              'Notifications',
+              'அறிவிப்புகள்',
+              'දැනුම්දීම්',
+            ),
             icon: Badge.count(
               count: notices.length,
               child: const Icon(AppIcons.notification),
@@ -182,7 +220,19 @@ class _MainShellState extends ConsumerState<MainShell> {
             ),
           ),
           IconButton(
-            tooltip: isDark ? 'Light theme' : 'Dark theme',
+            tooltip: isDark
+                ? _adminText(
+                    currentLang,
+                    'Light theme',
+                    'ஒளி பயன்முறை',
+                    'ආලෝක මාදිලිය',
+                  )
+                : _adminText(
+                    currentLang,
+                    'Dark theme',
+                    'இருள் பயன்முறை',
+                    'අඳුරු මාදිලිය',
+                  ),
             icon: Icon(
               isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
               size: 20,
@@ -272,7 +322,14 @@ class _MainShellState extends ConsumerState<MainShell> {
 
             ListTile(
               leading: const Icon(AppIcons.home, color: AppColors.accent),
-              title: Text(isTamil ? 'முகப்பு பலகை' : 'Dashboard'),
+              title: Text(
+                _adminText(
+                  currentLang,
+                  'Dashboard',
+                  'முகப்பு பலகை',
+                  'මුල් පිටුව',
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 context.go('/app');
@@ -281,7 +338,12 @@ class _MainShellState extends ConsumerState<MainShell> {
             ListTile(
               leading: const Icon(AppIcons.groups, color: AppColors.brandBlue),
               title: Text(
-                isTamil ? 'குழுக்கள் & வகுப்புகள்' : 'Groups & Classes',
+                _adminText(
+                  currentLang,
+                  'Groups & Classes',
+                  'குழுக்கள் & வகுப்புகள்',
+                  'කණ්ඩායම් සහ පන්ති',
+                ),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -294,7 +356,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                 color: AppColors.brandGreen,
               ),
               title: Text(
-                isTamil ? 'உறுப்பினர்கள் & மாணவர்கள்' : 'Members Directory',
+                _adminText(
+                  currentLang,
+                  'Members Directory',
+                  'உறுப்பினர்கள் & மாணவர்கள்',
+                  'සාමාජික ලැයිස්තුව',
+                ),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -306,7 +373,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                 Icons.campaign_outlined,
                 color: AppColors.warning,
               ),
-              title: Text(isTamil ? 'அறிவிப்புகள்' : 'Notices & Bulletins'),
+              title: Text(
+                _adminText(
+                  currentLang,
+                  'Notices & Bulletins',
+                  'அறிவிப்புகள்',
+                  'දැනුම්දීම් සහ නිවේදන',
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/app/notices');
@@ -317,7 +391,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                 Icons.payment_outlined,
                 color: AppColors.brandBlue,
               ),
-              title: Text(isTamil ? 'கட்டணங்கள் & விலை' : 'Payments & Tuition'),
+              title: Text(
+                _adminText(
+                  currentLang,
+                  'Payments & Tuition',
+                  'கட்டணங்கள் & விலை',
+                  'ගෙවීම් සහ ගාස්තු',
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/app/payments');
@@ -328,7 +409,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                 Icons.fiber_manual_record_outlined,
                 color: AppColors.danger,
               ),
-              title: Text(isTamil ? 'பதிவுகள்' : 'Recording'),
+              title: Text(
+                _adminText(
+                  currentLang,
+                  'Recording',
+                  'பதிவுகள்',
+                  'පටිගත කිරීම්',
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/app/recording');
@@ -340,7 +428,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                   Icons.auto_awesome_outlined,
                   color: AppColors.brandGreen,
                 ),
-                title: Text(isTamil ? 'AI ஆசிரியர்' : 'AI Teacher Assistant'),
+                title: Text(
+                  _adminText(
+                    currentLang,
+                    'AI Teacher Assistant',
+                    'AI ஆசிரியர்',
+                    'AI ගුරු සහායක',
+                  ),
+                ),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 6,
@@ -370,7 +465,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                 color: AppColors.mutedLight,
               ),
               title: Text(
-                isTamil ? 'சுயவிவரம் & லோகோ' : 'Profile & Custom Branding',
+                _adminText(
+                  currentLang,
+                  'Profile & Custom Branding',
+                  'சுயவிவரம் & லோகோ',
+                  'පැතිකඩ සහ සන්නාම සැකසුම්',
+                ),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -382,7 +482,14 @@ class _MainShellState extends ConsumerState<MainShell> {
 
             ListTile(
               leading: const Icon(Icons.language_outlined),
-              title: Text(isTamil ? 'மொழி: தமிழ்' : 'Language: English'),
+              title: Text(
+                _adminText(
+                  currentLang,
+                  'Language: English',
+                  'மொழி: தமிழ்',
+                  'භාෂාව: සිංහල',
+                ),
+              ),
               trailing: const Icon(Icons.swap_horiz_rounded),
               onTap: () => ref.read(languageProvider.notifier).toggleLanguage(),
             ),
@@ -393,7 +500,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 color: AppColors.danger,
               ),
               title: Text(
-                isTamil ? 'வெளியேறு' : 'Log Out',
+                _adminText(currentLang, 'Log Out', 'வெளியேறு', 'ඉවත් වන්න'),
                 style: const TextStyle(color: AppColors.danger),
               ),
               onTap: () async {
@@ -413,6 +520,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 _buildDesktopSidebar(
                   context,
                   isTamil: isTamil,
+                  isSinhala: isSinhala,
                   selectedIndex: selectedIndex,
                 ),
                 Expanded(child: widget.child),
@@ -422,7 +530,12 @@ class _MainShellState extends ConsumerState<MainShell> {
       floatingActionButton: isDashboardRoute
           ? FloatingActionButton(
               heroTag: 'ai-teacher-fab',
-              tooltip: isTamil ? 'AI ஆசிரியர்' : 'AI Teacher',
+              tooltip: _adminText(
+                currentLang,
+                'AI Teacher',
+                'AI ஆசிரியர்',
+                'AI ගුරුවරයා',
+              ),
               backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
               elevation: 6,
@@ -439,17 +552,27 @@ class _MainShellState extends ConsumerState<MainShell> {
                 BottomNavigationBarItem(
                   icon: _navIcon(AppIcons.home, 0, selectedIndex),
                   activeIcon: _navIcon(AppIcons.homeActive, 0, selectedIndex),
-                  label: isTamil ? 'முகப்பு' : 'Home',
+                  label: _adminText(
+                    currentLang,
+                    'Home',
+                    'முகப்பு',
+                    'මුල් පිටුව',
+                  ),
                 ),
                 BottomNavigationBarItem(
                   icon: _navIcon(AppIcons.groups, 1, selectedIndex),
                   activeIcon: _navIcon(AppIcons.groupsActive, 1, selectedIndex),
-                  label: isTamil ? 'குழுக்கள்' : 'Groups',
+                  label: _adminText(
+                    currentLang,
+                    'Groups',
+                    'குழுக்கள்',
+                    'කණ්ඩායම්',
+                  ),
                 ),
                 BottomNavigationBarItem(
                   icon: _navIcon(AppIcons.chat, 2, selectedIndex),
                   activeIcon: _navIcon(AppIcons.chatActive, 2, selectedIndex),
-                  label: isTamil ? 'அரட்டை' : 'Chat',
+                  label: _adminText(currentLang, 'Chat', 'அரட்டை', 'කතාබස්'),
                 ),
                 BottomNavigationBarItem(
                   icon: _navIcon(AppIcons.meetings, 3, selectedIndex),
@@ -458,7 +581,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                     3,
                     selectedIndex,
                   ),
-                  label: isTamil ? 'கூட்டம்' : 'Meetings',
+                  label: _adminText(
+                    currentLang,
+                    'Meetings',
+                    'கூட்டம்',
+                    'රැස්වීම්',
+                  ),
                 ),
                 BottomNavigationBarItem(
                   icon: _navIcon(AppIcons.library, 4, selectedIndex),
@@ -467,7 +595,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                     4,
                     selectedIndex,
                   ),
-                  label: isTamil ? 'நூலகம்' : 'Library',
+                  label: _adminText(
+                    currentLang,
+                    'Library',
+                    'நூலகம்',
+                    'පුස්තකාලය',
+                  ),
                 ),
               ],
             )
@@ -478,8 +611,14 @@ class _MainShellState extends ConsumerState<MainShell> {
   Widget _buildDesktopSidebar(
     BuildContext context, {
     required bool isTamil,
+    required bool isSinhala,
     required int selectedIndex,
   }) {
+    final language = isSinhala
+        ? 'si'
+        : isTamil
+        ? 'ta'
+        : 'en';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dividerColor = isDark ? AppColors.lineDark : AppColors.lineLight;
     return Container(
@@ -491,69 +630,75 @@ class _MainShellState extends ConsumerState<MainShell> {
       child: ListView(
         padding: const EdgeInsets.only(bottom: 12),
         children: [
-          _desktopSectionLabel(isTamil ? 'மக்கள்' : 'PEOPLE'),
+          _desktopSectionLabel(
+            _adminText(language, 'PEOPLE', 'மக்கள்', 'පුද්ගලයින්'),
+          ),
           _desktopNavItem(
             context,
             AppIcons.groups,
-            isTamil ? 'குழுக்கள்' : 'Groups',
+            _adminText(language, 'Groups', 'குழுக்கள்', 'කණ්ඩායම්'),
             selectedIndex == 1,
             () => context.go('/app/groups'),
           ),
           _desktopNavItem(
             context,
             Icons.person_outline_rounded,
-            isTamil ? 'உறுப்பினர்கள்' : 'Members',
+            _adminText(language, 'Members', 'உறுப்பினர்கள்', 'සාමාජිකයින්'),
             false,
             () => context.go('/app/members'),
           ),
-          _desktopSectionLabel(isTamil ? 'செய்திகள்' : 'MESSAGES'),
+          _desktopSectionLabel(
+            _adminText(language, 'MESSAGES', 'செய்திகள்', 'පණිවිඩ'),
+          ),
           _desktopNavItem(
             context,
             AppIcons.chat,
-            isTamil ? 'அரட்டை' : 'Chat',
+            _adminText(language, 'Chat', 'அரட்டை', 'කතාබස්'),
             selectedIndex == 2,
             () => context.go('/app/chat'),
           ),
           _desktopNavItem(
             context,
             Icons.article_outlined,
-            isTamil ? 'அறிவிப்புகள்' : 'Notices',
+            _adminText(language, 'Notices', 'அறிவிப்புகள்', 'දැනුම්දීම්'),
             false,
             () => context.go('/app/notices'),
           ),
           _desktopNavItem(
             context,
             Icons.credit_card_outlined,
-            isTamil ? 'கட்டணங்கள்' : 'Payments',
+            _adminText(language, 'Payments', 'கட்டணங்கள்', 'ගෙවීම්'),
             false,
             () => context.go('/app/payments'),
           ),
-          _desktopSectionLabel(isTamil ? 'கற்றல்' : 'LEARN'),
+          _desktopSectionLabel(
+            _adminText(language, 'LEARN', 'கற்றல்', 'ඉගෙනීම'),
+          ),
           _desktopNavItem(
             context,
             AppIcons.meetings,
-            isTamil ? 'கூட்டங்கள்' : 'Meetings',
+            _adminText(language, 'Meetings', 'கூட்டங்கள்', 'රැස්වීම්'),
             selectedIndex == 3,
             () => context.go('/app/meetings'),
           ),
           _desktopNavItem(
             context,
             Icons.radio_button_checked_outlined,
-            isTamil ? 'பதிவுகள்' : 'Recording',
+            _adminText(language, 'Recording', 'பதிவுகள்', 'පටිගත කිරීම්'),
             false,
             () => context.go('/app/recording'),
           ),
           _desktopNavItem(
             context,
             AppIcons.library,
-            isTamil ? 'நூலகம்' : 'Library',
+            _adminText(language, 'Library', 'நூலகம்', 'පුස්තකාලය'),
             selectedIndex == 4,
             () => context.go('/app/library'),
           ),
           _desktopNavItem(
             context,
             Icons.auto_awesome_outlined,
-            isTamil ? 'AI ஆசிரியர்' : 'AI Teacher',
+            _adminText(language, 'AI Teacher', 'AI ஆசிரியர்', 'AI ගුරුවරයා'),
             false,
             () => context.go('/app/ai-teacher'),
           ),
@@ -591,7 +736,11 @@ class _MainShellState extends ConsumerState<MainShell> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _languageSegment(label: 'EN', selected: !isTamil, onTap: onEnglish),
+          _languageSegment(
+            label: 'EN',
+            selected: !isTamil && !isSinhala,
+            onTap: onEnglish,
+          ),
           const SizedBox(width: 2),
           _languageSegment(label: 'த', selected: isTamil, onTap: onTamil),
           const SizedBox(width: 2),
