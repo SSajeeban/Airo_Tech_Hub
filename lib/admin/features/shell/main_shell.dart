@@ -57,7 +57,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     'செப்',
     'அக்',
     'நவ',
-    'டிச',
+    'டிச'
   ];
   static const _siShortMonths = [
     'ජන',
@@ -121,11 +121,8 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = _calculateSelectedIndex(context);
-    final isDashboardRoute = GoRouterState.of(context).uri.path == '/app';
     final session = ref.watch(sessionProvider);
-    final currentLang = ref.watch(languageProvider);
-    final isTamil = currentLang == 'ta';
-    final isSinhala = currentLang == 'si';
+    final isTamil = ref.watch(languageProvider) == 'ta';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final notices = ref.watch(noticesProvider);
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -209,13 +206,10 @@ class _MainShellState extends ConsumerState<MainShell> {
             child: Center(
               child: _languageSwitch(
                 isTamil: isTamil,
-                isSinhala: isSinhala,
                 onEnglish: () =>
                     ref.read(languageProvider.notifier).setLanguage('en'),
                 onTamil: () =>
                     ref.read(languageProvider.notifier).setLanguage('ta'),
-                onSinhala: () =>
-                    ref.read(languageProvider.notifier).setLanguage('si'),
               ),
             ),
           ),
@@ -527,7 +521,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               ],
             )
           : widget.child,
-      floatingActionButton: isDashboardRoute
+      floatingActionButton: selectedIndex == 0
           ? FloatingActionButton(
               heroTag: 'ai-teacher-fab',
               tooltip: _adminText(
@@ -624,10 +618,11 @@ class _MainShellState extends ConsumerState<MainShell> {
     return Container(
       width: 343,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : const Color(0xFFF8F9FB),
         border: Border(right: BorderSide(color: dividerColor)),
       ),
-      child: ListView(
+      child: Material(
+        color: isDark ? AppColors.cardDark : const Color(0xFFF8F9FB),
+        child: ListView(
         padding: const EdgeInsets.only(bottom: 12),
         children: [
           _desktopSectionLabel(
@@ -715,15 +710,14 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _languageSwitch({
     required bool isTamil,
-    required bool isSinhala,
     required VoidCallback onEnglish,
     required VoidCallback onTamil,
-    required VoidCallback onSinhala,
   }) {
     return Container(
       height: 32,
@@ -731,20 +725,25 @@ class _MainShellState extends ConsumerState<MainShell> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _languageSegment(
             label: 'EN',
-            selected: !isTamil && !isSinhala,
+              selected: !isTamil && !isSinhala,
+
             onTap: onEnglish,
           ),
           const SizedBox(width: 2),
-          _languageSegment(label: 'த', selected: isTamil, onTap: onTamil),
-          const SizedBox(width: 2),
-          _languageSegment(label: 'සි', selected: isSinhala, onTap: onSinhala),
+          _languageSegment(
+            label: 'த',
+            selected: isTamil,
+            onTap: onTamil,
+          ),
         ],
       ),
     );
@@ -800,30 +799,33 @@ class _MainShellState extends ConsumerState<MainShell> {
     VoidCallback onTap,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListTile(
-      dense: true,
-      minTileHeight: 50,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      tileColor: selected ? AppColors.accent : null,
-      leading: Icon(
-        icon,
-        size: 24,
-        color: selected
-            ? Colors.white
-            : (isDark ? AppColors.mutedDark : AppColors.mutedLight),
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        dense: true,
+        minTileHeight: 50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        tileColor: selected ? AppColors.accent : null,
+        leading: Icon(
+          icon,
+          size: 24,
           color: selected
               ? Colors.white
-              : (isDark ? AppColors.inkDark : AppColors.mutedLight),
-          fontSize: 16,
-          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              : (isDark ? AppColors.mutedDark : AppColors.mutedLight),
         ),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: selected
+                ? Colors.white
+                : (isDark ? AppColors.inkDark : AppColors.mutedLight),
+            fontSize: 16,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+        onTap: onTap,
       ),
-      onTap: onTap,
     );
   }
 }
