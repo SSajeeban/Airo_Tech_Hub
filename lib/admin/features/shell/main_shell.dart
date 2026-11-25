@@ -57,7 +57,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     'செப்',
     'அக்',
     'நவ',
-    'டிச'
+    'டிச',
   ];
   static const _siShortMonths = [
     'ජන',
@@ -122,7 +122,9 @@ class _MainShellState extends ConsumerState<MainShell> {
   Widget build(BuildContext context) {
     final selectedIndex = _calculateSelectedIndex(context);
     final session = ref.watch(sessionProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final currentLang = ref.watch(languageProvider);
+    final isTamil = currentLang == 'ta';
+    final isSinhala = currentLang == 'si';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final notices = ref.watch(noticesProvider);
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -206,6 +208,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             child: Center(
               child: _languageSwitch(
                 isTamil: isTamil,
+                isSinhala: isSinhala,
                 onEnglish: () =>
                     ref.read(languageProvider.notifier).setLanguage('en'),
                 onTamil: () =>
@@ -623,99 +626,100 @@ class _MainShellState extends ConsumerState<MainShell> {
       child: Material(
         color: isDark ? AppColors.cardDark : const Color(0xFFF8F9FB),
         child: ListView(
-        padding: const EdgeInsets.only(bottom: 12),
-        children: [
-          _desktopSectionLabel(
-            _adminText(language, 'PEOPLE', 'மக்கள்', 'පුද්ගලයින්'),
-          ),
-          _desktopNavItem(
-            context,
-            AppIcons.groups,
-            _adminText(language, 'Groups', 'குழுக்கள்', 'කණ්ඩායම්'),
-            selectedIndex == 1,
-            () => context.go('/app/groups'),
-          ),
-          _desktopNavItem(
-            context,
-            Icons.person_outline_rounded,
-            _adminText(language, 'Members', 'உறுப்பினர்கள்', 'සාමාජිකයින්'),
-            false,
-            () => context.go('/app/members'),
-          ),
-          _desktopSectionLabel(
-            _adminText(language, 'MESSAGES', 'செய்திகள்', 'පණිවිඩ'),
-          ),
-          _desktopNavItem(
-            context,
-            AppIcons.chat,
-            _adminText(language, 'Chat', 'அரட்டை', 'කතාබස්'),
-            selectedIndex == 2,
-            () => context.go('/app/chat'),
-          ),
-          _desktopNavItem(
-            context,
-            Icons.article_outlined,
-            _adminText(language, 'Notices', 'அறிவிப்புகள்', 'දැනුම්දීම්'),
-            false,
-            () => context.go('/app/notices'),
-          ),
-          _desktopNavItem(
-            context,
-            Icons.credit_card_outlined,
-            _adminText(language, 'Payments', 'கட்டணங்கள்', 'ගෙවීම්'),
-            false,
-            () => context.go('/app/payments'),
-          ),
-          _desktopSectionLabel(
-            _adminText(language, 'LEARN', 'கற்றல்', 'ඉගෙනීම'),
-          ),
-          _desktopNavItem(
-            context,
-            AppIcons.meetings,
-            _adminText(language, 'Meetings', 'கூட்டங்கள்', 'රැස්වීම්'),
-            selectedIndex == 3,
-            () => context.go('/app/meetings'),
-          ),
-          _desktopNavItem(
-            context,
-            Icons.radio_button_checked_outlined,
-            _adminText(language, 'Recording', 'பதிவுகள்', 'පටිගත කිරීම්'),
-            false,
-            () => context.go('/app/recording'),
-          ),
-          _desktopNavItem(
-            context,
-            AppIcons.library,
-            _adminText(language, 'Library', 'நூலகம்', 'පුස්තකාලය'),
-            selectedIndex == 4,
-            () => context.go('/app/library'),
-          ),
-          _desktopNavItem(
-            context,
-            Icons.auto_awesome_outlined,
-            _adminText(language, 'AI Teacher', 'AI ஆசிரியர்', 'AI ගුරුවරයා'),
-            false,
-            () => context.go('/app/ai-teacher'),
-          ),
-          const SizedBox(height: 12),
-          Divider(height: 1, color: dividerColor),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 14, 10, 0),
-            child: Text(
-              '© 2026 Airo Techhub',
-              style: TextStyle(
-                color: isDark ? AppColors.mutedDark : AppColors.mutedLight,
+          padding: const EdgeInsets.only(bottom: 12),
+          children: [
+            _desktopSectionLabel(
+              _adminText(language, 'PEOPLE', 'மக்கள்', 'පුද්ගලයින්'),
+            ),
+            _desktopNavItem(
+              context,
+              AppIcons.groups,
+              _adminText(language, 'Groups', 'குழுக்கள்', 'කණ්ඩායම්'),
+              selectedIndex == 1,
+              () => context.go('/app/groups'),
+            ),
+            _desktopNavItem(
+              context,
+              Icons.person_outline_rounded,
+              _adminText(language, 'Members', 'உறுப்பினர்கள்', 'සාමාජිකයින්'),
+              false,
+              () => context.go('/app/members'),
+            ),
+            _desktopSectionLabel(
+              _adminText(language, 'MESSAGES', 'செய்திகள்', 'පණිවිඩ'),
+            ),
+            _desktopNavItem(
+              context,
+              AppIcons.chat,
+              _adminText(language, 'Chat', 'அரட்டை', 'කතාබස්'),
+              selectedIndex == 2,
+              () => context.go('/app/chat'),
+            ),
+            _desktopNavItem(
+              context,
+              Icons.article_outlined,
+              _adminText(language, 'Notices', 'அறிவிப்புகள்', 'දැනුම්දීම්'),
+              false,
+              () => context.go('/app/notices'),
+            ),
+            _desktopNavItem(
+              context,
+              Icons.credit_card_outlined,
+              _adminText(language, 'Payments', 'கட்டணங்கள்', 'ගෙවීම්'),
+              false,
+              () => context.go('/app/payments'),
+            ),
+            _desktopSectionLabel(
+              _adminText(language, 'LEARN', 'கற்றல்', 'ඉගෙනීම'),
+            ),
+            _desktopNavItem(
+              context,
+              AppIcons.meetings,
+              _adminText(language, 'Meetings', 'கூட்டங்கள்', 'රැස්වීම්'),
+              selectedIndex == 3,
+              () => context.go('/app/meetings'),
+            ),
+            _desktopNavItem(
+              context,
+              Icons.radio_button_checked_outlined,
+              _adminText(language, 'Recording', 'பதிவுகள்', 'පටිගත කිරීම්'),
+              false,
+              () => context.go('/app/recording'),
+            ),
+            _desktopNavItem(
+              context,
+              AppIcons.library,
+              _adminText(language, 'Library', 'நூலகம்', 'පුස්තකාලය'),
+              selectedIndex == 4,
+              () => context.go('/app/library'),
+            ),
+            _desktopNavItem(
+              context,
+              Icons.auto_awesome_outlined,
+              _adminText(language, 'AI Teacher', 'AI ஆசிரியர்', 'AI ගුරුවරයා'),
+              false,
+              () => context.go('/app/ai-teacher'),
+            ),
+            const SizedBox(height: 12),
+            Divider(height: 1, color: dividerColor),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 14, 10, 0),
+              child: Text(
+                '© 2026 Airo Techhub',
+                style: TextStyle(
+                  color: isDark ? AppColors.mutedDark : AppColors.mutedLight,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _languageSwitch({
     required bool isTamil,
+    required bool isSinhala,
     required VoidCallback onEnglish,
     required VoidCallback onTamil,
   }) {
@@ -725,25 +729,19 @@ class _MainShellState extends ConsumerState<MainShell> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _languageSegment(
             label: 'EN',
-              selected: !isTamil && !isSinhala,
+            selected: !isTamil && !isSinhala,
 
             onTap: onEnglish,
           ),
           const SizedBox(width: 2),
-          _languageSegment(
-            label: 'த',
-            selected: isTamil,
-            onTap: onTamil,
-          ),
+          _languageSegment(label: 'த', selected: isTamil, onTap: onTamil),
         ],
       ),
     );
