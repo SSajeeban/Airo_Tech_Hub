@@ -44,7 +44,7 @@ class _HomeShellState extends State<HomeShell> {
   String get _language => AppSettings.instance.language;
   bool get _isTamil => AppSettings.instance.isTamil;
 
-  bool _isDarkMode = false;
+  bool get _isDarkMode => AppSettings.instance.themeMode == ThemeMode.dark;
   late String _memberName;
   late String _memberPhone;
   String? _memberImage;
@@ -721,9 +721,7 @@ class _HomeShellState extends State<HomeShell> {
         color: iconColor,
       ),
       onPressed: () {
-        setState(() => _isDarkMode = !_isDarkMode);
-        AppSettings.instance.themeMode =
-            _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+        setState(() => AppSettings.instance.toggleTheme());
       },
     );
   }
@@ -1508,7 +1506,7 @@ class _HomeShellState extends State<HomeShell> {
             ),
             const SizedBox(width: 14),
             Text(
-              label,
+              _tr(label),
               style: TextStyle(
                 color: isSelected ? Colors.white : textColor,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

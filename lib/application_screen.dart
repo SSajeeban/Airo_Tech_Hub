@@ -5,6 +5,7 @@ import 'mock_data.dart';
 import 'app_logo.dart';
 import 'portal_screen.dart';
 import 'phone_sign_in_screen.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApplicationScreen extends StatefulWidget {
@@ -26,12 +27,12 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text(
+        title: Text(
           'Are you sure you want to sign out?',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1F2A5A),
+            color: Theme.of(dialogContext).colorScheme.onSurface,
           ),
         ),
         actions: [
@@ -39,14 +40,17 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
             onPressed: () {
               Navigator.pop(dialogContext, false);
             },
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: Color(0xFF1B9A85)),
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.primary,
+              ),
             ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF1B9A85),
+              foregroundColor: Colors.white,
             ),
             onPressed: () {
               Navigator.pop(dialogContext, true);
@@ -73,7 +77,9 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const navy = Color(0xFF1F2A5A);
+    final navy = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF1F2A5A);
     const teal = Color(0xFF1B9A85);
 
     final groups = MockDb.groupsForMember(widget.member);
@@ -96,7 +102,7 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Choose an application',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -143,6 +149,7 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
                           },
                     style: FilledButton.styleFrom(
                       backgroundColor: teal,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text('CONTINUE'),
@@ -170,7 +177,7 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
                           overlayColor: Colors.transparent,
                           foregroundColor: _isSignOutHovered
                               ? teal
-                              : Colors.black54,
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         child: Text(
                           'Sign out',
@@ -179,7 +186,9 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
                             decoration: TextDecoration.underline,
                             decorationColor: _isSignOutHovered
                                 ? teal
-                                : Colors.black54,
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                           ),
                         ),
                       ),
