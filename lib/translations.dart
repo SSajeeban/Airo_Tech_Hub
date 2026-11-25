@@ -1,4 +1,13 @@
 const Map<String, String> tamilTexts = {
+  'My Attendance': 'எனது வருகைப் பதிவு',
+  'Overall Attendance': 'மொத்த வருகை',
+  'Total Classes': 'மொத்த வகுப்புகள்',
+  'Present': 'வருகை',
+  'Absent': 'வருகையில்லை',
+  'No record': 'பதிவு இல்லை',
+  'Attendance History': 'வருகைப் பதிவு வரலாறு',
+  'No attendance records': 'வருகைப் பதிவுகள் இல்லை',
+  'Sample attendance data': 'மாதிரி வருகைத் தரவு',
   'SIGN IN TO A PORTAL': 'ஒரு portal-இல் உள்நுழைக',
   'Choose your portal': 'உங்கள் portal-ஐத் தேர்ந்தெடுக்கவும்',
   'Students & members': 'மாணவர்கள் & உறுப்பினர்கள்',
@@ -162,6 +171,15 @@ const Map<String, String> tamilTexts = {
 };
 
 const Map<String, String> sinhalaTexts = {
+  'My Attendance': 'මගේ පැමිණීම',
+  'Overall Attendance': 'සමස්ත පැමිණීම',
+  'Total Classes': 'මුළු පන්ති',
+  'Present': 'පැමිණ ඇත',
+  'Absent': 'පැමිණ නැත',
+  'No record': 'වාර්තා නැත',
+  'Attendance History': 'පැමිණීමේ ඉතිහාසය',
+  'No attendance records': 'පැමිණීමේ වාර්තා නැත',
+  'Sample attendance data': 'ආදර්ශ පැමිණීමේ දත්ත',
   'SIGN IN TO A PORTAL': 'ද්වාරයකට පිවිසෙන්න',
   'Choose your portal': 'ඔබගේ ද්වාරය තෝරන්න',
   'Students & members': 'සිසුන් සහ සාමාජිකයින්',

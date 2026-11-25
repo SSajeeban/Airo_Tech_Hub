@@ -25,6 +25,7 @@ import 'library_tab.dart';
 import 'mock_meeting_store.dart';
 import 'timetable_board.dart';
 import 'app_settings.dart';
+import 'attendance_screen.dart';
 
 class HomeShell extends StatefulWidget {
   final Member member;
@@ -482,6 +483,30 @@ class _HomeShellState extends State<HomeShell> {
                 AppColors.brandGreen,
                 teal,
               ),
+              ListTile(
+                leading: const Icon(
+                  Icons.calendar_today_outlined,
+                  color: AppColors.brandBlue,
+                ),
+                title: Text(
+                  _tr('My Attendance'),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                onTap: () {
+                  final navigator = Navigator.of(context);
+                  navigator.pop();
+                  navigator.push(
+                    MaterialPageRoute(
+                      builder: (_) => AttendanceScreen(
+                        groupName: widget.group.name,
+                      ),
+                    ),
+                  );
+                },
+              ),
+
               ListTile(
                 leading: const Icon(
                   Icons.payments_outlined,
