@@ -8,6 +8,7 @@ class ApiEndpoints {
   static const String site = '/site';
   static const String login = '/auth/login';
   static const String register = '/auth/register';
+  static const String changePassword = '/auth/change-password';
 
   // Subscriber & Workspace Endpoints
   static const String dashboard = '/dashboard';
@@ -15,12 +16,15 @@ class ApiEndpoints {
   static String groupMembers(String groupId) => '/groups/$groupId/members';
   static String groupJoinLink(String groupId) => '/groups/$groupId/join-link';
   static const String members = '/groups/members';
-  static String memberPhoto(String memberId) => '/groups/members/$memberId/photo';
-  static String memberPayments(String memberId) => '/groups/members/$memberId/payments';
+  static String memberPhoto(String memberId) =>
+      '/groups/members/$memberId/photo';
+  static String memberPayments(String memberId) =>
+      '/groups/members/$memberId/payments';
 
   // Chat & Notices
   static const String chatConversations = '/chat/conversations';
-  static String chatMessages(String conversationId) => '/chat/conversations/$conversationId/messages';
+  static String chatMessages(String conversationId) =>
+      '/chat/conversations/$conversationId/messages';
   static const String notices = '/notices';
   static const String noticesTranslate = '/notices/translate';
 
@@ -47,4 +51,3 @@ class ApiEndpoints {
   static const String applicationsMineProfile = '/applications/mine/profile';
   static const String applicationsMineLogo = '/applications/mine/logo';
 }
-

@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'home_shell.dart';
 import 'mock_data.dart';
 import 'app_logo.dart';
 import 'portal_screen.dart';
 import 'phone_sign_in_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApplicationScreen extends StatefulWidget {
   final Member member;
@@ -57,6 +58,9 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
     );
 
     if (confirm == true && mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('signed_in_phone');
+      if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
@@ -181,30 +185,20 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Text(
+                      '© ${DateTime.now().year} Airo Techhub',
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeTemp extends StatelessWidget {
-  final Member member;
-  final Group group;
-
-  const _HomeTemp({required this.member, required this.group});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(group.name), actions: const [AppBarLogo()]),
-      body: Center(
-        child: Text(
-          'Welcome, ${member.name}!\n(Home screen அடுத்த படியில்)',
-          textAlign: TextAlign.center,
         ),
       ),
     );

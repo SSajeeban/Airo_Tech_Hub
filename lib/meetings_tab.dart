@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 
 import 'admin/models/app_models.dart';
 import 'mock_meeting_store.dart';
+
+import 'app_settings.dart';
 
 class MeetingItem {
   final String id;
@@ -48,6 +50,8 @@ class MeetingsTab extends StatefulWidget {
 }
 
 class _MeetingsTabState extends State<MeetingsTab> {
+  String _tr(String value) => AppSettings.instance.tr(value);
+
   MockMeetingStore get _meetingStore => MockMeetingStore.instance;
 
   @override
@@ -90,7 +94,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
             ),
           ),
           TextSpan(
-            text: widget.isTamil ? 'கூட்டங்கள்' : 'Meetings',
+            text: _tr('Meetings'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -149,7 +153,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       Expanded(
                         flex: 4,
                         child: Text(
-                          widget.isTamil ? 'கூட்டம்' : 'Meeting',
+                          _tr('Meeting'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -160,7 +164,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       Expanded(
                         flex: 3,
                         child: Text(
-                          widget.isTamil ? 'ஆரம்பம்' : 'Starts',
+                          _tr('Starts'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -171,7 +175,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       Expanded(
                         flex: isWide ? 3 : 2,
                         child: Text(
-                          widget.isTamil ? 'நிலை' : 'Status',
+                          _tr('Status'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -182,7 +186,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          widget.isTamil ? 'செயல்கள்' : 'Actions',
+                          _tr('Actions'),
                           textAlign: TextAlign.end,
                           style: TextStyle(
                             fontSize: 13,
@@ -203,9 +207,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       vertical: 24,
                     ),
                     child: Text(
-                      widget.isTamil
-                          ? 'கூட்டங்கள் எதுவும் இல்லை.'
-                          : 'No meetings yet.',
+                      _tr('No meetings yet.'),
                       style: TextStyle(
                         fontSize: 14,
                         color: colors.onSurfaceVariant,
@@ -335,7 +337,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                   ),
                 ),
                 child: Text(
-                  widget.isTamil ? 'இணை' : 'Join',
+                  _tr('Join'),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,

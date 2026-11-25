@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'mock_data.dart';
+import 'app_settings.dart';
 
 class AppDateHelper {
   static const months = [
@@ -17,7 +18,6 @@ class AppDateHelper {
     'Nov',
     'Dec',
   ];
-
   static const fullMonths = [
     'January',
     'February',
@@ -32,7 +32,6 @@ class AppDateHelper {
     'November',
     'December',
   ];
-
   static const shortWeekdays = [
     'Sun',
     'Mon',
@@ -43,37 +42,50 @@ class AppDateHelper {
     'Sat',
   ];
 
-  static String formatShortDay(DateTime d) {
-    return shortWeekdays[d.weekday % 7];
-  }
+  static String formatShortDay(DateTime d) =>
+      AppSettings.instance.tr(shortWeekdays[d.weekday % 7]);
 
   static String formatWeekRange(DateTime start, DateTime end) {
-    return '${start.day} ${months[start.month - 1]} – ${end.day} ${months[end.month - 1]} ${end.year}';
+    final tr = AppSettings.instance.tr;
+    return '${start.day} ${tr(months[start.month - 1])} – ${end.day} ${tr(months[end.month - 1])} ${end.year}';
   }
 
   static String formatFullDate(DateTime d) {
-    return '${formatShortDay(d)}, ${d.day} ${months[d.month - 1]} ${d.year}';
+    final tr = AppSettings.instance.tr;
+    return '${formatShortDay(d)}, ${d.day} ${tr(months[d.month - 1])} ${d.year}';
   }
 
   static String formatClock(DateTime d) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    return '${d.day} ${months[d.month - 1]} ${d.year} | ${twoDigits(d.hour)}:${twoDigits(d.minute)}:${twoDigits(d.second)}';
+    return '${d.day} ${AppSettings.instance.tr(months[d.month - 1])} ${d.year} | ${twoDigits(d.hour)}:${twoDigits(d.minute)}:${twoDigits(d.second)}';
   }
 }
 
 class TimetableBoard extends StatefulWidget {
   final Group group;
   final Member member;
+  final bool? isDark;
 
-  const TimetableBoard({super.key, required this.group, required this.member});
+  const TimetableBoard({
+    super.key,
+    required this.group,
+    required this.member,
+    this.isDark,
+  });
 
   @override
   State<TimetableBoard> createState() => _TimetableBoardState();
 }
 
 class _TimetableBoardState extends State<TimetableBoard> {
+  String _tr(String value) => AppSettings.instance.tr(value);
   late DateTime _selectedDate;
   String _viewMode = 'Weekly'; // 'Weekly', 'Monthly', 'Yearly'
+
+  bool get _isDark =>
+      widget.isDark ??
+      (Theme.of(context).brightness == Brightness.dark ||
+          AppSettings.instance.themeMode == ThemeMode.dark);
 
   @override
   void initState() {
@@ -141,6 +153,32 @@ class _TimetableBoardState extends State<TimetableBoard> {
     return _eventsForDate(date).isNotEmpty;
   }
 
+  Widget _buildDateNumber(
+    int dayNumber, {
+    required bool isSelected,
+    required bool isToday,
+    required Color textColor,
+    required double fontSize,
+  }) {
+    return AnimatedScale(
+      scale: isSelected ? 1.08 : 1,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      child: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOutCubic,
+        style: TextStyle(
+          color: isSelected
+              ? Colors.white
+              : (isToday ? const Color(0xFF1B9A85) : textColor),
+          fontWeight: isSelected || isToday ? FontWeight.w700 : FontWeight.w500,
+          fontSize: fontSize,
+        ),
+        child: Text('$dayNumber'),
+      ),
+    );
+  }
+
   List<CalendarEvent> _eventsForDate(DateTime date) {
     return MockDb.eventsForGroup(widget.group.id)
         .where(
@@ -155,7 +193,6 @@ class _TimetableBoardState extends State<TimetableBoard> {
   void _showEventsForDate(DateTime date) {
     final events = _eventsForDate(date);
 
-    //
     if (events.isEmpty) return;
 
     showDialog(
@@ -168,15 +205,18 @@ class _TimetableBoardState extends State<TimetableBoard> {
           child: ListView.separated(
             shrinkWrap: true,
             itemCount: events.length,
-            separatorBuilder: (_, __) => const Divider(),
+            separatorBuilder: (_, _) => const Divider(),
             itemBuilder: (context, index) {
               final event = events[index];
 
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFFE3F4F0),
-                  child: Icon(Icons.event, color: Color(0xFF1B9A85)),
+                leading: CircleAvatar(
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF1B9A85).withValues(alpha: 0.2)
+                          : const Color(0xFFE3F4F0),
+                  child: const Icon(Icons.event, color: Color(0xFF1B9A85)),
                 ),
                 title: Text(
                   event.title,
@@ -206,64 +246,103 @@ class _TimetableBoardState extends State<TimetableBoard> {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
-
     final hasSelectedDateEvents = _hasEvents(_selectedDate);
 
-    if (isWide) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: hasSelectedDateEvents ? 6 : 1,
-            child: _buildCalendarCard(),
-          ),
-          if (hasSelectedDateEvents) ...[
-            const SizedBox(width: 16),
-            Expanded(flex: 4, child: _buildEventCard()),
-          ],
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildCalendarCard(),
-        if (hasSelectedDateEvents) ...[
-          const SizedBox(height: 16),
-          _buildEventCard(),
-        ],
-      ],
+    // Provide a Material ancestor for all InkWell widgets in this board.
+    return Material(
+      color: Colors.transparent,
+      child: isWide
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: hasSelectedDateEvents ? 6 : 1,
+                  child: _buildCalendarCard(),
+                ),
+                if (hasSelectedDateEvents) ...[
+                  const SizedBox(width: 16),
+                  Expanded(flex: 4, child: _buildEventCard()),
+                ],
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildCalendarCard(),
+                if (hasSelectedDateEvents) ...[
+                  const SizedBox(height: 16),
+                  _buildEventCard(),
+                ],
+              ],
+            ),
     );
   }
 
   Widget _buildCalendarCard() {
+    final dark = _isDark;
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      switchInCurve: Curves.easeInOutCubic,
+      switchOutCurve: Curves.easeInOutCubic,
+      transitionBuilder: (child, animation) {
+        final slide = Tween<Offset>(
+          begin: const Offset(0, 0.015),
+          end: Offset.zero,
+        ).animate(animation);
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: slide,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.99, end: 1).animate(animation),
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: _buildCalendarCardContent(
+        key: ValueKey('${AppSettings.instance.language}_$dark'),
+      ),
+    );
+  }
+
+  Widget _buildCalendarCardContent({required Key key}) {
     const navy = Color(0xFF1F2A5A);
     const teal = Color(0xFF1B9A85);
-    final colors = Theme.of(context).colorScheme;
-    final selectedColor = Theme.of(context).brightness == Brightness.dark
-        ? teal
-        : navy;
+    final isDark = _isDark;
+
+    // Palette explicitly tuned for dark/light theme to match home page background
+    final cardBg = isDark ? const Color(0xFF1F2937) : Colors.white;
+    final cardBorder =
+        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
+    final textPrimary = isDark ? Colors.white : const Color(0xFF1F2937);
+    final textSecondary =
+        isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
+    final dayBoxBg = isDark ? const Color(0xFF111827) : Colors.white;
+    final dayBoxBorder =
+        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
+    final selectedColor = isDark ? teal : navy;
 
     final startOfWeek = _getStartOfWeek(_selectedDate);
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
     final weekRangeText = _viewMode == 'Weekly'
         ? AppDateHelper.formatWeekRange(startOfWeek, endOfWeek)
         : _viewMode == 'Monthly'
-        ? '${AppDateHelper.fullMonths[_selectedDate.month - 1]} ${_selectedDate.year}'
+        ? '${_tr(AppDateHelper.fullMonths[_selectedDate.month - 1])} ${_selectedDate.year}'
         : '${_selectedDate.year}';
 
     return Container(
+      key: key,
       padding: EdgeInsets.all(
         MediaQuery.of(context).size.width < 400 ? 12 : 20,
       ),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: cardBg,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.outlineVariant),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -272,50 +351,59 @@ class _TimetableBoardState extends State<TimetableBoard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Date range (e.g. "8 Nov – 14 Nov 2026")
+          // Header: Date range (e.g. "22 Nov – 28 Nov 2026")
           Text(
             weekRangeText,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: colors.onSurface,
+              color: textPrimary,
             ),
           ),
           const SizedBox(height: 16),
 
           // View switches + Nav buttons
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            alignment: WrapAlignment.spaceBetween,
-            children: [
-              // Segmented Tabs: Weekly, Monthly, Yearly
-              Container(
-                decoration: BoxDecoration(
-                  color: colors.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.all(3),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildViewButton('Weekly', teal, colors.onSurface),
-                    _buildViewButton('Monthly', teal, colors.onSurface),
-                    _buildViewButton('Yearly', teal, colors.onSurface),
-                  ],
-                ),
-              ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 500;
 
-              // Controls: < Today >
-              Row(
+              final viewButtons = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildViewButton(
+                    _tr('Weekly'),
+                    teal,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
+                  ),
+                  _buildViewButton(
+                    _tr('Monthly'),
+                    teal,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
+                  ),
+                  _buildViewButton(
+                    _tr('Yearly'),
+                    teal,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
+                  ),
+                ],
+              );
+
+              final navControls = Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildNavIconButton(
                     Icons.chevron_left,
                     _onPrev,
-                    colors.onSurface,
-                    colors.outlineVariant,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
                   ),
                   const SizedBox(width: 6),
                   OutlinedButton(
@@ -326,15 +414,17 @@ class _TimetableBoardState extends State<TimetableBoard> {
                         vertical: 8,
                       ),
                       minimumSize: Size.zero,
-                      side: BorderSide(color: colors.outlineVariant),
+                      backgroundColor:
+                          isDark ? const Color(0xFF111827) : Colors.transparent,
+                      side: BorderSide(color: cardBorder),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     child: Text(
-                      'Today',
+                      _tr('Today'),
                       style: TextStyle(
-                        color: colors.onSurface,
+                        color: textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -344,12 +434,32 @@ class _TimetableBoardState extends State<TimetableBoard> {
                   _buildNavIconButton(
                     Icons.chevron_right,
                     _onNext,
-                    colors.onSurface,
-                    colors.outlineVariant,
+                    textPrimary,
+                    cardBorder,
+                    isDark ? const Color(0xFF111827) : Colors.transparent,
                   ),
                 ],
-              ),
-            ],
+              );
+
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    viewButtons,
+                    const SizedBox(height: 10),
+                    Align(alignment: Alignment.centerLeft, child: navControls),
+                  ],
+                );
+              }
+
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                alignment: WrapAlignment.spaceBetween,
+                children: [...viewButtons.children, navControls],
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -358,40 +468,55 @@ class _TimetableBoardState extends State<TimetableBoard> {
             _buildWeeklyDaysRow(
               startOfWeek,
               selectedColor,
-              colors.onSurface,
-              colors.onSurfaceVariant,
-              colors.surface,
-              colors.outlineVariant,
+              textPrimary,
+              textSecondary,
+              dayBoxBg,
+              dayBoxBorder,
             )
           else if (_viewMode == 'Monthly')
             _buildMonthlyView(
               selectedColor,
-              colors.onSurface,
-              colors.onSurfaceVariant,
-              colors.outlineVariant,
+              textPrimary,
+              textSecondary,
+              dayBoxBorder,
+              dayBoxBg,
             )
           else
             _buildYearlyView(
               selectedColor,
-              colors.onSurface,
-              colors.surfaceContainerHighest,
+              textPrimary,
+              dayBoxBg,
+              dayBoxBorder,
             ),
         ],
       ),
     );
   }
 
-  Widget _buildViewButton(String label, Color teal, Color textColor) {
-    final isSelected = _viewMode == label;
+  Widget _buildViewButton(
+    String label,
+    Color teal,
+    Color textColor,
+    Color borderColor, [
+    Color? unselectedBg,
+  ]) {
+    final englishLabel = label == _tr('Weekly')
+        ? 'Weekly'
+        : label == _tr('Monthly')
+        ? 'Monthly'
+        : 'Yearly';
+    final isSelected = _viewMode == englishLabel;
     return InkWell(
-      onTap: () => setState(() => _viewMode = label),
+      onTap: () => setState(() => _viewMode = englishLabel),
       borderRadius: BorderRadius.circular(8),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? teal : Colors.transparent,
+          color: isSelected ? teal : (unselectedBg ?? Colors.transparent),
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isSelected ? teal : borderColor, width: 1),
         ),
         child: Text(
           label,
@@ -409,18 +534,23 @@ class _TimetableBoardState extends State<TimetableBoard> {
     IconData icon,
     VoidCallback onPressed,
     Color iconColor,
-    Color borderColor,
-  ) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(7),
-        decoration: BoxDecoration(
-          border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(8),
+    Color borderColor, [
+    Color? bgColor,
+  ]) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: bgColor ?? Colors.transparent,
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 18, color: iconColor),
         ),
-        child: Icon(icon, size: 18, color: iconColor),
       ),
     );
   }
@@ -491,12 +621,11 @@ class _TimetableBoardState extends State<TimetableBoard> {
               setState(() {
                 _selectedDate = day;
               });
-              if (_hasEvents(day)) {
-                _showEventsForDate(day);
-              }
             },
             borderRadius: BorderRadius.circular(9),
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeInOutCubic,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isSelected ? selectedColor : surfaceColor,
@@ -510,21 +639,18 @@ class _TimetableBoardState extends State<TimetableBoard> {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '${day.day}',
-                    style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : (isToday ? const Color(0xFF1B9A85) : textColor),
-                      fontWeight: isSelected || isToday
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                      fontSize: 13,
-                    ),
+                  _buildDateNumber(
+                    day.day,
+                    isSelected: isSelected,
+                    isToday: isToday,
+                    textColor: textColor,
+                    fontSize: 13,
                   ),
                   const SizedBox(height: 3),
                   if (hasEvents)
-                    Container(
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOutCubic,
                       width: 5,
                       height: 5,
                       decoration: BoxDecoration(
@@ -550,6 +676,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
     Color textColor,
     Color mutedColor,
     Color outlineColor,
+    Color dayBgColor,
   ) {
     final firstDay = DateTime(_selectedDate.year, _selectedDate.month, 1);
     final daysInMonth = DateTime(
@@ -604,14 +731,13 @@ class _TimetableBoardState extends State<TimetableBoard> {
             return InkWell(
               onTap: () {
                 setState(() => _selectedDate = day);
-                if (_hasEvents(day)) {
-                  _showEventsForDate(day);
-                }
               },
               borderRadius: BorderRadius.circular(8),
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeInOutCubic,
                 decoration: BoxDecoration(
-                  color: isSelected ? selectedColor : Colors.transparent,
+                  color: isSelected ? selectedColor : dayBgColor,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected ? selectedColor : outlineColor,
@@ -620,21 +746,18 @@ class _TimetableBoardState extends State<TimetableBoard> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      '$dayNumber',
-                      style: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : (isToday ? const Color(0xFF1B9A85) : textColor),
-                        fontWeight: isSelected || isToday
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 12,
-                      ),
+                    _buildDateNumber(
+                      dayNumber,
+                      isSelected: isSelected,
+                      isToday: isToday,
+                      textColor: textColor,
+                      fontSize: 12,
                     ),
                     const SizedBox(height: 3),
                     if (hasEvents)
-                      Container(
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeInOutCubic,
                         width: 5,
                         height: 5,
                         decoration: BoxDecoration(
@@ -667,6 +790,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
     Color selectedColor,
     Color textColor,
     Color surfaceColor,
+    Color outlineColor,
   ) {
     return GridView.builder(
       shrinkWrap: true,
@@ -697,9 +821,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
               color: isSelectedMonth ? selectedColor : surfaceColor,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isSelectedMonth
-                    ? selectedColor
-                    : Theme.of(context).colorScheme.outlineVariant,
+                color: isSelectedMonth ? selectedColor : outlineColor,
               ),
             ),
             child: Column(
@@ -736,19 +858,27 @@ class _TimetableBoardState extends State<TimetableBoard> {
 
   Widget _buildEventCard() {
     const teal = Color(0xFF1B9A85);
-    final colors = Theme.of(context).colorScheme;
+    final isDark = _isDark;
+    final cardBg = isDark ? const Color(0xFF1F2937) : Colors.white;
+    final cardBorder =
+        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
+    final itemBg =
+        isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFC);
+    final textPrimary = isDark ? Colors.white : const Color(0xFF1F2937);
+    final textSecondary =
+        isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
     final events = _eventsForDate(_selectedDate);
 
     return Container(
       padding: const EdgeInsets.all(16),
       constraints: const BoxConstraints(minHeight: 150),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: cardBg,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.outlineVariant),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -758,11 +888,11 @@ class _TimetableBoardState extends State<TimetableBoard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Events',
+            _tr('Events'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: colors.onSurface,
+              color: textPrimary,
             ),
           ),
           const SizedBox(height: 5),
@@ -777,8 +907,8 @@ class _TimetableBoardState extends State<TimetableBoard> {
           const SizedBox(height: 14),
           if (events.isEmpty)
             Text(
-              'No events scheduled for this date.',
-              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
+              _tr('No events scheduled for this date.'),
+              style: TextStyle(color: textSecondary, fontSize: 13),
             )
           else
             ...events.map(
@@ -786,9 +916,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colors.surfaceContainerHighest,
+                  color: itemBg,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.outlineVariant),
+                  border: Border.all(color: cardBorder),
                 ),
                 child: Row(
                   children: [
@@ -802,7 +932,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                             event.title,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              color: colors.onSurface,
+                              color: textPrimary,
                               fontSize: 13,
                             ),
                           ),
@@ -810,7 +940,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                           Text(
                             '${event.startTime} - ${event.endTime}',
                             style: TextStyle(
-                              color: colors.onSurfaceVariant,
+                              color: textSecondary,
                               fontSize: 11,
                             ),
                           ),
@@ -818,7 +948,7 @@ class _TimetableBoardState extends State<TimetableBoard> {
                           Text(
                             event.description,
                             style: TextStyle(
-                              color: colors.onSurfaceVariant,
+                              color: textSecondary,
                               fontSize: 12,
                             ),
                           ),

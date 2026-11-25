@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../network/api_client.dart';
 import '../services/storage_service.dart';
 import '../../models/site_content.dart';
@@ -23,7 +24,7 @@ final siteContentProvider = FutureProvider<SiteContent>((ref) async {
   return client.fetchSiteContent();
 });
 
-// Language Provider ('en' or 'ta')
+// Language Provider ('en', 'ta', or 'si')
 class LanguageNotifier extends StateNotifier<String> {
   final StorageService _storage;
   LanguageNotifier(this._storage) : super(_storage.getLanguage());
@@ -34,7 +35,11 @@ class LanguageNotifier extends StateNotifier<String> {
   }
 
   void toggleLanguage() {
-    final next = state == 'en' ? 'ta' : 'en';
+    final next = state == 'en'
+        ? 'ta'
+        : state == 'ta'
+        ? 'si'
+        : 'en';
     setLanguage(next);
   }
 }
@@ -136,6 +141,38 @@ class SessionNotifier extends StateNotifier<UserSession?> {
     }
   }
 
+  Future<bool> updateProfile({
+    required String displayName,
+    required String email,
+  }) async {
+    final current = state;
+    if (current == null) return false;
+
+    final updated = UserSession(
+      token: current.token,
+      user: UserProfile(
+        id: current.user.id,
+        email: email,
+        displayName: displayName,
+        role: current.user.role,
+      ),
+    );
+
+    try {
+      final saved = await _client.updateProfile(
+        displayName: displayName,
+        email: email,
+      );
+      await _storage.saveSession(saved);
+      state = saved;
+      return true;
+    } catch (_) {
+      await _storage.saveSession(updated);
+      state = updated;
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _storage.clearSession();
     state = null;
@@ -234,10 +271,8 @@ final noticesProvider = StateProvider<List<NoticeModel>>((ref) {
       id: 'not_01',
       title: 'Monthly Mock Exam Scheduled for Saturday',
       titleTa: 'மாதாந்திர மாதிரித் தேர்வு சனிக்கிழமை நடைபெறும்',
-      content:
-          'All registered students must join the exam room 15 minutes prior to the start time with your study materials ready.',
-      contentTa:
-          'பதிவு செய்த அனைத்து மாணவர்களும் தங்கள் கற்றல் பொருட்களுடன் தொடக்க நேரத்திற்கு 15 நிமிடங்களுக்கு முன்பே தேர்வு அறையில் இணைய வேண்டும்.',
+      content: 'All registered students must join the exam room 15 minutes prior to the start time with your study materials ready.',
+      contentTa: 'பதிவு செய்த அனைத்து மாணவர்களும் தங்கள் கற்றல் பொருட்களுடன் தொடக்க நேரத்திற்கு 15 நிமிடங்களுக்கு முன்பே தேர்வு அறையில் இணைய வேண்டும்.',
       isPinned: true,
       publishedAt: DateTime.now().subtract(const Duration(hours: 4)),
       author: 'Academic Coordinator',
@@ -246,10 +281,8 @@ final noticesProvider = StateProvider<List<NoticeModel>>((ref) {
       id: 'not_02',
       title: 'New AI Teacher Learning Modules Released',
       titleTa: 'புதிய AI ஆசிரியர் கற்றல் தொகுதிகள் வெளியிடப்பட்டுள்ளன',
-      content:
-          'Students can now generate practice quizzes and study notes directly within their library tab.',
-      contentTa:
-          'மாணவர்கள் இப்போது தங்கள் நூலகத் தாவலில் நேரடியாக பயிற்சி வினாடி வினாக்கள் மற்றும் குறிப்புகளை உருவாக்க முடியும்.',
+      content: 'Students can now generate practice quizzes and study notes directly within their library tab.',
+      contentTa: 'மாணவர்கள் இப்போது தங்கள் நூலகத் தாவலில் நேரடியாக பயிற்சி வினாடி வினாக்கள் மற்றும் குறிப்புகளை உருவாக்க முடியும்.',
       isPinned: false,
       publishedAt: DateTime.now().subtract(const Duration(days: 2)),
       author: 'AIRO Techhub Support',

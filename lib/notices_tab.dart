@@ -1,24 +1,23 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'mock_data.dart';
-import 'timetable_board.dart';
+import 'app_settings.dart';
 
 class NoticesTab extends StatelessWidget {
   final List<Notice> notices;
-  final Group? group;
-  final Member? member;
 
-  const NoticesTab({super.key, required this.notices, this.group, this.member});
+  const NoticesTab({super.key, required this.notices});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final translate = AppSettings.instance.tr;
 
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
         Text(
-          'Notice board',
+          translate('Notice board'),
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -27,7 +26,7 @@ class NoticesTab extends StatelessWidget {
         const SizedBox(height: 12),
         if (notices.isEmpty)
           Text(
-            'No notices for you yet.',
+            translate('No notices for you yet.'),
             style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
           )
         else
@@ -40,18 +39,12 @@ class NoticesTab extends StatelessWidget {
               ),
               child: ListTile(
                 title: Text(
-                  n.title,
+                  translate(n.title),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text(n.body),
+                subtitle: Text(translate(n.body)),
               ),
             ),
-
-        const SizedBox(height: 24),
-
-        // Timetable board attached to the notice board
-        if (group != null && member != null)
-          TimetableBoard(group: group!, member: member!),
       ],
     );
   }

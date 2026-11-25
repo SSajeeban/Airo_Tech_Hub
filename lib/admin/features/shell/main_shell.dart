@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -41,7 +41,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     'செப்',
     'அக்',
     'நவ',
-    'டிச'
+    'டிச',
   ];
 
   @override
@@ -91,8 +91,11 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = _calculateSelectedIndex(context);
+    final isDashboardRoute = GoRouterState.of(context).uri.path == '/app';
     final session = ref.watch(sessionProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final currentLang = ref.watch(languageProvider);
+    final isTamil = currentLang == 'ta';
+    final isSinhala = currentLang == 'si';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final notices = ref.watch(noticesProvider);
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -119,14 +122,25 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
         ),
         titleSpacing: 16,
-        title: Image.asset(
-          'assets/images/logo.png',
-          height: 32,
-          fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => const Icon(
-            Icons.school_outlined,
-            color: AppColors.accent,
-            size: 28,
+        title: Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          decoration: isDark
+              ? BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.white, width: 1),
+                )
+              : null,
+          child: Image.asset(
+            'assets/images/logo.png',
+            height: 32,
+            fit: BoxFit.contain,
+            errorBuilder: (_, _, _) => const Icon(
+              Icons.school_outlined,
+              color: AppColors.accent,
+              size: 28,
+            ),
           ),
         ),
         actions: [
@@ -152,25 +166,20 @@ class _MainShellState extends ConsumerState<MainShell> {
             ),
             onPressed: () => context.push('/app/notices'),
           ),
-          IconButton(
-            tooltip: isTamil ? 'Switch to English' : 'தமிழுக்கு மாறவும்',
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.translate, size: 19, color: AppColors.accent),
-                const SizedBox(width: 4),
-                Text(
-                  isTamil ? 'த' : 'EN',
-                  style: const TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Center(
+              child: _languageSwitch(
+                isTamil: isTamil,
+                isSinhala: isSinhala,
+                onEnglish: () =>
+                    ref.read(languageProvider.notifier).setLanguage('en'),
+                onTamil: () =>
+                    ref.read(languageProvider.notifier).setLanguage('ta'),
+                onSinhala: () =>
+                    ref.read(languageProvider.notifier).setLanguage('si'),
+              ),
             ),
-            onPressed: () =>
-                ref.read(languageProvider.notifier).toggleLanguage(),
           ),
           IconButton(
             tooltip: isDark ? 'Light theme' : 'Dark theme',
@@ -410,7 +419,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               ],
             )
           : widget.child,
-      floatingActionButton: selectedIndex == 0
+      floatingActionButton: isDashboardRoute
           ? FloatingActionButton(
               heroTag: 'ai-teacher-fab',
               tooltip: isTamil ? 'AI ஆசிரியர்' : 'AI Teacher',
@@ -560,6 +569,63 @@ class _MainShellState extends ConsumerState<MainShell> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _languageSwitch({
+    required bool isTamil,
+    required bool isSinhala,
+    required VoidCallback onEnglish,
+    required VoidCallback onTamil,
+    required VoidCallback onSinhala,
+  }) {
+    return Container(
+      height: 32,
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _languageSegment(label: 'EN', selected: !isTamil, onTap: onEnglish),
+          const SizedBox(width: 2),
+          _languageSegment(label: 'த', selected: isTamil, onTap: onTamil),
+          const SizedBox(width: 2),
+          _languageSegment(label: 'සි', selected: isSinhala, onTap: onSinhala),
+        ],
+      ),
+    );
+  }
+
+  Widget _languageSegment({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(6),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        width: 28,
+        height: 24,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : AppColors.accent,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

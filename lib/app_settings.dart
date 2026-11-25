@@ -1,16 +1,49 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'translations.dart';
 
 class AppSettings extends ChangeNotifier {
   AppSettings._();
+
   static final AppSettings instance = AppSettings._();
 
-  bool isTamil = false;
+  String language = 'English';
   ThemeMode themeMode = ThemeMode.light;
 
+  bool get isTamil => language == 'Tamil';
+  bool get isSinhala => language == 'Sinhala';
+
+  String get languageLabel {
+    switch (language) {
+      case 'Tamil':
+        return 'த';
+      case 'Sinhala':
+        return 'සි';
+      default:
+        return 'EN';
+    }
+  }
+
+  void setLanguage(String value) {
+    if (!['English', 'Tamil', 'Sinhala'].contains(value)) return;
+
+    if (language != value) {
+      language = value;
+      notifyListeners();
+    }
+  }
+
   void toggleLanguage() {
-    isTamil = !isTamil;
-    notifyListeners();
+    switch (language) {
+      case 'English':
+        setLanguage('Tamil');
+        break;
+      case 'Tamil':
+        setLanguage('Sinhala');
+        break;
+      default:
+        setLanguage('English');
+    }
   }
 
   void toggleTheme() {
@@ -19,8 +52,14 @@ class AppSettings extends ChangeNotifier {
   }
 
   String tr(String english) {
-    if (!isTamil) return english;
-    return tamilTexts[english] ?? english;
+    switch (language) {
+      case 'Tamil':
+        return tamilTexts[english] ?? english;
+      case 'Sinhala':
+        return sinhalaTexts[english] ?? english;
+      default:
+        return english;
+    }
   }
 }
 
