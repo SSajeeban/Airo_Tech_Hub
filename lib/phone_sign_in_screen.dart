@@ -5,6 +5,7 @@ import 'app_settings.dart';
 import 'application_screen.dart';
 import 'mock_data.dart';
 import 'translations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PhoneSignInScreen extends StatefulWidget {
   const PhoneSignInScreen({super.key});
@@ -36,11 +37,14 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
     _showMessage('If this number is registered, a code was sent.');
   }
 
-  void _verify() {
+  Future<void> _verify() async {
     final member = MockDb.findMemberByPhone(_phoneController.text.trim());
     final codeOk = _codeController.text.trim() == MockDb.testOtp;
 
     if (member != null && codeOk) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('signed_in_phone', _phoneController.text.trim());
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => ApplicationScreen(member: member)),
