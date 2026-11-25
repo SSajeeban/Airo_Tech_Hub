@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
@@ -273,7 +274,9 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
         .watch(groupsProvider)
         .where((item) => item.id == widget.groupId)
         .firstOrNull;
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final currentLang = ref.watch(languageProvider);
+    final isTamil = currentLang == 'ta';
+    final isSinhala = currentLang == 'si';
     final colors = Theme.of(context).colorScheme;
 
     if (group == null) {
@@ -306,7 +309,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
             children: [
               Align(
                 alignment: Alignment.centerRight,
-                child: _languageSwitch(isTamil),
+                child: _languageSwitch(isTamil, isSinhala, currentLang),
               ),
               const SizedBox(height: 12),
               _breadcrumb(group, isTamil, colors),
@@ -357,7 +360,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     );
   }
 
-  Widget _languageSwitch(bool isTamil) {
+  Widget _languageSwitch(bool isTamil, bool isSinhala, String currentLang) {
     final colors = Theme.of(context).colorScheme;
     return Container(
       height: 32,
@@ -372,16 +375,20 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
         children: [
           _languageSegment(
             label: 'EN',
-            selected: !isTamil,
-            onTap: () =>
-                ref.read(languageProvider.notifier).setLanguage('en'),
+            selected: currentLang == 'en',
+            onTap: () => ref.read(languageProvider.notifier).setLanguage('en'),
           ),
           const SizedBox(width: 2),
           _languageSegment(
             label: 'த',
             selected: isTamil,
-            onTap: () =>
-                ref.read(languageProvider.notifier).setLanguage('ta'),
+            onTap: () => ref.read(languageProvider.notifier).setLanguage('ta'),
+          ),
+          const SizedBox(width: 2),
+          _languageSegment(
+            label: 'සි',
+            selected: isSinhala,
+            onTap: () => ref.read(languageProvider.notifier).setLanguage('si'),
           ),
         ],
       ),
@@ -429,7 +436,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
         ),
-        Icon(Icons.chevron_right_rounded, size: 18, color: colors.onSurfaceVariant),
+        Icon(
+          Icons.chevron_right_rounded,
+          size: 18,
+          color: colors.onSurfaceVariant,
+        ),
         Text(
           group.name,
           style: TextStyle(
@@ -460,9 +471,8 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
           children: [
             Text(
               isTamil ? 'சேரும் இணைப்பு' : 'Join link',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text(
@@ -631,10 +641,8 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
       children: [
         Text(
           isTamil ? 'உறுப்பினர்கள்' : 'Members',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: colors.primary,
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(context).textTheme.titleMedium
+              ?.copyWith(color: colors.primary, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         if (members.isEmpty)

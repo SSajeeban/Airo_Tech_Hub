@@ -24,7 +24,7 @@ final siteContentProvider = FutureProvider<SiteContent>((ref) async {
   return client.fetchSiteContent();
 });
 
-// Language Provider ('en' or 'ta')
+// Language Provider ('en', 'ta', or 'si')
 class LanguageNotifier extends StateNotifier<String> {
   final StorageService _storage;
   LanguageNotifier(this._storage) : super(_storage.getLanguage());
@@ -35,7 +35,11 @@ class LanguageNotifier extends StateNotifier<String> {
   }
 
   void toggleLanguage() {
-    final next = state == 'en' ? 'ta' : 'en';
+    final next = state == 'en'
+        ? 'ta'
+        : state == 'ta'
+        ? 'si'
+        : 'en';
     setLanguage(next);
   }
 }
