@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/app_providers.dart';
@@ -11,57 +10,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _IosInstallStep extends StatelessWidget {
-  final String number;
-  final String text;
-
-  const _IosInstallStep({required this.number, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: Color(0xFF14877C),
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              number,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: Color(0xFF475569),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
@@ -76,111 +24,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _openAiroWebsite() async {
-    final uri = Uri.parse('https://airotechhub.lk/');
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
-  void _showIosInstallInstructions() {
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        final isTamil = ref.watch(languageProvider) == 'ta';
-
-        return Container(
-          margin: const EdgeInsets.all(12),
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 30,
-                offset: const Offset(0, -8),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF116B9E), Color(0xFF14877C)],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.phone_iphone_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      isTamil ? 'iOS இல் நிறுவவும்' : 'Install on iOS',
-                      style: const TextStyle(
-                        color: Color(0xFF1E293B),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(sheetContext).pop(),
-                    icon: const Icon(Icons.close_rounded),
-                    color: const Color(0xFF64748B),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              _IosInstallStep(
-                number: '1',
-                text: isTamil
-                    ? 'Safari இல் Airo Techhub தளத்தைத் திறக்கவும்'
-                    : 'Open Airo Techhub in Safari',
-              ),
-              const SizedBox(height: 10),
-              _IosInstallStep(
-                number: '2',
-                text: isTamil
-                    ? 'பகிர் (Share) ஐகானைத் தட்டவும்'
-                    : 'Tap the Share icon',
-              ),
-              const SizedBox(height: 10),
-              _IosInstallStep(
-                number: '3',
-                text: isTamil
-                    ? 'Add to Home Screen தேர்ந்தெடுக்கவும்'
-                    : 'Choose Add to Home Screen',
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   Future<void> _handleLogin() async {
@@ -213,10 +56,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Widget _languageButton(
+    BuildContext context, {
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF14877C) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : const Color(0xFF64748B),
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentLang = ref.watch(languageProvider);
     final isTamil = currentLang == 'ta';
+    final isSinhala = currentLang == 'si';
+    String localText({
+      required String english,
+      required String tamil,
+      required String sinhala,
+    }) {
+      if (isTamil) return tamil;
+      if (isSinhala) return sinhala;
+      return english;
+    }
 
     return Scaffold(
       backgroundColor: const Color(
@@ -258,7 +137,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 }
                               },
                               child: Text(
-                                isTamil ? 'முகப்பு' : 'Home',
+                                localText(
+                                  english: 'Home',
+                                  tamil: 'முகப்பு',
+                                  sinhala: 'මුල් පිටුව',
+                                ),
                                 style: const TextStyle(
                                   color: Color(0xFF64748B),
                                   fontSize: 14,
@@ -274,7 +157,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ),
                             Text(
-                              isTamil ? 'உள்நுழையவும்' : 'Sign in',
+                              localText(
+                                english: 'Sign in',
+                                tamil: 'உள்நுழையவும்',
+                                sinhala: 'පිවිසෙන්න',
+                              ),
                               style: const TextStyle(
                                 color: Color(0xFF1E293B),
                                 fontSize: 14,
@@ -284,7 +171,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ],
                         ),
 
-                        // Language Pill Switcher [ EN | த ]
+                        // Language Pill Switcher [ EN | த | සි ]
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -294,67 +181,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           padding: const EdgeInsets.all(2),
                           child: Row(
                             children: [
-                              InkWell(
-                                onTap: () {
-                                  if (isTamil) {
-                                    ref
-                                        .read(languageProvider.notifier)
-                                        .setLanguage('en');
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: !isTamil
-                                        ? const Color(0xFF14877C)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'EN',
-                                    style: TextStyle(
-                                      color: !isTamil
-                                          ? Colors.white
-                                          : const Color(0xFF64748B),
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
+                              _languageButton(
+                                context,
+                                label: 'EN',
+                                selected: currentLang == 'en',
+                                onTap: () => ref
+                                    .read(languageProvider.notifier)
+                                    .setLanguage('en'),
                               ),
-                              InkWell(
-                                onTap: () {
-                                  if (!isTamil) {
-                                    ref
-                                        .read(languageProvider.notifier)
-                                        .setLanguage('ta');
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isTamil
-                                        ? const Color(0xFF14877C)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'த',
-                                    style: TextStyle(
-                                      color: isTamil
-                                          ? Colors.white
-                                          : const Color(0xFF64748B),
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
+                              _languageButton(
+                                context,
+                                label: 'த',
+                                selected: isTamil,
+                                onTap: () => ref
+                                    .read(languageProvider.notifier)
+                                    .setLanguage('ta'),
+                              ),
+                              _languageButton(
+                                context,
+                                label: 'සි',
+                                selected: isSinhala,
+                                onTap: () => ref
+                                    .read(languageProvider.notifier)
+                                    .setLanguage('si'),
                               ),
                             ],
                           ),
@@ -446,9 +295,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       // Subtitle: "Sign in with your email"
                                       Center(
                                         child: Text(
-                                          isTamil
-                                              ? 'உங்கள் மின்னஞ்சல் மூலம் உள்நுழையவும்'
-                                              : 'Sign in with your email',
+                                          localText(
+                                            english: 'Sign in with your email',
+                                            tamil: 'உங்கள் மின்னஞ்சல் மூலம் உள்நுழையவும்',
+                                            sinhala: 'ඔබගේ විද්‍යුත් තැපෑලෙන් පිවිසෙන්න',
+                                          ),
                                           style: const TextStyle(
                                             color: Color(0xFF64748B),
                                             fontSize: 14,
@@ -485,7 +336,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                                       // Email Field Label
                                       Text(
-                                        isTamil ? 'மின்னஞ்சல்' : 'Email',
+                                        localText(
+                                          english: 'Email',
+                                          tamil: 'மின்னஞ்சல்',
+                                          sinhala: 'විද්‍යුත් තැපෑල',
+                                        ),
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
@@ -540,9 +395,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         validator: (val) {
                                           if (val == null ||
                                               val.trim().isEmpty) {
-                                            return isTamil
-                                                ? 'மின்னஞ்சலை உள்ளிடவும்'
-                                                : 'Please enter your email';
+                                            return localText(
+                                              english:
+                                                  'Please enter your email',
+                                              tamil: 'மின்னஞ்சலை உள்ளிடவும்',
+                                              sinhala: 'කරුණාකර විද්‍යුත් තැපෑල ඇතුළත් කරන්න',
+                                            );
                                           }
                                           return null;
                                         },
@@ -552,7 +410,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                                       // Password Field Label
                                       Text(
-                                        isTamil ? 'கடவுச்சொல்' : 'Password',
+                                        localText(
+                                          english: 'Password',
+                                          tamil: 'கடவுச்சொல்',
+                                          sinhala: 'මුරපදය',
+                                        ),
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
@@ -605,9 +467,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ),
                                         validator: (val) {
                                           if (val == null || val.isEmpty) {
-                                            return isTamil
-                                                ? 'கடவுச்சொல்லை உள்ளிடவும்'
-                                                : 'Please enter your password';
+                                            return localText(
+                                              english:
+                                                  'Please enter your password',
+                                              tamil: 'கடவுச்சொல்லை உள்ளிடவும்',
+                                              sinhala:
+                                                  'කරුණාකර මුරපදය ඇතුළත් කරන්න',
+                                            );
                                           }
                                           return null;
                                         },
@@ -644,9 +510,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                                       ),
                                                 )
                                               : Text(
-                                                  isTamil
-                                                      ? 'உள்நுழைக'
-                                                      : 'SIGN IN',
+                                                  localText(
+                                                    english: 'SIGN IN',
+                                                    tamil: 'உள்நுழைக',
+                                                    sinhala: 'පිවිසෙන්න',
+                                                  ),
                                                   style: const TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w700,
@@ -666,9 +534,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                               WrapCrossAlignment.center,
                                           children: [
                                             Text(
-                                              isTamil
-                                                  ? 'புதிய சந்தாதாரரா? '
-                                                  : 'New subscriber? ',
+                                              localText(
+                                                english: 'New subscriber? ',
+                                                tamil: 'புதிய சந்தாதாரரா? ',
+                                                sinhala: 'නව ග්‍රාහකයෙක්ද? ',
+                                              ),
                                               style: const TextStyle(
                                                 color: Color(0xFF64748B),
                                                 fontSize: 13,
@@ -678,9 +548,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                               onTap: () =>
                                                   context.push('/register'),
                                               child: Text(
-                                                isTamil
-                                                    ? 'கணக்கை உருவாக்கவும்'
-                                                    : 'Create an account',
+                                                localText(
+                                                  english: 'Create an account',
+                                                  tamil: 'கணக்கை உருவாக்கவும்',
+                                                  sinhala: 'ගිණුමක් සාදන්න',
+                                                ),
                                                 style: const TextStyle(
                                                   color: Color(0xFF14877C),
                                                   fontSize: 13,
@@ -746,7 +618,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              isTamil ? 'AI ஆசிரியர்' : 'AI Teacher',
+                              localText(
+                                english: 'AI Teacher',
+                                tamil: 'AI ஆசிரியர்',
+                                sinhala: 'AI ගුරුවරයා',
+                              ),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -755,9 +631,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              isTamil
-                                  ? 'எந்தக் கேள்வியையும் கேளுங்கள், தேர்வுக்கு படிக்கவும் அல்லது ஆய்வு செய்யவும்.'
-                                  : 'Ask a question, get an exam, or write notes. It works 24/7 on Tamil and English.',
+                              localText(
+                                english: 'Ask a question, get an exam, or write notes.',
+                                tamil: 'எந்தக் கேள்வியையும் கேளுங்கள், தேர்வுக்கு படிக்கவும் அல்லது ஆய்வு செய்யவும்.',
+                                sinhala: 'ප්‍රශ්නයක් විමසන්න, විභාගයක් සකසන්න හෝ සටහන් ලියන්න.',
+                              ),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.78),
                                 fontSize: 12,
@@ -766,73 +644,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: _openAiroWebsite,
-                            icon: Container(
-                              width: 24,
-                              height: 24,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFFCBD5E1),
-                                ),
-                              ),
-                              child: const Text(
-                                'G',
-                                style: TextStyle(
-                                  color: Color(0xFF4285F4),
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                            label: Text(isTamil ? 'Airo இணையதளம்' : 'Airo Web'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF1E293B),
-                              backgroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0xFFE2E8F0)),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: _showIosInstallInstructions,
-                            icon: const Icon(
-                              Icons.phone_iphone_rounded,
-                              size: 20,
-                              color: Color(0xFF111827),
-                            ),
-                            label: Text(isTamil ? 'iOS பயன்பாடு' : 'iOS App'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF1E293B),
-                              backgroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0xFFE2E8F0)),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ],

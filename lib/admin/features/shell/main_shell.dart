@@ -41,7 +41,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     'செப்',
     'அக்',
     'நவ',
-    'டிச'
+    'டிச',
   ];
 
   @override
@@ -93,7 +93,9 @@ class _MainShellState extends ConsumerState<MainShell> {
     final selectedIndex = _calculateSelectedIndex(context);
     final isDashboardRoute = GoRouterState.of(context).uri.path == '/app';
     final session = ref.watch(sessionProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final currentLang = ref.watch(languageProvider);
+    final isTamil = currentLang == 'ta';
+    final isSinhala = currentLang == 'si';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final notices = ref.watch(noticesProvider);
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -169,10 +171,13 @@ class _MainShellState extends ConsumerState<MainShell> {
             child: Center(
               child: _languageSwitch(
                 isTamil: isTamil,
+                isSinhala: isSinhala,
                 onEnglish: () =>
                     ref.read(languageProvider.notifier).setLanguage('en'),
                 onTamil: () =>
                     ref.read(languageProvider.notifier).setLanguage('ta'),
+                onSinhala: () =>
+                    ref.read(languageProvider.notifier).setLanguage('si'),
               ),
             ),
           ),
@@ -570,8 +575,10 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Widget _languageSwitch({
     required bool isTamil,
+    required bool isSinhala,
     required VoidCallback onEnglish,
     required VoidCallback onTamil,
+    required VoidCallback onSinhala,
   }) {
     return Container(
       height: 32,
@@ -579,24 +586,16 @@ class _MainShellState extends ConsumerState<MainShell> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _languageSegment(
-            label: 'EN',
-            selected: !isTamil,
-            onTap: onEnglish,
-          ),
+          _languageSegment(label: 'EN', selected: !isTamil, onTap: onEnglish),
           const SizedBox(width: 2),
-          _languageSegment(
-            label: 'த',
-            selected: isTamil,
-            onTap: onTamil,
-          ),
+          _languageSegment(label: 'த', selected: isTamil, onTap: onTamil),
+          const SizedBox(width: 2),
+          _languageSegment(label: 'සි', selected: isSinhala, onTap: onSinhala),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_settings.dart';
 import 'home_shell.dart';
@@ -18,7 +19,11 @@ class ApplicationScreen extends StatefulWidget {
 class _ApplicationScreenState extends State<ApplicationScreen> {
   Group? _selected;
 
-  void _goToSite() {
+  Future<void> _goToSite() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('signed_in_phone');
+    if (!mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
