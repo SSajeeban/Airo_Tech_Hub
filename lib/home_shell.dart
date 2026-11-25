@@ -268,17 +268,15 @@ class _HomeShellState extends State<HomeShell> {
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
           ),
-          title: MediaQuery.sizeOf(context).width >= 420
-              ? Image.asset(
-                  _isDarkMode
-                      ? 'assets/images/logo_dark.png'
-                      : 'assets/images/logo.png',
-                  height: 28,
-                  errorBuilder: (_, _, _) => Text(widget.group.name),
-                )
-              : null,
+          title: Image.asset(
+            _isDarkMode
+                ? 'assets/images/logo_dark.png'
+                : 'assets/images/logo.png',
+            height: MediaQuery.sizeOf(context).width >= 420 ? 28 : 22,
+            errorBuilder: (_, _, _) => Text(widget.group.name),
+          ),
           actions: [
-            _buildCompactClock(),
+            if (MediaQuery.sizeOf(context).width >= 420) _buildCompactClock(),
             _buildNotificationButton(notices),
             _buildThemeButton(),
             _buildLanguageToggle(teal),
@@ -492,15 +490,6 @@ class _HomeShellState extends State<HomeShell> {
           const SizedBox(width: 10),
           _buildThemeButton(foreground: foreground),
           const SizedBox(width: 14),
-          Text(
-            _memberName,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: _isDarkMode ? Colors.white : const Color(0xFF1F2A5A),
-            ),
-          ),
-          const SizedBox(width: 8),
           _buildProfileAvatar(teal),
         ],
       ),

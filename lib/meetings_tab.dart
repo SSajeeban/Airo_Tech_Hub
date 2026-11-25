@@ -81,28 +81,13 @@ class _MeetingsTabState extends State<MeetingsTab> {
     final colors = Theme.of(context).colorScheme;
     final isWide = MediaQuery.of(context).size.width >= 750;
     final meetings = _meetings;
-    final headerTitle = RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(
-            text: '${widget.memberName} / ',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: colors.onSurfaceVariant,
-              letterSpacing: 0.2,
-            ),
-          ),
-          TextSpan(
-            text: _tr('Meetings'),
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: colors.onSurface,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
+    final headerTitle = Text(
+      _tr('Meetings'),
+      style: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        color: colors.onSurface,
+        letterSpacing: 0.2,
       ),
     );
 
