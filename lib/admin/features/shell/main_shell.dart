@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
-import '../../core/localization/admin_localizations.dart';
 import '../../core/providers/app_providers.dart';
 
 String _adminText(
@@ -745,19 +744,19 @@ class _MainShellState extends ConsumerState<MainShell> {
         children: [
           _languageSegment(
             label: 'EN',
-            selected: isAdminLanguageSelected(currentLanguage, 'en'),
+            selected: currentLanguage == 'en',
             onTap: onEnglish,
           ),
           const SizedBox(width: 2),
           _languageSegment(
             label: 'த',
-            selected: isAdminLanguageSelected(currentLanguage, 'ta'),
+            selected: currentLanguage == 'ta',
             onTap: onTamil,
           ),
           const SizedBox(width: 2),
           _languageSegment(
             label: 'සි',
-            selected: isAdminLanguageSelected(currentLanguage, 'si'),
+            selected: currentLanguage == 'si',
             onTap: onSinhala,
           ),
         ],
@@ -814,7 +813,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             child: Row(
               children: [
                 Expanded(child: Text(label)),
-                if (normalizeAdminLanguage(language) == code)
+                if (language == code)
                   const Icon(Icons.check, size: 18),
               ],
             ),
