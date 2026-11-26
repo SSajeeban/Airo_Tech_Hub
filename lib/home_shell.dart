@@ -258,7 +258,8 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     const navy = Color(0xFF1F2A5A);
     const teal = Color(0xFF1B9A85);
-    final isWide = MediaQuery.of(context).size.width >= 800;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isWide = screenWidth >= 800;
     final notices = MockDb.notices
         .where((notice) => notice.groupId == widget.group.id)
         .toList();
@@ -389,14 +390,28 @@ class _HomeShellState extends State<HomeShell> {
             _isDarkMode
                 ? 'assets/images/logo_dark.png'
                 : 'assets/images/logo.png',
-            height: MediaQuery.sizeOf(context).width >= 420 ? 28 : 22,
-            errorBuilder: (_, _, _) => Text(widget.group.name),
+            width: screenWidth < 420
+                ? (screenWidth * 0.28).clamp(76.0, 112.0)
+                : null,
+            height: screenWidth >= 420 ? 28 : 22,
+            errorBuilder: (_, _, _) => SizedBox(
+              width: screenWidth < 420 ? (screenWidth * 0.28) : null,
+              child: Text(
+                widget.group.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
           actions: [
             if (MediaQuery.sizeOf(context).width >= 420) _buildCompactClock(),
             _buildNotificationButton(notices),
-            _buildThemeButton(),
-            _buildLanguageToggle(teal),
+            if (MediaQuery.sizeOf(context).width < 420)
+              _buildCompactSettingsMenu(teal)
+            else ...[
+              _buildThemeButton(),
+              _buildLanguageToggle(teal),
+            ],
             const SizedBox(width: 4),
             _buildProfileAvatar(teal),
             const SizedBox(width: 8),
@@ -563,6 +578,9 @@ class _HomeShellState extends State<HomeShell> {
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
+          labelBehavior: MediaQuery.sizeOf(context).width < 400
+              ? NavigationDestinationLabelBehavior.alwaysHide
+              : NavigationDestinationLabelBehavior.alwaysShow,
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: [
             NavigationDestination(
@@ -710,6 +728,62 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
+  Widget _buildCompactSettingsMenu(Color teal) {
+    return PopupMenuButton<String>(
+      key: const ValueKey('member-compact-settings'),
+      tooltip: _tr('Settings'),
+      icon: const Icon(Icons.tune_rounded),
+      onSelected: (value) {
+        if (value == 'theme') {
+          setState(() => AppSettings.instance.toggleTheme());
+        } else {
+          setState(() => AppSettings.instance.setLanguage(value));
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'theme',
+          child: Row(
+            children: [
+              Icon(
+                _isDarkMode
+                    ? Icons.light_mode_outlined
+                    : Icons.dark_mode_outlined,
+                color: teal,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                _isDarkMode
+                    ? _tr('Switch to light mode')
+                    : _tr('Switch to dark mode'),
+              ),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        for (final (language, label) in [
+          ('English', 'EN'),
+          ('Tamil', 'த'),
+          ('Sinhala', 'සි'),
+        ])
+          PopupMenuItem(
+            value: language,
+            child: Row(
+              children: [
+                SizedBox(width: 24, child: Text(label)),
+                const SizedBox(width: 12),
+                Text(language),
+                if (_language == language) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 18),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   void _showNotifications(
     List<Notice> notices,
     List<MockMeetingNotification> meetingNotifications,
@@ -729,8 +803,8 @@ class _HomeShellState extends State<HomeShell> {
               ? Text(
                   _tr('You are all caught up. There are no notifications yet.'),
                 )
-              : SizedBox(
-                  width: 360,
+              : ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
                   child: ListView(
                     shrinkWrap: true,
                     children: [
@@ -1770,8 +1844,11 @@ class _UsageRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
               Text(
                 label,

@@ -119,14 +119,175 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
           child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
+            builder: (context, constraints) {
+              final compactHeight = constraints.maxHeight < 500;
+              final form = ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: compactHeight ? 8 : 24,
+                  ),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Top Bar: Home link on left, Language switcher (EN, த, සි) on right
+                      Center(
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          height: compactHeight ? 48 : 84,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      SizedBox(height: compactHeight ? 12 : 28),
+                      Text(
+                        tr('Sign in with your phone'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: compactHeight ? 16 : 32),
+                      Text(
+                        tr('Mobile number'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _phoneController,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(10),
+                        ],
+                        decoration: InputDecoration(
+                          hintText: '07XXXXXXXX',
+                          hintStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: teal,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_codeSent) ...[
+                        const SizedBox(height: 18),
+                        Text(
+                          tr('Verification code'),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _codeController,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          keyboardType: TextInputType.number,
+                          maxLength: 6,
+                          decoration: InputDecoration(
+                            hintText: tr('Enter OTP'),
+                            hintStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFCBD5E1),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: teal,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          tr('If this number is registered, a code was sent.'),
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                      SizedBox(height: compactHeight ? 12 : 18),
+                      SizedBox(
+                        height: 48,
+                        child: FilledButton(
+                          onPressed: _codeSent ? _verify : _sendCode,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: teal,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            _codeSent ? tr('VERIFY OTP') : tr('SEND OTP'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        style: TextButton.styleFrom(foregroundColor: teal),
+                        child: Text(tr('Back to the site')),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                         child: Row(
@@ -157,201 +318,12 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                           ],
                         ),
                       ),
-
-                      // Center form content
-                      Expanded(
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 420),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 28,
-                                vertical: 24,
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Center(
-                                    child: Image.asset(
-                                      'assets/images/logo.png',
-                                      height: 84,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 28),
-                                  Text(
-                                    tr('Sign in with your phone'),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 32),
-                                  Text(
-                                    tr('Mobile number'),
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextField(
-                                    controller: _phoneController,
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(10),
-                                    ],
-                                    decoration: InputDecoration(
-                                      hintText: '07XXXXXXXX',
-                                      hintStyle: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 12,
-                                          ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFCBD5E1),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                          color: teal,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (_codeSent) ...[
-                                    const SizedBox(height: 18),
-                                    Text(
-                                      tr('Verification code'),
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    TextField(
-                                      controller: _codeController,
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
-                                      ),
-                                      keyboardType: TextInputType.number,
-                                      maxLength: 6,
-                                      decoration: InputDecoration(
-                                        hintText: tr('Enter OTP'),
-                                        hintStyle: TextStyle(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 14,
-                                              vertical: 12,
-                                            ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFCBD5E1),
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          borderSide: const BorderSide(
-                                            color: teal,
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      tr(
-                                        'If this number is registered, a code was sent.',
-                                      ),
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: 18),
-                                  SizedBox(
-                                    height: 48,
-                                    child: FilledButton(
-                                      onPressed: _codeSent
-                                          ? _verify
-                                          : _sendCode,
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: teal,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        _codeSent
-                                            ? tr('VERIFY OTP')
-                                            : tr('SEND OTP'),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).maybePop(),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: teal,
-                                    ),
-                                    child: Text(tr('Back to the site')),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Bottom Footer: "© 2026 Airo Techhub"
+                      Center(child: form),
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 20, top: 12),
+                        padding: EdgeInsets.only(
+                          bottom: compactHeight ? 8 : 20,
+                          top: compactHeight ? 4 : 12,
+                        ),
                         child: Center(
                           child: Text(
                             '© 2026 Airo Techhub',
@@ -367,8 +339,8 @@ class _PhoneSignInScreenState extends State<PhoneSignInScreen> {
                     ],
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),

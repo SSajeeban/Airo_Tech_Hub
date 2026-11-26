@@ -190,59 +190,6 @@ class _TimetableBoardState extends State<TimetableBoard> {
         .toList();
   }
 
-  void _showEventsForDate(DateTime date) {
-    final events = _eventsForDate(date);
-
-    if (events.isEmpty) return;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(AppDateHelper.formatFullDate(date)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: events.length,
-            separatorBuilder: (_, _) => const Divider(),
-            itemBuilder: (context, index) {
-              final event = events[index];
-
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF1B9A85).withValues(alpha: 0.2)
-                          : const Color(0xFFE3F4F0),
-                  child: const Icon(Icons.event, color: Color(0xFF1B9A85)),
-                ),
-                title: Text(
-                  event.title,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  '${event.startTime} - ${event.endTime}\n'
-                  '${event.description}',
-                ),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              'Close',
-              style: TextStyle(color: Color(0xFF1B9A85)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
@@ -313,14 +260,17 @@ class _TimetableBoardState extends State<TimetableBoard> {
 
     // Palette explicitly tuned for dark/light theme to match home page background
     final cardBg = isDark ? const Color(0xFF1F2937) : Colors.white;
-    final cardBorder =
-        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
+    final cardBorder = isDark
+        ? const Color(0xFF374151)
+        : const Color(0xFFE2E8F0);
     final textPrimary = isDark ? Colors.white : const Color(0xFF1F2937);
-    final textSecondary =
-        isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
+    final textSecondary = isDark
+        ? const Color(0xFF9CA3AF)
+        : const Color(0xFF6B7280);
     final dayBoxBg = isDark ? const Color(0xFF111827) : Colors.white;
-    final dayBoxBorder =
-        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
+    final dayBoxBorder = isDark
+        ? const Color(0xFF374151)
+        : const Color(0xFFE2E8F0);
     final selectedColor = isDark ? teal : navy;
 
     final startOfWeek = _getStartOfWeek(_selectedDate);
@@ -414,8 +364,9 @@ class _TimetableBoardState extends State<TimetableBoard> {
                         vertical: 8,
                       ),
                       minimumSize: Size.zero,
-                      backgroundColor:
-                          isDark ? const Color(0xFF111827) : Colors.transparent,
+                      backgroundColor: isDark
+                          ? const Color(0xFF111827)
+                          : Colors.transparent,
                       side: BorderSide(color: cardBorder),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -860,13 +811,14 @@ class _TimetableBoardState extends State<TimetableBoard> {
     const teal = Color(0xFF1B9A85);
     final isDark = _isDark;
     final cardBg = isDark ? const Color(0xFF1F2937) : Colors.white;
-    final cardBorder =
-        isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0);
-    final itemBg =
-        isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFC);
+    final cardBorder = isDark
+        ? const Color(0xFF374151)
+        : const Color(0xFFE2E8F0);
+    final itemBg = isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFC);
     final textPrimary = isDark ? Colors.white : const Color(0xFF1F2937);
-    final textSecondary =
-        isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
+    final textSecondary = isDark
+        ? const Color(0xFF9CA3AF)
+        : const Color(0xFF6B7280);
     final events = _eventsForDate(_selectedDate);
 
     return Container(

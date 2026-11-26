@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
+import '../../core/localization/admin_localizations.dart';
 import '../../core/providers/app_providers.dart';
 
 String _adminText(
@@ -155,7 +156,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        titleSpacing: 16,
+        titleSpacing: screenWidth < 380 ? 4 : 16,
         title: Container(
           height: 40,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -203,43 +204,49 @@ class _MainShellState extends ConsumerState<MainShell> {
             ),
             onPressed: () => context.push('/app/notices'),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Center(
-              child: _languageSwitch(
-                isTamil: isTamil,
-                isSinhala: isSinhala,
-                onEnglish: () =>
-                    ref.read(languageProvider.notifier).setLanguage('en'),
-                onTamil: () =>
-                    ref.read(languageProvider.notifier).setLanguage('ta'),
+          if (screenWidth < 380)
+            _buildCompactSettingsMenu(currentLang, isDark)
+          else ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Center(
+                child: _languageSwitch(
+                  currentLanguage: currentLang,
+                  onEnglish: () =>
+                      ref.read(languageProvider.notifier).setLanguage('en'),
+                  onTamil: () =>
+                      ref.read(languageProvider.notifier).setLanguage('ta'),
+                  onSinhala: () =>
+                      ref.read(languageProvider.notifier).setLanguage('si'),
+                ),
               ),
             ),
-          ),
-          IconButton(
-            tooltip: isDark
-                ? _adminText(
-                    currentLang,
-                    'Light theme',
-                    'ஒளி பயன்முறை',
-                    'ආලෝක මාදිලිය',
-                  )
-                : _adminText(
-                    currentLang,
-                    'Dark theme',
-                    'இருள் பயன்முறை',
-                    'අඳුරු මාදිලිය',
-                  ),
-            icon: Icon(
-              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-              size: 20,
+            IconButton(
+              tooltip: isDark
+                  ? _adminText(
+                      currentLang,
+                      'Light theme',
+                      'ஒளி பயன்முறை',
+                      'ආලෝක මාදිලිය',
+                    )
+                  : _adminText(
+                      currentLang,
+                      'Dark theme',
+                      'இருள் பயன்முறை',
+                      'අඳුරු මාදිලිය',
+                    ),
+              icon: Icon(
+                isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                size: 20,
+              ),
+              onPressed: () =>
+                  ref.read(themeModeProvider.notifier).toggleTheme(),
             ),
-            onPressed: () => ref.read(themeModeProvider.notifier).toggleTheme(),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: VerticalDivider(width: 1),
-          ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: VerticalDivider(width: 1),
+            ),
+          ],
           Padding(
             padding: const EdgeInsets.only(left: 8, right: 12),
             child: InkWell(
@@ -544,6 +551,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       bottomNavigationBar: screenWidth < 1000
           ? BottomNavigationBar(
               currentIndex: selectedIndex,
+              showSelectedLabels: screenWidth >= 380,
+              showUnselectedLabels: screenWidth >= 380,
               onTap: (index) => _onItemTapped(index, context),
               items: [
                 BottomNavigationBarItem(
@@ -718,10 +727,10 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Widget _languageSwitch({
-    required bool isTamil,
-    required bool isSinhala,
+    required String currentLanguage,
     required VoidCallback onEnglish,
     required VoidCallback onTamil,
+    required VoidCallback onSinhala,
   }) {
     return Container(
       height: 32,
@@ -736,14 +745,81 @@ class _MainShellState extends ConsumerState<MainShell> {
         children: [
           _languageSegment(
             label: 'EN',
-            selected: !isTamil && !isSinhala,
-
+            selected: isAdminLanguageSelected(currentLanguage, 'en'),
             onTap: onEnglish,
           ),
           const SizedBox(width: 2),
-          _languageSegment(label: 'த', selected: isTamil, onTap: onTamil),
+          _languageSegment(
+            label: 'த',
+            selected: isAdminLanguageSelected(currentLanguage, 'ta'),
+            onTap: onTamil,
+          ),
+          const SizedBox(width: 2),
+          _languageSegment(
+            label: 'සි',
+            selected: isAdminLanguageSelected(currentLanguage, 'si'),
+            onTap: onSinhala,
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCompactSettingsMenu(String language, bool isDark) {
+    return PopupMenuButton<String>(
+      key: const ValueKey('admin-compact-settings'),
+      tooltip: _adminText(language, 'Settings', 'அமைப்புகள்', 'සැකසීම්'),
+      onSelected: (value) {
+        if (value == 'theme') {
+          ref.read(themeModeProvider.notifier).toggleTheme();
+        } else {
+          ref.read(languageProvider.notifier).setLanguage(value);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'theme',
+          child: Row(
+            children: [
+              Icon(
+                isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                isDark
+                    ? _adminText(
+                        language,
+                        'Light theme',
+                        'ஒளி பயன்முறை',
+                        'ආලෝක මාදිලිය',
+                      )
+                    : _adminText(
+                        language,
+                        'Dark theme',
+                        'இருள் பயன்முறை',
+                        'අඳුරු මාදිලිය',
+                      ),
+              ),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        for (final (code, label) in [
+          ('en', 'English'),
+          ('ta', 'தமிழ்'),
+          ('si', 'සිංහල'),
+        ])
+          PopupMenuItem(
+            value: code,
+            child: Row(
+              children: [
+                Expanded(child: Text(label)),
+                if (normalizeAdminLanguage(language) == code)
+                  const Icon(Icons.check, size: 18),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
