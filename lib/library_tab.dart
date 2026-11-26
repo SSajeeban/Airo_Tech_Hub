@@ -12,8 +12,6 @@ class LibraryTab extends StatefulWidget {
 class _LibraryTabState extends State<LibraryTab> {
   DateTime? _from;
   DateTime? _to;
-  bool _gridView = false;
-
   String _fmt(DateTime? d) {
     if (d == null) return 'mm/dd/yyyy';
 
@@ -44,8 +42,6 @@ class _LibraryTabState extends State<LibraryTab> {
 
   @override
   Widget build(BuildContext context) {
-    const teal = Color(0xFF1B9A85);
-
     return AnimatedBuilder(
       animation: AppSettings.instance,
       builder: (context, child) {
@@ -85,28 +81,6 @@ class _LibraryTabState extends State<LibraryTab> {
                   ),
                 ),
               ],
-            ),
-
-            const SizedBox(height: 8),
-
-            Align(
-              alignment: Alignment.centerRight,
-              child: SegmentedButton<bool>(
-                showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(value: true, icon: Icon(Icons.grid_view)),
-                  ButtonSegment(value: false, icon: Icon(Icons.list)),
-                ],
-                selected: {_gridView},
-                onSelectionChanged: (s) {
-                  setState(() {
-                    _gridView = s.first;
-                  });
-                },
-                style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: teal.withValues(alpha: 0.15),
-                ),
-              ),
             ),
 
             const SizedBox(height: 12),
