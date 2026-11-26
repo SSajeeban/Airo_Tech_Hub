@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -63,11 +64,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isTamil ? 'பதிவு செய்யுங்கள்' : 'Create Account'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Create Account',
+            tamil: 'பதிவு செய்யுங்கள்',
+            sinhala: 'ගිණුමක් සාදන්න',
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -77,16 +85,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                isTamil ? 'சந்தாதாரர் பதிவு' : 'Register as a Subscriber',
+                adminUiText(
+                  language,
+                  english: 'Register as a Subscriber',
+                  tamil: 'சந்தாதாரர் பதிவு',
+                  sinhala: 'දායකයෙකු ලෙස ලියාපදිංචි වන්න',
+                ),
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                isTamil
-                    ? 'ஒரு நிர்வாகி நீங்கள் விண்ணப்பத்தைத் திறப்பதற்கு முன் உங்கள் திட்டத்தை ஒதுக்குகிறார்.'
-                    : 'An admin assigns your plan before you open an application.',
+                adminUiText(
+                  language,
+                  english:
+                      'An admin assigns your plan before you open an application.',
+                  tamil:
+                      'ஒரு நிர்வாகி நீங்கள் விண்ணப்பத்தைத் திறப்பதற்கு முன் உங்கள் திட்டத்தை ஒதுக்குகிறார்.',
+                  sinhala:
+                      'ඔබ අයදුම්පත විවෘත කිරීමට පෙර පරිපාලකයෙකු ඔබට සැලසුමක් පවරයි.',
+                ),
                 style: TextStyle(
                   color: isDark ? AppColors.mutedDark : AppColors.mutedLight,
                   fontSize: 13,
@@ -114,12 +133,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: isTamil ? 'முழுப் பெயர்' : 'Full Name',
+                  labelText: adminUiText(
+                    language,
+                    english: 'Full Name',
+                    tamil: 'முழுப் பெயர்',
+                    sinhala: 'සම්පූර්ණ නම',
+                  ),
                   prefixIcon: const Icon(Icons.person_outline, size: 20),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return isTamil ? 'பெயரை உள்ளிடவும்' : 'Please enter your name';
+                    return adminUiText(
+                      language,
+                      english: 'Please enter your name',
+                      tamil: 'பெயரை உள்ளிடவும்',
+                      sinhala: 'කරුණාකර ඔබගේ නම ඇතුළත් කරන්න',
+                    );
                   }
                   return null;
                 },
@@ -131,12 +160,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: isTamil ? 'மின்னஞ்சல்' : 'Email',
+                  labelText: adminUiText(
+                    language,
+                    english: 'Email',
+                    tamil: 'மின்னஞ்சல்',
+                    sinhala: 'විද්‍යුත් තැපෑල',
+                  ),
                   prefixIcon: const Icon(Icons.email_outlined, size: 20),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
-                    return isTamil ? 'மின்னஞ்சலை உள்ளிடவும்' : 'Please enter your email';
+                    return adminUiText(
+                      language,
+                      english: 'Please enter your email',
+                      tamil: 'மின்னஞ்சலை உள்ளிடவும்',
+                      sinhala: 'කරුණාකර ඔබගේ විද්‍යුත් තැපෑල ඇතුළත් කරන්න',
+                    );
                   }
                   return null;
                 },
@@ -148,14 +187,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  labelText: isTamil ? 'கடவுச்சொல்' : 'Password',
+                  labelText: adminUiText(
+                    language,
+                    english: 'Password',
+                    tamil: 'கடவுச்சொல்',
+                    sinhala: 'මුරපදය',
+                  ),
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                 ),
                 validator: (val) {
                   if (val == null || val.length < 6) {
-                    return isTamil
-                        ? 'கடவுச்சொல் குறைந்தது 6 எழுத்துகள் இருக்க வேண்டும்'
-                        : 'Password must be at least 6 characters';
+                    return adminUiText(
+                      language,
+                      english: 'Password must be at least 6 characters',
+                      tamil: 'கடவுச்சொல் குறைந்தது 6 எழுத்துகள் இருக்க வேண்டும்',
+                      sinhala: 'මුරපදය අවම වශයෙන් අක්ෂර 6ක් විය යුතුය',
+                    );
                   }
                   return null;
                 },
@@ -171,7 +218,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : Text(
-                        isTamil ? 'கணக்கை உருவாக்கவும்' : 'Create Account',
+                        adminUiText(
+                          language,
+                          english: 'Create Account',
+                          tamil: 'கணக்கை உருவாக்கவும்',
+                          sinhala: 'ගිණුමක් සාදන්න',
+                        ),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
               ),
@@ -181,7 +233,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: TextButton(
                   onPressed: () => context.pop(),
                   child: Text(
-                    isTamil ? 'ஏற்கனவே கணக்கு உள்ளதா? உள்நுழையவும்' : 'Already have an account? Sign In',
+                    adminUiText(
+                      language,
+                      english: 'Already have an account? Sign In',
+                      tamil: 'ஏற்கனவே கணக்கு உள்ளதா? உள்நுழையவும்',
+                      sinhala: 'දැනටමත් ගිණුමක් තිබේද? පුරනය වන්න',
+                    ),
                     style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600),
                   ),
                 ),

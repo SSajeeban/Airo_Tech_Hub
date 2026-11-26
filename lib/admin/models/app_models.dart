@@ -111,8 +111,10 @@ class NoticeModel {
   final String id;
   final String title;
   final String titleTa;
+  final String titleSi;
   final String content;
   final String contentTa;
+  final String contentSi;
   final bool isPinned;
   final DateTime publishedAt;
   final String author;
@@ -123,8 +125,10 @@ class NoticeModel {
     required this.id,
     required this.title,
     required this.titleTa,
+    this.titleSi = '',
     required this.content,
     required this.contentTa,
+    this.contentSi = '',
     required this.isPinned,
     required this.publishedAt,
     required this.author,
@@ -137,8 +141,10 @@ class NoticeModel {
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       titleTa: json['titleTa'] as String? ?? '',
+      titleSi: json['titleSi'] as String? ?? '',
       content: json['content'] as String? ?? '',
       contentTa: json['contentTa'] as String? ?? '',
+      contentSi: json['contentSi'] as String? ?? '',
       isPinned: json['isPinned'] as bool? ?? false,
       publishedAt: json['publishedAt'] != null
           ? DateTime.tryParse(json['publishedAt'] as String) ?? DateTime.now()

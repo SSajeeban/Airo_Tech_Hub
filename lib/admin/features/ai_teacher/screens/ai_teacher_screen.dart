@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -55,7 +56,7 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
     }
   }
 
-  Future<void> _handleGenerate(bool isTamil) async {
+  Future<void> _handleGenerate(String uiLanguage) async {
     final prompt = _requestPrompt();
     if ((_taskType == 'question' && _questionController.text.trim().isEmpty) ||
         (_taskType != 'question' &&
@@ -64,9 +65,12 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isTamil
-                ? 'தொடர்வதற்கு தேவையான புலங்களை நிரப்பவும்.'
-                : 'Please complete the required fields before continuing.',
+            adminUiText(
+              uiLanguage,
+              english: 'Please complete the required fields before continuing.',
+              tamil: 'தொடர்வதற்கு தேவையான புலங்களை நிரப்பவும்.',
+              sinhala: 'ඉදිරියට යාමට අවශ්‍ය ක්ෂේත්‍ර පුරවන්න.',
+            ),
           ),
         ),
       );
@@ -84,7 +88,7 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
           .askAiTeacher(
             prompt: prompt,
             taskType: _taskType,
-            language: _responseLanguage ?? (isTamil ? 'ta' : 'en'),
+            language: _responseLanguage ?? normalizeAdminLanguage(uiLanguage),
           );
       if (mounted) setState(() => _generatedResult = answer);
     } catch (error) {
@@ -92,9 +96,12 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isTamil
-                  ? 'AI ஆசிரியரிடமிருந்து பதிலைப் பெற முடியவில்லை: $error'
-                  : 'Could not get a response from AI Teacher: $error',
+              adminUiText(
+                uiLanguage,
+                english: 'Could not get a response from AI Teacher: $error',
+                tamil: 'AI ஆசிரியரிடமிருந்து பதிலைப் பெற முடியவில்லை: $error',
+                sinhala: 'AI ගුරුවරයාගෙන් ප්‍රතිචාරයක් ලබාගත නොහැකි විය: $error',
+              ),
             ),
           ),
         );
@@ -104,7 +111,7 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
     }
   }
 
-  void _saveToLibrary(bool isTamil) {
+  void _saveToLibrary(String language) {
     final result = _generatedResult;
     if (result == null) return;
     final topic = _taskType == 'question'
@@ -128,9 +135,12 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isTamil
-              ? 'நூலகத்தில் உரையாகச் சேமிக்கப்பட்டது: $title'
-              : 'Saved as a text file in Library: $title',
+          adminUiText(
+            language,
+            english: 'Saved as a text file in Library: $title',
+            tamil: 'நூலகத்தில் உரையாகச் சேமிக்கப்பட்டது: $title',
+            sinhala: 'පුස්තකාලයේ පෙළ ගොනුවක් ලෙස සුරකින ලදී: $title',
+          ),
         ),
       ),
     );
@@ -138,7 +148,7 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
     final colors = Theme.of(context).colorScheme;
 
     return SingleChildScrollView(
@@ -157,7 +167,12 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isTamil ? 'AI ஆசிரியர்' : 'AI Teacher',
+                          adminUiText(
+                            language,
+                            english: 'AI Teacher',
+                            tamil: 'AI ஆசிரியர்',
+                            sinhala: 'AI ගුරුවරයා',
+                          ),
                           style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(
                                 color: colors.onSurface,
@@ -166,9 +181,12 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          isTamil
-                              ? 'கேள்வி கேளுங்கள், தேர்வுத் தாள் அல்லது குறிப்புகளை உருவாக்குங்கள். உருவாக்கிய உள்ளடக்கத்தை நூலகத்தில் உரையாகச் சேமிக்கலாம்.'
-                              : 'Ask a question, or create an exam paper or notes. Generated text can be saved to your Library.',
+                          adminUiText(
+                            language,
+                            english: 'Ask a question, or create an exam paper or notes. Generated text can be saved to your Library.',
+                            tamil: 'கேள்வி கேளுங்கள், தேர்வுத் தாள் அல்லது குறிப்புகளை உருவாக்குங்கள். உருவாக்கிய உள்ளடக்கத்தை நூலகத்தில் உரையாகச் சேமிக்கலாம்.',
+                            sinhala: 'ප්‍රශ්නයක් අසන්න, විභාග ප්‍රශ්න පත්‍රයක් හෝ සටහන් සාදන්න. සාදන ලද පෙළ පුස්තකාලයේ සුරැකිය හැක.',
+                          ),
                           style: TextStyle(color: colors.onSurfaceVariant),
                         ),
                       ],
@@ -178,9 +196,12 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
                     Padding(
                       padding: const EdgeInsets.only(left: 16, bottom: 2),
                       child: Text(
-                        isTamil
-                            ? 'டோக்கன் பயன்பாடு கணக்கு அமைப்புகளால் நிர்வகிக்கப்படுகிறது'
-                            : 'Token usage is managed by your account',
+                        adminUiText(
+                          language,
+                          english: 'Token usage is managed by your account',
+                          tamil: 'டோக்கன் பயன்பாடு கணக்கு அமைப்புகளால் நிர்வகிக்கப்படுகிறது',
+                          sinhala: 'ඔබගේ ගිණුම මඟින් ටෝකන් භාවිතය කළමනාකරණය වේ',
+                        ),
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           color: colors.onSurfaceVariant,
@@ -191,7 +212,7 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
                 ],
               ),
               const SizedBox(height: 18),
-              _buildModeSelector(isTamil),
+              _buildModeSelector(language),
               const SizedBox(height: 16),
               Card(
                 elevation: 1,
@@ -204,14 +225,14 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildForm(isTamil),
+                      _buildForm(language),
                       const SizedBox(height: 14),
-                      _buildResponseLanguageSelector(isTamil),
+                      _buildResponseLanguageSelector(language),
                       const SizedBox(height: 14),
                       FilledButton(
                         onPressed: _isLoading
                             ? null
-                            : () => _handleGenerate(isTamil),
+                            : () => _handleGenerate(language),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.accent,
                           minimumSize: const Size.fromHeight(44),
@@ -228,7 +249,7 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(_submitLabel(isTamil)),
+                            : Text(_submitLabel(language)),
                       ),
                     ],
                   ),
@@ -236,7 +257,7 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
               ),
               if (_generatedResult != null) ...[
                 const SizedBox(height: 20),
-                _buildResult(isTamil, colors),
+                _buildResult(language, colors),
               ],
             ],
           ),
@@ -245,20 +266,21 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
     );
   }
 
-  Widget _buildModeSelector(bool isTamil) {
+  Widget _buildModeSelector(String language) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
-        _modeButton('question', isTamil ? 'கேள்' : 'Ask'),
-        _modeButton('exam', isTamil ? 'தேர்வுத் தாள்' : 'Exam paper'),
-        _modeButton('notes', isTamil ? 'குறிப்புகள்' : 'Notes'),
+        _modeButton('question', adminUiText(language, english: 'Ask', tamil: 'கேள்', sinhala: 'අසන්න')),
+        _modeButton('exam', adminUiText(language, english: 'Exam paper', tamil: 'தேர்வுத் தாள்', sinhala: 'විභාග ප්‍රශ්න පත්‍රය')),
+        _modeButton('notes', adminUiText(language, english: 'Notes', tamil: 'குறிப்புகள்', sinhala: 'සටහන්')),
       ],
     );
   }
 
-  Widget _buildResponseLanguageSelector(bool isTamil) {
-    final selectedLanguage = _responseLanguage ?? (isTamil ? 'ta' : 'en');
+  Widget _buildResponseLanguageSelector(String language) {
+    final selectedLanguage =
+        _responseLanguage ?? normalizeAdminLanguage(language);
     final colors = Theme.of(context).colorScheme;
 
     return Wrap(
@@ -267,15 +289,16 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
       runSpacing: 4,
       children: [
         Text(
-          isTamil ? 'பதில் மொழி:' : 'Response language:',
+          adminUiText(language, english: 'Response language:', tamil: 'பதில் மொழி:', sinhala: 'ප්‍රතිචාර භාෂාව:'),
           style: TextStyle(
             color: colors.onSurface,
             fontWeight: FontWeight.w500,
           ),
         ),
         for (final option in [
-          ('en', isTamil ? 'ஆங்கிலம்' : 'English'),
-          ('ta', isTamil ? 'தமிழ்' : 'Tamil'),
+          ('en', adminUiText(language, english: 'English', tamil: 'ஆங்கிலம்', sinhala: 'ඉංග්‍රීසි')),
+          ('ta', adminUiText(language, english: 'Tamil', tamil: 'தமிழ்', sinhala: 'දෙමළ')),
+          ('si', adminUiText(language, english: 'Sinhala', tamil: 'சிங்களம்', sinhala: 'සිංහල')),
         ])
           ChoiceChip(
             label: Text(option.$2),
@@ -328,8 +351,8 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
     );
   }
 
-  Widget _buildForm(bool isTamil) {
-    if (_taskType == 'question') return _buildQuestionForm(isTamil);
+  Widget _buildForm(String language) {
+    if (_taskType == 'question') return _buildQuestionForm(language);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -337,11 +360,11 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
         LayoutBuilder(
           builder: (context, constraints) {
             final subjectField = _labeledField(
-              isTamil ? 'பாடம்' : 'Subject',
+              adminUiText(language, english: 'Subject', tamil: 'பாடம்', sinhala: 'විෂය'),
               _subjectController,
             );
             final gradeField = _labeledField(
-              isTamil ? 'வகுப்பு' : 'Grade',
+              adminUiText(language, english: 'Grade', tamil: 'வகுப்பு', sinhala: 'ශ්‍රේණිය'),
               _gradeController,
             );
             if (constraints.maxWidth < 620) {
@@ -364,11 +387,11 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
           },
         ),
         const SizedBox(height: 12),
-        _labeledField(isTamil ? 'தலைப்பு' : 'Topic', _topicController),
+        _labeledField(adminUiText(language, english: 'Topic', tamil: 'தலைப்பு', sinhala: 'මාතෘකාව'), _topicController),
         if (_taskType == 'exam') ...[
           const SizedBox(height: 12),
           _labeledField(
-            isTamil ? 'கேள்விகள்' : 'Questions',
+            adminUiText(language, english: 'Questions', tamil: 'கேள்விகள்', sinhala: 'ප්‍රශ්න'),
             _questionCountController,
             keyboardType: TextInputType.number,
           ),
@@ -377,18 +400,21 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
     );
   }
 
-  Widget _buildQuestionForm(bool isTamil) {
+  Widget _buildQuestionForm(String language) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _labeledField(
-          isTamil ? 'உங்கள் கேள்வி' : 'Your question',
+          adminUiText(language, english: 'Your question', tamil: 'உங்கள் கேள்வி', sinhala: 'ඔබගේ ප්‍රශ්නය'),
           _questionController,
           maxLines: 5,
           minLines: 3,
-          hint: isTamil
-              ? 'உங்கள் பாடம் அல்லது கேள்வியை எழுதுங்கள்'
-              : 'Ask about a lesson, a concept, or how to explain a topic.',
+          hint: adminUiText(
+            language,
+            english: 'Ask about a lesson, a concept, or how to explain a topic.',
+            tamil: 'உங்கள் பாடம் அல்லது கேள்வியை எழுதுங்கள்',
+            sinhala: 'පාඩමක්, සංකල්පයක් හෝ මාතෘකාවක් පැහැදිලි කරන ආකාරය ගැන අසන්න.',
+          ),
         ),
       ],
     );
@@ -434,8 +460,8 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
     ),
   );
 
-  String _submitLabel(bool isTamil) {
-    if (isTamil) {
+  String _submitLabel(String language) {
+    if (language == 'ta') {
       return switch (_taskType) {
         'exam' => 'தேர்வுத் தாளை உருவாக்கு',
         'notes' => 'குறிப்புகளை உருவாக்கு',
@@ -443,13 +469,13 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
       };
     }
     return switch (_taskType) {
-      'exam' => 'Create exam paper',
-      'notes' => 'Create notes',
-      _ => 'Ask AI Teacher',
+      'exam' => language == 'si' ? 'විභාග ප්‍රශ්න පත්‍රය සාදන්න' : 'Create exam paper',
+      'notes' => language == 'si' ? 'සටහන් සාදන්න' : 'Create notes',
+      _ => language == 'si' ? 'AI ගුරුවරයාගෙන් අසන්න' : 'Ask AI Teacher',
     };
   }
 
-  Widget _buildResult(bool isTamil, ColorScheme colors) {
+  Widget _buildResult(String language, ColorScheme colors) {
     final result = _generatedResult!;
     return Card(
       elevation: 1,
@@ -462,25 +488,25 @@ class _AiTeacherScreenState extends ConsumerState<AiTeacherScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    isTamil ? 'AI ஆசிரியரின் பதில்' : 'AI Teacher response',
+                    adminUiText(language, english: 'AI Teacher response', tamil: 'AI ஆசிரியரின் பதில்', sinhala: 'AI ගුරුවරයාගේ ප්‍රතිචාරය'),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 IconButton(
-                  tooltip: isTamil ? 'நகலெடு' : 'Copy response',
+                  tooltip: adminUiText(language, english: 'Copy response', tamil: 'நகலெடு', sinhala: 'ප්‍රතිචාරය පිටපත් කරන්න'),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: result));
                     _showMessage(
-                      isTamil ? 'பதில் நகலெடுக்கப்பட்டது.' : 'Response copied.',
+                      adminUiText(language, english: 'Response copied.', tamil: 'பதில் நகலெடுக்கப்பட்டது.', sinhala: 'ප්‍රතිචාරය පිටපත් කරන ලදී.'),
                     );
                   },
                   icon: const Icon(Icons.copy_outlined),
                 ),
                 IconButton(
-                  tooltip: isTamil ? 'நூலகத்தில் சேமி' : 'Save to Library',
-                  onPressed: () => _saveToLibrary(isTamil),
+                  tooltip: adminUiText(language, english: 'Save to Library', tamil: 'நூலகத்தில் சேமி', sinhala: 'පුස්තකාලයට සුරකින්න'),
+                  onPressed: () => _saveToLibrary(language),
                   icon: const Icon(
                     Icons.bookmark_add_outlined,
                     color: AppColors.accent,

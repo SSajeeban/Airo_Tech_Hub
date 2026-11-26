@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -73,15 +74,15 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
     }
   }
 
-  Future<void> _addCustomField() async {
+  Future<void> _addCustomField(String language) async {
     final field = await showDialog<MapEntry<String, String>>(
       context: context,
-      builder: (context) => const _CustomFieldDialog(),
+      builder: (context) => _CustomFieldDialog(language: language),
     );
     if (field != null) setState(() => _customFields.add(field));
   }
 
-  void _save() {
+  void _save(String language) {
     if (!_formKey.currentState!.validate()) return;
     final groups = ref.read(groupsProvider);
     final group = groups.where((item) => item.id == _groupId).firstOrNull;
@@ -109,7 +110,16 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
         .read(membersProvider.notifier)
         .update((members) => [member, ...members]);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${member.name} added to the directory.')),
+      SnackBar(
+        content: Text(
+          adminUiText(
+            language,
+            english: '${member.name} added to the directory.',
+            tamil: '${member.name} கோப்பகத்தில் சேர்க்கப்பட்டார்.',
+            sinhala: '${member.name} නාමාවලියට එක් කරන ලදී.',
+          ),
+        ),
+      ),
     );
     context.go('/app/members');
   }
@@ -117,14 +127,27 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
   @override
   Widget build(BuildContext context) {
     final groups = ref.watch(groupsProvider);
+    final language = ref.watch(languageProvider);
     final compact = MediaQuery.sizeOf(context).width < 600;
     if (_groupId == null && groups.isNotEmpty) _groupId = groups.first.id;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Member'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Create Member',
+            tamil: 'உறுப்பினரை உருவாக்கு',
+            sinhala: 'සාමාජිකයෙකු සාදන්න',
+          ),
+        ),
         leading: IconButton(
-          tooltip: 'Back to members',
+          tooltip: adminUiText(
+            language,
+            english: 'Back to members',
+            tamil: 'உறுப்பினர்களுக்குத் திரும்பு',
+            sinhala: 'සාමාජිකයින් වෙත ආපසු',
+          ),
           onPressed: () => context.go('/app/members'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
@@ -142,19 +165,34 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                 padding: EdgeInsets.all(compact ? 16 : 28),
                 children: [
                   Text(
-                    'Create a new member profile',
+                    adminUiText(
+                      language,
+                      english: 'Create a new member profile',
+                      tamil: 'புதிய உறுப்பினர் சுயவிவரத்தை உருவாக்கவும்',
+                      sinhala: 'නව සාමාජික පැතිකඩක් සාදන්න',
+                    ),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    'Add member information, group membership, and supporting documents.',
+                    adminUiText(
+                      language,
+                      english: 'Add member information, group membership, and supporting documents.',
+                      tamil: 'உறுப்பினர் தகவல், குழு உறுப்பினர் விவரங்கள் மற்றும் ஆதார ஆவணங்களைச் சேர்க்கவும்.',
+                      sinhala: 'සාමාජික තොරතුරු, කණ්ඩායම් සාමාජිකත්වය සහ උපකාරක ලේඛන එක් කරන්න.',
+                    ),
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 22),
                   _FormSection(
-                    title: 'Member Information',
+                    title: adminUiText(
+                      language,
+                      english: 'Member Information',
+                      tamil: 'உறுப்பினர் தகவல்',
+                      sinhala: 'සාමාජික තොරතුරු',
+                    ),
                     icon: Icons.person_outline,
                     children: [
                       _ResponsiveFields(
@@ -162,47 +200,47 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                         children: [
                           TextFormField(
                             controller: _displayName,
-                            decoration: const InputDecoration(
-                              labelText: 'Display name *',
-                              hintText: 'e.g. Kavindu Perera',
+                            decoration: InputDecoration(
+                              labelText: adminUiText(language, english: 'Display name *', tamil: 'காட்சிப் பெயர் *', sinhala: 'පෙන්වන නම *'),
+                              hintText: adminUiText(language, english: 'e.g. Kavindu Perera', tamil: 'எ.கா. Kavindu Perera', sinhala: 'උදා: Kavindu Perera'),
                             ),
                             validator: (value) =>
                                 value == null || value.trim().isEmpty
-                                ? 'Enter a display name'
+                                ? adminUiText(language, english: 'Enter a display name', tamil: 'காட்சிப் பெயரை உள்ளிடவும்', sinhala: 'පෙන්වන නම ඇතුළත් කරන්න')
                                 : null,
                           ),
                           TextFormField(
                             controller: _fullName,
-                            decoration: const InputDecoration(
-                              labelText: 'Full name',
-                              hintText: 'Full legal name',
+                            decoration: InputDecoration(
+                              labelText: adminUiText(language, english: 'Full name', tamil: 'முழுப் பெயர்', sinhala: 'සම්පූර්ණ නම'),
+                              hintText: adminUiText(language, english: 'Full legal name', tamil: 'முழு சட்டப்பூர்வ பெயர்', sinhala: 'සම්පූර්ණ නීත්‍යානුකූල නම'),
                             ),
                           ),
                           TextFormField(
                             controller: _email,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'Email address',
+                            decoration: InputDecoration(
+                              labelText: adminUiText(language, english: 'Email address', tamil: 'மின்னஞ்சல் முகவரி', sinhala: 'විද්‍යුත් තැපැල් ලිපිනය'),
                             ),
                           ),
                           TextFormField(
                             controller: _phone,
                             keyboardType: TextInputType.phone,
-                            decoration: const InputDecoration(
-                              labelText: 'Phone number',
+                            decoration: InputDecoration(
+                              labelText: adminUiText(language, english: 'Phone number', tamil: 'தொலைபேசி எண்', sinhala: 'දුරකථන අංකය'),
                               hintText: '+94',
                             ),
                           ),
                           InkWell(
                             onTap: _selectBirthDate,
                             child: InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Date of birth',
+                              decoration: InputDecoration(
+                                labelText: adminUiText(language, english: 'Date of birth', tamil: 'பிறந்த தேதி', sinhala: 'උපන් දිනය'),
                                 suffixIcon: Icon(Icons.calendar_today_outlined),
                               ),
                               child: Text(
                                 _birthDate == null
-                                    ? 'Select date'
+                                    ? adminUiText(language, english: 'Select date', tamil: 'தேதியைத் தேர்ந்தெடுக்கவும்', sinhala: 'දිනය තෝරන්න')
                                     : DateFormat(
                                         'dd MMM yyyy',
                                       ).format(DateTime.parse(_birthDate!)),
@@ -212,13 +250,13 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                           DropdownButtonFormField<String?>(
                             initialValue: _groupId,
                             isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Group',
+                            decoration: InputDecoration(
+                              labelText: adminUiText(language, english: 'Group', tamil: 'குழு', sinhala: 'කණ්ඩායම'),
                             ),
                             items: [
-                              const DropdownMenuItem<String?>(
+                              DropdownMenuItem<String?>(
                                 value: null,
-                                child: Text('No group'),
+                                child: Text(adminUiText(language, english: 'No group', tamil: 'குழு இல்லை', sinhala: 'කණ්ඩායමක් නැත')),
                               ),
                               ...groups.map(
                                 (group) => DropdownMenuItem<String?>(
@@ -240,15 +278,15 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                         controller: _address,
                         minLines: 2,
                         maxLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: 'Address',
+                        decoration: InputDecoration(
+                          labelText: adminUiText(language, english: 'Address', tamil: 'முகவரி', sinhala: 'ලිපිනය'),
                           alignLabelWithHint: true,
                         ),
                       ),
                       const SizedBox(height: 8),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Active member'),
+                        title: Text(adminUiText(language, english: 'Active member', tamil: 'செயலில் உள்ள உறுப்பினர்', sinhala: 'සක්‍රිය සාමාජිකයා')),
                         value: _isActive,
                         onChanged: (value) => setState(() => _isActive = value),
                       ),
@@ -256,7 +294,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                   ),
                   const SizedBox(height: 16),
                   _FormSection(
-                    title: 'Photo',
+                    title: adminUiText(language, english: 'Photo', tamil: 'புகைப்படம்', sinhala: 'ඡායාරූපය'),
                     icon: Icons.photo_outlined,
                     children: [
                       Row(
@@ -272,12 +310,12 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              _photoName ?? 'No photo selected',
+                              _photoName ?? adminUiText(language, english: 'No photo selected', tamil: 'புகைப்படம் தேர்ந்தெடுக்கப்படவில்லை', sinhala: 'ඡායාරූපයක් තෝරා නැත'),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           _ActionButton(
-                            label: 'Choose photo',
+                            label: adminUiText(language, english: 'Choose photo', tamil: 'புகைப்படத்தைத் தேர்ந்தெடு', sinhala: 'ඡායාරූපයක් තෝරන්න'),
                             icon: Icons.upload_file_rounded,
                             onPressed: _pickPhoto,
                           ),
@@ -287,12 +325,12 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                   ),
                   const SizedBox(height: 16),
                   _FormSection(
-                    title: 'Documents',
+                    title: adminUiText(language, english: 'Documents', tamil: 'ஆவணங்கள்', sinhala: 'ලේඛන'),
                     icon: Icons.folder_open_outlined,
                     children: [
                       if (_documents.isEmpty)
                         Text(
-                          'No documents selected.',
+                          adminUiText(language, english: 'No documents selected.', tamil: 'ஆவணங்கள் தேர்ந்தெடுக்கப்படவில்லை.', sinhala: 'ලේඛන තෝරා නැත.'),
                           style: TextStyle(color: Colors.grey.shade600),
                         )
                       else
@@ -304,7 +342,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                             ),
                             title: Text(entry.value),
                             trailing: IconButton(
-                              tooltip: 'Remove document',
+                              tooltip: adminUiText(language, english: 'Remove document', tamil: 'ஆவணத்தை நீக்கு', sinhala: 'ලේඛනය ඉවත් කරන්න'),
                               onPressed: () => setState(
                                 () => _documents.removeAt(entry.key),
                               ),
@@ -313,13 +351,13 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                           ),
                         ),
                       _ActionButton(
-                        label: 'Choose documents',
+                        label: adminUiText(language, english: 'Choose documents', tamil: 'ஆவணங்களைத் தேர்ந்தெடு', sinhala: 'ලේඛන තෝරන්න'),
                         icon: Icons.upload_file_rounded,
                         onPressed: _pickDocuments,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Files are selected on this device only; remote upload is not configured.',
+                        adminUiText(language, english: 'Files are selected on this device only; remote upload is not configured.', tamil: 'கோப்புகள் இந்தச் சாதனத்தில் மட்டுமே தேர்ந்தெடுக்கப்படுகின்றன; தொலைநிலைப் பதிவேற்றம் அமைக்கப்படவில்லை.', sinhala: 'ගොනු තෝරාගනු ලබන්නේ මෙම උපාංගයෙන් පමණි; දුරස්ථ උඩුගත කිරීම සකසා නැත.'),
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,
@@ -329,12 +367,12 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                   ),
                   const SizedBox(height: 16),
                   _FormSection(
-                    title: 'Custom Fields',
+                    title: adminUiText(language, english: 'Custom Fields', tamil: 'தனிப்பயன் புலங்கள்', sinhala: 'අභිරුචි ක්ෂේත්‍ර'),
                     icon: Icons.tune_rounded,
                     children: [
                       if (_customFields.isEmpty)
                         Text(
-                          'Add optional information specific to this member.',
+                          adminUiText(language, english: 'Add optional information specific to this member.', tamil: 'இந்த உறுப்பினருக்கான விருப்பத் தகவலைச் சேர்க்கவும்.', sinhala: 'මෙම සාමාජිකයාට අදාළ විකල්ප තොරතුරු එක් කරන්න.'),
                           style: TextStyle(color: Colors.grey.shade600),
                         ),
                       ..._customFields.asMap().entries.map(
@@ -343,7 +381,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                           title: Text(entry.value.key),
                           subtitle: Text(entry.value.value),
                           trailing: IconButton(
-                            tooltip: 'Remove custom field',
+                            tooltip: adminUiText(language, english: 'Remove custom field', tamil: 'தனிப்பயன் புலத்தை நீக்கு', sinhala: 'අභිරුචි ක්ෂේත්‍රය ඉවත් කරන්න'),
                             onPressed: () => setState(
                               () => _customFields.removeAt(entry.key),
                             ),
@@ -352,9 +390,9 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                         ),
                       ),
                       _ActionButton(
-                        label: 'Add field',
+                        label: adminUiText(language, english: 'Add field', tamil: 'புலத்தைச் சேர்', sinhala: 'ක්ෂේත්‍රය එක් කරන්න'),
                         icon: Icons.add_rounded,
-                        onPressed: _addCustomField,
+                        onPressed: () => _addCustomField(language),
                       ),
                     ],
                   ),
@@ -366,12 +404,12 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                     children: [
                       OutlinedButton(
                         onPressed: () => context.go('/app/members'),
-                        child: const Text('Cancel'),
+                        child: Text(adminUiText(language, english: 'Cancel', tamil: 'ரத்து', sinhala: 'අවලංගු කරන්න')),
                       ),
                       FilledButton.icon(
-                        onPressed: _save,
+                        onPressed: () => _save(language),
                         icon: const Icon(Icons.save_outlined),
-                        label: const Text('Create Member'),
+                        label: Text(adminUiText(language, english: 'Create Member', tamil: 'உறுப்பினரை உருவாக்கு', sinhala: 'සාමාජිකයෙකු සාදන්න')),
                       ),
                     ],
                   ),
@@ -460,7 +498,9 @@ class _FormSection extends StatelessWidget {
 }
 
 class _CustomFieldDialog extends StatefulWidget {
-  const _CustomFieldDialog();
+  const _CustomFieldDialog({required this.language});
+
+  final String language;
 
   @override
   State<_CustomFieldDialog> createState() => _CustomFieldDialogState();
@@ -480,25 +520,53 @@ class _CustomFieldDialogState extends State<_CustomFieldDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Add custom field'),
+      title: Text(
+        adminUiText(
+          widget.language,
+          english: 'Add custom field',
+          tamil: 'தனிப்பயன் புலத்தைச் சேர்',
+          sinhala: 'අභිරුචි ක්ෂේත්‍රය එක් කරන්න',
+        ),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _name,
-            decoration: const InputDecoration(labelText: 'Field name'),
+            decoration: InputDecoration(
+              labelText: adminUiText(
+                widget.language,
+                english: 'Field name',
+                tamil: 'புலத்தின் பெயர்',
+                sinhala: 'ක්ෂේත්‍රයේ නම',
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _value,
-            decoration: const InputDecoration(labelText: 'Value'),
+            decoration: InputDecoration(
+              labelText: adminUiText(
+                widget.language,
+                english: 'Value',
+                tamil: 'மதிப்பு',
+                sinhala: 'අගය',
+              ),
+            ),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(
+            adminUiText(
+              widget.language,
+              english: 'Cancel',
+              tamil: 'ரத்து',
+              sinhala: 'අවලංගු කරන්න',
+            ),
+          ),
         ),
         FilledButton(
           onPressed: () {
@@ -508,7 +576,14 @@ class _CustomFieldDialogState extends State<_CustomFieldDialog> {
               MapEntry(_name.text.trim(), _value.text.trim()),
             );
           },
-          child: const Text('Add'),
+          child: Text(
+            adminUiText(
+              widget.language,
+              english: 'Add',
+              tamil: 'சேர்',
+              sinhala: 'එක් කරන්න',
+            ),
+          ),
         ),
       ],
     );

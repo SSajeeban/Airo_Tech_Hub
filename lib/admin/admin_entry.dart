@@ -1,4 +1,3 @@
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,9 +32,7 @@ class _AdminEntryState extends State<AdminEntry> {
         }
 
         return ProviderScope(
-          overrides: [
-            storageServiceProvider.overrideWithValue(snap.data!),
-          ],
+          overrides: [storageServiceProvider.overrideWithValue(snap.data!)],
           child: const _AdminApp(),
         );
       },
@@ -51,13 +48,14 @@ class _AdminApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
     final isTamil = ref.watch(languageProvider) == 'ta';
+    final isSinhala = ref.watch(languageProvider) == 'si';
 
     return MaterialApp.router(
       title: 'AIRO TECHHUB Admin',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
-      theme: AppTheme.lightTheme(isTamil: isTamil),
-      darkTheme: AppTheme.darkTheme(isTamil: isTamil),
+      theme: AppTheme.lightTheme(isTamil: isTamil, isSinhala: isSinhala),
+      darkTheme: AppTheme.darkTheme(isTamil: isTamil, isSinhala: isSinhala),
       routerConfig: router,
     );
   }

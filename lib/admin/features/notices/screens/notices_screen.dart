@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -15,9 +17,10 @@ class NoticesScreen extends ConsumerStatefulWidget {
 class _NoticesScreenState extends ConsumerState<NoticesScreen> {
   final _englishController = TextEditingController();
   final _tamilController = TextEditingController();
+  final _sinhalaController = TextEditingController();
   late DateTime _expiresAt;
   String _selectedAudience = 'All groups';
-  bool _composeInTamil = false;
+  String _composeLanguage = 'en';
 
   @override
   void initState() {
@@ -29,6 +32,7 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
   void dispose() {
     _englishController.dispose();
     _tamilController.dispose();
+    _sinhalaController.dispose();
     super.dispose();
   }
 
@@ -61,13 +65,17 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
   void _postNotice() {
     final english = _englishController.text.trim();
     final tamil = _tamilController.text.trim();
-    if (english.isEmpty && tamil.isEmpty) {
+    final sinhala = _sinhalaController.text.trim();
+    if (english.isEmpty && tamil.isEmpty && sinhala.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _composeInTamil
-                ? 'அறிவிப்பு செய்தியை உள்ளிடவும்.'
-                : 'Enter a notice message before posting.',
+            adminUiText(
+              _composeLanguage,
+              english: 'Enter a notice message before posting.',
+              tamil: 'வெளியிடுவதற்கு முன் அறிவிப்பு செய்தியை உள்ளிடவும்.',
+              sinhala: 'පළ කිරීමට පෙර නිවේදන පණිවිඩයක් ඇතුළත් කරන්න.',
+            ),
           ),
         ),
       );
@@ -76,6 +84,7 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
 
     final englishText = english.isEmpty ? tamil : english;
     final tamilText = tamil.isEmpty ? english : tamil;
+    final sinhalaText = sinhala;
     final session = ref.read(sessionProvider);
     final author = session?.user.displayName.trim().isNotEmpty == true
         ? session!.user.displayName
@@ -84,8 +93,10 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
       id: 'not_${DateTime.now().millisecondsSinceEpoch}',
       title: _titleFrom(englishText),
       titleTa: _titleFrom(tamilText),
+      titleSi: _titleFrom(sinhalaText),
       content: englishText,
       contentTa: tamilText,
+      contentSi: sinhalaText,
       isPinned: false,
       publishedAt: DateTime.now(),
       author: author,
@@ -98,13 +109,17 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
         .update((notices) => [notice, ...notices]);
     _englishController.clear();
     _tamilController.clear();
+    _sinhalaController.clear();
     FocusScope.of(context).unfocus();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _composeInTamil
-              ? 'அறிவிப்பு வெளியிடப்பட்டது.'
-              : 'Notice posted successfully.',
+          adminUiText(
+            _composeLanguage,
+            english: 'Notice posted successfully.',
+            tamil: 'அறிவிப்பு வெற்றிகரமாக வெளியிடப்பட்டது.',
+            sinhala: 'නිවේදනය සාර්ථකව පළ කරන ලදී.',
+          ),
         ),
       ),
     );
@@ -120,7 +135,7 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
   Widget build(BuildContext context) {
     final notices = ref.watch(noticesProvider);
     final groups = ref.watch(groupsProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final visibleNotices = notices
         .where(
@@ -138,7 +153,16 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(isTamil ? 'அறிவிப்புகள்' : 'Notices')),
+      appBar: AppBar(
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Notices',
+            tamil: 'அறிவிப்புகள்',
+            sinhala: 'දැනුම්දීම්',
+          ),
+        ),
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final horizontalPadding = constraints.maxWidth < 420 ? 16.0 : 24.0;
@@ -156,7 +180,12 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      isTamil ? 'அறிவிப்பு பலகை' : 'Notice board',
+                      adminUiText(
+                        language,
+                        english: 'Notice board',
+                        tamil: 'அறிவிப்பு பலகை',
+                        sinhala: 'නිවේදන පුවරුව',
+                      ),
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                             color: isDark
@@ -168,7 +197,7 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                     const SizedBox(height: 16),
                     _buildComposer(
                       context,
-                      isTamil: isTamil,
+                      language: language,
                       isDark: isDark,
                       audienceOptions: audienceOptions,
                     ),
@@ -177,9 +206,12 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
-                          isTamil
-                              ? 'இன்னும் அறிவிப்புகள் இல்லை.'
-                              : 'No notices yet.',
+                          adminUiText(
+                            language,
+                            english: 'No notices yet.',
+                            tamil: 'இன்னும் அறிவிப்புகள் இல்லை.',
+                            sinhala: 'තවමත් නිවේදන නැත.',
+                          ),
                           style: TextStyle(
                             color: isDark
                                 ? AppColors.mutedDark
@@ -192,7 +224,7 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                         (notice) => _buildNoticeCard(
                           context,
                           notice,
-                          isTamil: isTamil,
+                          language: language,
                           isDark: isDark,
                         ),
                       ),
@@ -208,14 +240,16 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
 
   Widget _buildComposer(
     BuildContext context, {
-    required bool isTamil,
+    required String language,
     required bool isDark,
     required List<String> audienceOptions,
   }) {
     final outlineColor = isDark ? AppColors.lineDark : AppColors.lineLight;
-    final messageController = _composeInTamil
-        ? _tamilController
-        : _englishController;
+    final messageController = switch (_composeLanguage) {
+      'ta' => _tamilController,
+      'si' => _sinhalaController,
+      _ => _englishController,
+    };
 
     return Card(
       margin: EdgeInsets.zero,
@@ -232,7 +266,12 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    isTamil ? 'செய்தி' : 'Message',
+                    adminUiText(
+                      language,
+                      english: 'Message',
+                      tamil: 'செய்தி',
+                      sinhala: 'පණිවිඩය',
+                    ),
                     style: TextStyle(
                       color: isDark
                           ? AppColors.mutedDark
@@ -243,17 +282,24 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                   ),
                 ),
                 _buildLanguageButton(
-                  label: 'English',
-                  selected: !_composeInTamil,
+                  label: 'EN',
+                  selected: _composeLanguage == 'en',
                   isDark: isDark,
-                  onPressed: () => setState(() => _composeInTamil = false),
+                  onPressed: () => setState(() => _composeLanguage = 'en'),
                 ),
                 const SizedBox(width: 6),
                 _buildLanguageButton(
-                  label: 'தமிழ்',
-                  selected: _composeInTamil,
+                  label: 'த',
+                  selected: _composeLanguage == 'ta',
                   isDark: isDark,
-                  onPressed: () => setState(() => _composeInTamil = true),
+                  onPressed: () => setState(() => _composeLanguage = 'ta'),
+                ),
+                const SizedBox(width: 6),
+                _buildLanguageButton(
+                  label: 'සි',
+                  selected: _composeLanguage == 'si',
+                  isDark: isDark,
+                  onPressed: () => setState(() => _composeLanguage = 'si'),
                 ),
               ],
             ),
@@ -264,9 +310,12 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
               maxLines: 7,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
-                hintText: _composeInTamil
-                    ? 'தமிழில் உள்ளிடவும்'
-                    : 'Type in English',
+                hintText: adminUiText(
+                  _composeLanguage,
+                  english: 'Type in English',
+                  tamil: 'தமிழில் உள்ளிடவும்',
+                  sinhala: 'සිංහලෙන් ඇතුළත් කරන්න',
+                ),
                 alignLabelWithHint: true,
                 contentPadding: const EdgeInsets.all(14),
                 border: OutlineInputBorder(
@@ -280,7 +329,12 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
             ),
             const SizedBox(height: 12),
             _buildFieldLabel(
-              isTamil ? 'யார் பார்க்கலாம்' : 'Who can see this',
+              adminUiText(
+                language,
+                english: 'Who can see this',
+                tamil: 'யார் பார்க்கலாம்',
+                sinhala: 'මෙය දැකිය හැක්කේ කාටද?',
+              ),
               isDark,
             ),
             const SizedBox(height: 5),
@@ -298,8 +352,13 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                     (audience) => DropdownMenuItem(
                       value: audience,
                       child: Text(
-                        audience == 'All groups' && isTamil
-                            ? 'அனைத்து குழுக்களும்'
+                        audience == 'All groups'
+                            ? adminUiText(
+                                language,
+                                english: 'All groups',
+                                tamil: 'அனைத்து குழுக்களும்',
+                                sinhala: 'සියලුම කණ්ඩායම්',
+                              )
                             : audience,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -313,7 +372,15 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
               },
             ),
             const SizedBox(height: 12),
-            _buildFieldLabel(isTamil ? 'காலாவதி' : 'Expires', isDark),
+            _buildFieldLabel(
+              adminUiText(
+                language,
+                english: 'Expires',
+                tamil: 'காலாவதி',
+                sinhala: 'කල් ඉකුත් වීම',
+              ),
+              isDark,
+            ),
             const SizedBox(height: 5),
             InkWell(
               borderRadius: BorderRadius.circular(8),
@@ -342,7 +409,14 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(isTamil ? 'வெளியிடு' : 'Post notice'),
+                child: Text(
+                  adminUiText(
+                    language,
+                    english: 'Post notice',
+                    tamil: 'வெளியிடு',
+                    sinhala: 'නිවේදනය පළ කරන්න',
+                  ),
+                ),
               ),
             ),
           ],
@@ -391,14 +465,18 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
   Widget _buildNoticeCard(
     BuildContext context,
     NoticeModel notice, {
-    required bool isTamil,
+    required String language,
     required bool isDark,
   }) {
-    final content = isTamil
+    final content = language == 'ta'
         ? (notice.contentTa.isNotEmpty ? notice.contentTa : notice.content)
+        : language == 'si'
+        ? (notice.contentSi.isNotEmpty ? notice.contentSi : notice.content)
         : (notice.content.isNotEmpty ? notice.content : notice.contentTa);
-    final title = isTamil
+    final title = language == 'ta'
         ? (notice.titleTa.isNotEmpty ? notice.titleTa : notice.title)
+        : language == 'si'
+        ? (notice.titleSi.isNotEmpty ? notice.titleSi : notice.title)
         : (notice.title.isNotEmpty ? notice.title : notice.titleTa);
     final muted = isDark ? AppColors.mutedDark : AppColors.mutedLight;
 
@@ -421,8 +499,13 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                       color: AppColors.warning.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
-                      'PINNED',
+                    child: Text(
+                      adminUiText(
+                        language,
+                        english: 'PINNED',
+                        tamil: 'முன்னிலை',
+                        sinhala: 'ඉහළින් තබා ඇත',
+                      ),
                       style: TextStyle(
                         color: AppColors.warning,
                         fontSize: 10,
@@ -473,15 +556,20 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    notice.audience == 'All groups' && isTamil
-                        ? 'அனைத்து குழுக்களும்'
+                    notice.audience == 'All groups'
+                        ? adminUiText(
+                            language,
+                            english: 'All groups',
+                            tamil: 'அனைத்து குழுக்களும்',
+                            sinhala: 'සියලුම කණ්ඩායම්',
+                          )
                         : notice.audience,
                     style: TextStyle(color: muted, fontSize: 12),
                   ),
                 ),
                 if (notice.expiresAt != null)
                   Text(
-                    '${isTamil ? 'காலாவதி' : 'Expires'} ${DateFormat('dd MMM').format(notice.expiresAt!)}',
+                    '${adminUiText(language, english: 'Expires', tamil: 'காலாவதி', sinhala: 'කල් ඉකුත් වීම')} ${DateFormat('dd MMM').format(notice.expiresAt!)}',
                     style: TextStyle(color: muted, fontSize: 11),
                   ),
               ],

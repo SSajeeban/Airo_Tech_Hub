@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -24,25 +25,49 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
     super.dispose();
   }
 
-  Future<void> _deleteGroup(GroupModel group, bool isTamil) async {
+  Future<void> _deleteGroup(GroupModel group, String language) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isTamil ? 'குழுவை நீக்கவா?' : 'Delete group?'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Delete group?',
+            tamil: 'குழுவை நீக்கவா?',
+            sinhala: 'කණ්ඩායම මකා දමන්නද?',
+          ),
+        ),
         content: Text(
-          isTamil
-              ? '"${group.name}" குழுவை நீக்க விரும்புகிறீர்களா?'
-              : 'Are you sure you want to delete "${group.name}"?',
+          adminUiText(
+            language,
+            english: 'Are you sure you want to delete "${group.name}"?',
+            tamil: '"${group.name}" குழுவை நீக்க விரும்புகிறீர்களா?',
+            sinhala: '"${group.name}" කණ්ඩායම මකා දැමීමට ඔබට විශ්වාසද?',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(isTamil ? 'ரத்து' : 'Cancel'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Cancel',
+                tamil: 'ரத்து',
+                sinhala: 'අවලංගු කරන්න',
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: Text(isTamil ? 'நீக்கு' : 'Delete'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Delete',
+                tamil: 'நீக்கு',
+                sinhala: 'මකන්න',
+              ),
+            ),
           ),
         ],
       ),
@@ -55,16 +80,19 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
         );
   }
 
-  void _copyJoinLink(GroupModel group, bool isTamil) {
+  void _copyJoinLink(GroupModel group, String language) {
     Clipboard.setData(
       ClipboardData(text: 'https://airotechhub.lk/group/${group.code}'),
     );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isTamil
-              ? '"${group.name}" குழுவின் இணைப்பு நகலெடுக்கப்பட்டது.'
-              : 'Join link for "${group.name}" copied.',
+          adminUiText(
+            language,
+            english: 'Join link for "${group.name}" copied.',
+            tamil: '"${group.name}" குழுவின் இணைப்பு நகலெடுக்கப்பட்டது.',
+            sinhala: '"${group.name}" කණ්ඩායමේ සම්බන්ධකය පිටපත් කරන ලදී.',
+          ),
         ),
       ),
     );
@@ -73,7 +101,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
   @override
   Widget build(BuildContext context) {
     final groups = ref.watch(groupsProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
     final colors = Theme.of(context).colorScheme;
     final filtered = groups.where((group) {
       final query = _searchQuery.toLowerCase();
@@ -90,7 +118,12 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                isTamil ? 'குழுக்கள்' : 'Groups',
+                adminUiText(
+                  language,
+                  english: 'Groups',
+                  tamil: 'குழுக்கள்',
+                  sinhala: 'කණ්ඩායම්',
+                ),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -104,14 +137,22 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
                       decoration: InputDecoration(
-                        hintText: isTamil
-                            ? 'குழுக்களைத் தேடவும்'
-                            : 'Search groups',
+                        hintText: adminUiText(
+                          language,
+                          english: 'Search groups',
+                          tamil: 'குழுக்களைத் தேடவும்',
+                          sinhala: 'කණ්ඩායම් සොයන්න',
+                        ),
                         prefixIcon: const Icon(AppIcons.search),
                         suffixIcon: _searchQuery.isEmpty
                             ? null
                             : IconButton(
-                                tooltip: isTamil ? 'அழி' : 'Clear',
+                                tooltip: adminUiText(
+                                  language,
+                                  english: 'Clear',
+                                  tamil: 'அழி',
+                                  sinhala: 'මකන්න',
+                                ),
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _searchQuery = '');
@@ -134,7 +175,14 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
                     icon: const Icon(AppIcons.add, size: 18),
-                    label: Text(isTamil ? 'உருவாக்கு' : 'Create'),
+                    label: Text(
+                      adminUiText(
+                        language,
+                        english: 'Create',
+                        tamil: 'உருவாக்கு',
+                        sinhala: 'සාදන්න',
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -145,7 +193,12 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
           child: filtered.isEmpty
               ? Center(
                   child: Text(
-                    isTamil ? 'குழுக்கள் எதுவும் இல்லை' : 'No groups found',
+                    adminUiText(
+                      language,
+                      english: 'No groups found',
+                      tamil: 'குழுக்கள் எதுவும் இல்லை',
+                      sinhala: 'කණ්ඩායම් හමු නොවීය',
+                    ),
                     style: TextStyle(color: colors.onSurfaceVariant),
                   ),
                 )
@@ -166,7 +219,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                       ),
                       itemCount: filtered.length,
                       itemBuilder: (context, index) =>
-                          _groupCard(filtered[index], isTamil, colors),
+                          _groupCard(filtered[index], language, colors),
                     );
                   },
                 ),
@@ -175,7 +228,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
     );
   }
 
-  Widget _groupCard(GroupModel group, bool isTamil, ColorScheme colors) {
+  Widget _groupCard(GroupModel group, String language, ColorScheme colors) {
     final initial = group.name.trim().isEmpty
         ? '?'
         : group.name.trim()[0].toUpperCase();
@@ -230,31 +283,51 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                 ),
                 _actionButton(
                   icon: AppIcons.view,
-                  tooltip: isTamil ? 'விவரங்கள்' : 'View details',
+                  tooltip: adminUiText(
+                    language,
+                    english: 'View details',
+                    tamil: 'விவரங்கள்',
+                    sinhala: 'විස්තර බලන්න',
+                  ),
                   onPressed: () => context.push('/app/groups/${group.id}'),
                 ),
                 _actionButton(
                   icon: AppIcons.copy,
-                  tooltip: isTamil ? 'இணைப்பு நகலெடு' : 'Copy join link',
-                  onPressed: () => _copyJoinLink(group, isTamil),
+                  tooltip: adminUiText(
+                    language,
+                    english: 'Copy join link',
+                    tamil: 'இணைப்பு நகலெடு',
+                    sinhala: 'එක්වීමේ සබැඳිය පිටපත් කරන්න',
+                  ),
+                  onPressed: () => _copyJoinLink(group, language),
                 ),
                 _actionButton(
                   icon: AppIcons.edit,
-                  tooltip: isTamil ? 'திருத்து' : 'Edit',
+                  tooltip: adminUiText(
+                    language,
+                    english: 'Edit',
+                    tamil: 'திருத்து',
+                    sinhala: 'සංස්කරණය කරන්න',
+                  ),
                   onPressed: () =>
                       context.push('/app/groups/edit', extra: group),
                 ),
                 _actionButton(
                   icon: AppIcons.delete,
-                  tooltip: isTamil ? 'நீக்கு' : 'Delete',
+                  tooltip: adminUiText(
+                    language,
+                    english: 'Delete',
+                    tamil: 'நீக்கு',
+                    sinhala: 'මකන්න',
+                  ),
                   color: AppColors.danger,
-                  onPressed: () => _deleteGroup(group, isTamil),
+                  onPressed: () => _deleteGroup(group, language),
                 ),
               ],
             ),
             const Spacer(),
             Text(
-              '${group.memberCount} ${isTamil ? 'உறுப்பினர்கள்' : 'Members'}',
+              '${group.memberCount} ${adminUiText(language, english: 'Members', tamil: 'உறுப்பினர்கள்', sinhala: 'සාමාජිකයින්')}',
               style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
             ),
           ],

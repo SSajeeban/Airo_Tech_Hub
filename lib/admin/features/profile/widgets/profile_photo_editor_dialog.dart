@@ -4,17 +4,19 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:material_ui/material_ui.dart';
 
+import '../../../core/localization/admin_localizations.dart';
+
 class ProfilePhotoEditorDialog extends StatefulWidget {
   const ProfilePhotoEditorDialog({
     super.key,
     required this.image,
     required this.previewBytes,
-    required this.isTamil,
+    required this.language,
   });
 
   final img.Image image;
   final Uint8List previewBytes;
-  final bool isTamil;
+  final String language;
 
   @override
   State<ProfilePhotoEditorDialog> createState() =>
@@ -74,7 +76,14 @@ class _ProfilePhotoEditorDialogState extends State<ProfilePhotoEditorDialog> {
     final displayHeight = widget.image.height * _baseScale * _zoom;
 
     return AlertDialog(
-      title: Text(widget.isTamil ? 'படத்தைச் சரிசெய்' : 'Adjust photo'),
+      title: Text(
+        adminUiText(
+          widget.language,
+          english: 'Adjust photo',
+          tamil: 'படத்தைச் சரிசெய்',
+          sinhala: 'ඡායාරූපය සකසන්න',
+        ),
+      ),
       content: SizedBox(
         width: _viewportSize,
         child: Column(
@@ -143,9 +152,12 @@ class _ProfilePhotoEditorDialogState extends State<ProfilePhotoEditorDialog> {
               ],
             ),
             Text(
-              widget.isTamil
-                  ? 'படத்தை இழுத்து இடத்தை மாற்றவும்'
-                  : 'Drag to position the photo',
+              adminUiText(
+                widget.language,
+                english: 'Drag to position the photo',
+                tamil: 'படத்தை இழுத்து இடத்தை மாற்றவும்',
+                sinhala: 'ඡායාරූපය ස්ථානගත කිරීමට ඇදගෙන යන්න',
+              ),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -154,11 +166,25 @@ class _ProfilePhotoEditorDialogState extends State<ProfilePhotoEditorDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(widget.isTamil ? 'ரத்து' : 'Cancel'),
+          child: Text(
+            adminUiText(
+              widget.language,
+              english: 'Cancel',
+              tamil: 'ரத்து',
+              sinhala: 'අවලංගු කරන්න',
+            ),
+          ),
         ),
         FilledButton(
           onPressed: _saveCrop,
-          child: Text(widget.isTamil ? 'பயன்படுத்து' : 'Use photo'),
+          child: Text(
+            adminUiText(
+              widget.language,
+              english: 'Use photo',
+              tamil: 'பயன்படுத்து',
+              sinhala: 'ඡායාරූපය භාවිතා කරන්න',
+            ),
+          ),
         ),
       ],
     );

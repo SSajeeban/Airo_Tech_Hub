@@ -47,6 +47,11 @@ flutter:
     - assets/images/logo_dark.png
     - site_api_response.json
 
+  fonts:
+    - family: Noto Sans Sinhala
+      fonts:
+        - asset: assets/fonts/NotoSansSinhala.ttf
+
 flutter_launcher_icons:
   android: true
   ios: false

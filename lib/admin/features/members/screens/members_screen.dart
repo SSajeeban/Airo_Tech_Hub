@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -25,14 +26,23 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     super.dispose();
   }
 
-  void _deleteMember(MemberModel member) {
+  void _deleteMember(MemberModel member, String language) {
     ref
         .read(membersProvider.notifier)
         .update(
           (members) => members.where((item) => item.id != member.id).toList(),
         );
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${member.name} removed from the directory.')),
+      SnackBar(
+        content: Text(
+          adminUiText(
+            language,
+            english: '${member.name} removed from the directory.',
+            tamil: 'கோப்பகத்திலிருந்து ${member.name} நீக்கப்பட்டார்.',
+            sinhala: '${member.name} නාමාවලියෙන් ඉවත් කරන ලදී.',
+          ),
+        ),
+      ),
     );
   }
 
@@ -40,6 +50,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   Widget build(BuildContext context) {
     final members = ref.watch(membersProvider);
     final groups = ref.watch(groupsProvider);
+    final language = ref.watch(languageProvider);
     final groupOptions = ['All groups', ...groups.map((group) => group.name)];
     if (!groupOptions.contains(_selectedGroup)) _selectedGroup = 'All groups';
     final selectedGroup = groups
@@ -78,13 +89,24 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Members Directory',
+                          adminUiText(
+                            language,
+                            english: 'Members Directory',
+                            tamil: 'உறுப்பினர் கோப்பகம்',
+                            sinhala: 'සාමාජික නාමාවලිය',
+                          ),
                           style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Manage your students and member profiles.',
+                          adminUiText(
+                            language,
+                            english:
+                                'Manage your students and member profiles.',
+                            tamil: 'மாணவர்கள் மற்றும் உறுப்பினர் சுயவிவரங்களை நிர்வகிக்கவும்.',
+                            sinhala: 'ඔබගේ සිසුන් සහ සාමාජික පැතිකඩ කළමනාකරණය කරන්න.',
+                          ),
                           style: TextStyle(color: Colors.grey.shade600),
                         ),
                       ],
@@ -94,7 +116,14 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     FilledButton.icon(
                       onPressed: () => context.push('/app/members/new'),
                       icon: const Icon(Icons.person_add_alt_1_rounded),
-                      label: const Text('Create Member'),
+                      label: Text(
+                        adminUiText(
+                          language,
+                          english: 'Create Member',
+                          tamil: 'உறுப்பினரை உருவாக்கு',
+                          sinhala: 'සාමාජිකයෙකු සාදන්න',
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -105,7 +134,14 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                   child: FilledButton.icon(
                     onPressed: () => context.push('/app/members/new'),
                     icon: const Icon(Icons.person_add_alt_1_rounded),
-                    label: const Text('Create Member'),
+                    label: Text(
+                      adminUiText(
+                        language,
+                        english: 'Create Member',
+                        tamil: 'உறுப்பினரை உருவாக்கு',
+                        sinhala: 'සාමාජිකයෙකු සාදන්න',
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -120,8 +156,13 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) => setState(() => _query = value),
-                      decoration: const InputDecoration(
-                        hintText: 'Search members...',
+                      decoration: InputDecoration(
+                        hintText: adminUiText(
+                          language,
+                          english: 'Search members...',
+                          tamil: 'உறுப்பினர்களைத் தேடுங்கள்...',
+                          sinhala: 'සාමාජිකයින් සොයන්න...',
+                        ),
                         prefixIcon: Icon(Icons.search_rounded),
                         border: OutlineInputBorder(),
                         isDense: true,
@@ -133,8 +174,13 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     child: DropdownButtonFormField<String>(
                       initialValue: _selectedGroup,
                       isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Group',
+                      decoration: InputDecoration(
+                        labelText: adminUiText(
+                          language,
+                          english: 'Group',
+                          tamil: 'குழு',
+                          sinhala: 'කණ්ඩායම',
+                        ),
                         border: OutlineInputBorder(),
                         isDense: true,
                       ),
@@ -143,7 +189,14 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                             (group) => DropdownMenuItem(
                               value: group,
                               child: Text(
-                                group,
+                                group == 'All groups'
+                                    ? adminUiText(
+                                        language,
+                                        english: 'All groups',
+                                        tamil: 'அனைத்து குழுக்களும்',
+                                        sinhala: 'සියලුම කණ්ඩායම්',
+                                      )
+                                    : group,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -157,16 +210,30 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     ),
                   ),
                   SegmentedButton<bool>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: true,
                         icon: Icon(Icons.grid_view_rounded),
-                        label: Text('Cards'),
+                        label: Text(
+                          adminUiText(
+                            language,
+                            english: 'Cards',
+                            tamil: 'அட்டைகள்',
+                            sinhala: 'කාඩ්පත්',
+                          ),
+                        ),
                       ),
                       ButtonSegment(
                         value: false,
                         icon: Icon(Icons.table_rows_rounded),
-                        label: Text('Table'),
+                        label: Text(
+                          adminUiText(
+                            language,
+                            english: 'Table',
+                            tamil: 'அட்டவணை',
+                            sinhala: 'වගුව',
+                          ),
+                        ),
                       ),
                     ],
                     selected: {_showCards},
@@ -177,7 +244,10 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               ),
               const SizedBox(height: 18),
               if (filteredMembers.isEmpty)
-                _EmptyMembers(onCreate: () => context.push('/app/members/new'))
+                _EmptyMembers(
+                  language: language,
+                  onCreate: () => context.push('/app/members/new'),
+                )
               else if (_showCards)
                 GridView.builder(
                   shrinkWrap: true,
@@ -191,17 +261,20 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                   ),
                   itemBuilder: (context, index) => _MemberCard(
                     member: filteredMembers[index],
+                    language: language,
                     onView: () => context.push(
                       '/app/members/${filteredMembers[index].id}',
                     ),
-                    onDelete: () => _deleteMember(filteredMembers[index]),
+                    onDelete: () =>
+                        _deleteMember(filteredMembers[index], language),
                   ),
                 )
               else
                 _MembersTable(
                   members: filteredMembers,
+                  language: language,
                   onView: (member) => context.push('/app/members/${member.id}'),
-                  onDelete: _deleteMember,
+                  onDelete: (member) => _deleteMember(member, language),
                 ),
             ],
           );
@@ -214,11 +287,13 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
 class _MemberCard extends StatelessWidget {
   const _MemberCard({
     required this.member,
+    required this.language,
     required this.onView,
     required this.onDelete,
   });
 
   final MemberModel member;
+  final String language;
   final VoidCallback onView;
   final VoidCallback onDelete;
 
@@ -257,32 +332,69 @@ class _MemberCard extends StatelessWidget {
                   ),
                 ),
                 PopupMenuButton<String>(
-                  tooltip: 'Member actions',
+                  tooltip: adminUiText(
+                    language,
+                    english: 'Member actions',
+                    tamil: 'உறுப்பினர் செயல்கள்',
+                    sinhala: 'සාමාජික ක්‍රියා',
+                  ),
                   onSelected: (value) {
                     if (value == 'view') onView();
                     if (value == 'delete') onDelete();
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'view', child: Text('View member')),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'view',
+                      child: Text(
+                        adminUiText(
+                          language,
+                          english: 'View member',
+                          tamil: 'உறுப்பினரைப் பார்க்கவும்',
+                          sinhala: 'සාමාජිකයා බලන්න',
+                        ),
+                      ),
+                    ),
                     PopupMenuItem(
                       value: 'delete',
-                      child: Text('Remove member'),
+                      child: Text(
+                        adminUiText(
+                          language,
+                          english: 'Remove member',
+                          tamil: 'உறுப்பினரை நீக்கு',
+                          sinhala: 'සාමාජිකයා ඉවත් කරන්න',
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
             const Divider(height: 24),
-            _InfoLine(icon: Icons.groups_2_outlined, text: member.groupName),
+            _InfoLine(
+              icon: Icons.groups_2_outlined,
+              text: member.groupName,
+              language: language,
+            ),
             const SizedBox(height: 8),
-            _InfoLine(icon: Icons.phone_outlined, text: member.phone),
+            _InfoLine(
+              icon: Icons.phone_outlined,
+              text: member.phone,
+              language: language,
+            ),
             const Spacer(),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: onView,
                 icon: const Icon(Icons.open_in_new, size: 16),
-                label: const Text('View profile'),
+                label: Text(
+                  adminUiText(
+                    language,
+                    english: 'View profile',
+                    tamil: 'சுயவிவரத்தைக் காண்க',
+                    sinhala: 'පැතිකඩ බලන්න',
+                  ),
+                ),
               ),
             ),
           ],
@@ -295,11 +407,13 @@ class _MemberCard extends StatelessWidget {
 class _MembersTable extends StatelessWidget {
   const _MembersTable({
     required this.members,
+    required this.language,
     required this.onView,
     required this.onDelete,
   });
 
   final List<MemberModel> members;
+  final String language;
   final ValueChanged<MemberModel> onView;
   final ValueChanged<MemberModel> onDelete;
 
@@ -310,12 +424,57 @@ class _MembersTable extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          columns: const [
-            DataColumn(label: Text('Member')),
-            DataColumn(label: Text('Phone')),
-            DataColumn(label: Text('Group')),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('Actions')),
+          columns: [
+            DataColumn(
+              label: Text(
+                adminUiText(
+                  language,
+                  english: 'Member',
+                  tamil: 'உறுப்பினர்',
+                  sinhala: 'සාමාජිකයා',
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                adminUiText(
+                  language,
+                  english: 'Phone',
+                  tamil: 'தொலைபேசி',
+                  sinhala: 'දුරකථනය',
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                adminUiText(
+                  language,
+                  english: 'Group',
+                  tamil: 'குழு',
+                  sinhala: 'කණ්ඩායම',
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                adminUiText(
+                  language,
+                  english: 'Status',
+                  tamil: 'நிலை',
+                  sinhala: 'තත්ත්වය',
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                adminUiText(
+                  language,
+                  english: 'Actions',
+                  tamil: 'செயல்கள்',
+                  sinhala: 'ක්‍රියා',
+                ),
+              ),
+            ),
           ],
           rows: members
               .map(
@@ -357,17 +516,29 @@ class _MembersTable extends StatelessWidget {
                     ),
                     DataCell(Text(member.phone)),
                     DataCell(Text(member.groupName)),
-                    DataCell(_StatusBadge(status: member.status)),
+                    DataCell(
+                      _StatusBadge(status: member.status, language: language),
+                    ),
                     DataCell(
                       Row(
                         children: [
                           IconButton(
-                            tooltip: 'View member',
+                            tooltip: adminUiText(
+                              language,
+                              english: 'View member',
+                              tamil: 'உறுப்பினரைப் பார்க்கவும்',
+                              sinhala: 'සාමාජිකයා බලන්න',
+                            ),
                             onPressed: () => onView(member),
                             icon: const Icon(Icons.visibility_outlined),
                           ),
                           IconButton(
-                            tooltip: 'Remove member',
+                            tooltip: adminUiText(
+                              language,
+                              english: 'Remove member',
+                              tamil: 'உறுப்பினரை நீக்கு',
+                              sinhala: 'සාමාජිකයා ඉවත් කරන්න',
+                            ),
                             onPressed: () => onDelete(member),
                             icon: const Icon(Icons.delete_forever_outlined),
                           ),
@@ -415,10 +586,15 @@ class _MemberAvatar extends StatelessWidget {
 }
 
 class _InfoLine extends StatelessWidget {
-  const _InfoLine({required this.icon, required this.text});
+  const _InfoLine({
+    required this.icon,
+    required this.text,
+    required this.language,
+  });
 
   final IconData icon;
   final String text;
+  final String language;
 
   @override
   Widget build(BuildContext context) {
@@ -428,7 +604,14 @@ class _InfoLine extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            text.isEmpty ? 'Not provided' : text,
+            text.isEmpty
+                ? adminUiText(
+                    language,
+                    english: 'Not provided',
+                    tamil: 'வழங்கப்படவில்லை',
+                    sinhala: 'සපයා නැත',
+                  )
+                : text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
@@ -440,9 +623,10 @@ class _InfoLine extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
+  const _StatusBadge({required this.status, required this.language});
 
   final String status;
+  final String language;
 
   @override
   Widget build(BuildContext context) {
@@ -455,7 +639,19 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        status,
+        status.toLowerCase() == 'active'
+            ? adminUiText(
+                language,
+                english: 'Active',
+                tamil: 'செயலில்',
+                sinhala: 'සක්‍රිය',
+              )
+            : adminUiText(
+                language,
+                english: 'Inactive',
+                tamil: 'செயலற்றது',
+                sinhala: 'අක්‍රිය',
+              ),
         style: TextStyle(
           color: color,
           fontSize: 11,
@@ -467,8 +663,9 @@ class _StatusBadge extends StatelessWidget {
 }
 
 class _EmptyMembers extends StatelessWidget {
-  const _EmptyMembers({required this.onCreate});
+  const _EmptyMembers({required this.language, required this.onCreate});
 
+  final String language;
   final VoidCallback onCreate;
 
   @override
@@ -479,20 +676,37 @@ class _EmptyMembers extends StatelessWidget {
         children: [
           Icon(Icons.people_outline, size: 48, color: Colors.grey.shade400),
           const SizedBox(height: 12),
-          const Text(
-            'No members found',
+          Text(
+            adminUiText(
+              language,
+              english: 'No members found',
+              tamil: 'உறுப்பினர்கள் எவரும் இல்லை',
+              sinhala: 'සාමාජිකයින් හමු නොවීය',
+            ),
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
           const SizedBox(height: 5),
           Text(
-            'Try another search or add your first member.',
+            adminUiText(
+              language,
+              english: 'Try another search or add your first member.',
+              tamil: 'வேறு தேடலை முயற்சிக்கவும் அல்லது முதல் உறுப்பினரைச் சேர்க்கவும்.',
+              sinhala: 'වෙනත් සෙවුමක් උත්සාහ කරන්න හෝ ඔබගේ පළමු සාමාජිකයා එක් කරන්න.',
+            ),
             style: TextStyle(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 14),
           OutlinedButton.icon(
             onPressed: onCreate,
             icon: const Icon(Icons.person_add_alt_1_rounded),
-            label: const Text('Create Member'),
+            label: Text(
+              adminUiText(
+                language,
+                english: 'Create Member',
+                tamil: 'உறுப்பினரை உருவாக்கு',
+                sinhala: 'සාමාජිකයෙකු සාදන්න',
+              ),
+            ),
           ),
         ],
       ),

@@ -8,6 +8,7 @@ class AppTheme {
   static TextTheme _buildTextTheme(
     Brightness brightness, {
     bool isTamil = false,
+    bool isSinhala = false,
   }) {
     final baseColor = brightness == Brightness.light
         ? AppColors.inkLight
@@ -16,7 +17,11 @@ class AppTheme {
         ? AppColors.headingLight
         : AppColors.headingDark;
 
-    final fontFamily = isTamil ? 'Noto Sans Tamil' : 'Inter';
+    final fontFamily = isTamil
+        ? 'Noto Sans Tamil'
+        : isSinhala
+        ? 'Noto Sans Sinhala'
+        : 'Inter';
     final theme = TextTheme(
       displayLarge: TextStyle(fontFamily: fontFamily),
       displayMedium: TextStyle(fontFamily: fontFamily),
@@ -71,8 +76,12 @@ class AppTheme {
     );
   }
 
-  static ThemeData lightTheme({bool isTamil = false}) {
-    final textTheme = _buildTextTheme(Brightness.light, isTamil: isTamil);
+  static ThemeData lightTheme({bool isTamil = false, bool isSinhala = false}) {
+    final textTheme = _buildTextTheme(
+      Brightness.light,
+      isTamil: isTamil,
+      isSinhala: isSinhala,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -168,8 +177,12 @@ class AppTheme {
     );
   }
 
-  static ThemeData darkTheme({bool isTamil = false}) {
-    final textTheme = _buildTextTheme(Brightness.dark, isTamil: isTamil);
+  static ThemeData darkTheme({bool isTamil = false, bool isSinhala = false}) {
+    final textTheme = _buildTextTheme(
+      Brightness.dark,
+      isTamil: isTamil,
+      isSinhala: isSinhala,
+    );
 
     return ThemeData(
       useMaterial3: true,

@@ -98,22 +98,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildMobileInbox(BuildContext context) {
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
+    final isTamil = language == 'ta';
+    final isSinhala = language == 'si';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       children: [
-        _buildInboxHeader(context, isTamil),
-        _buildSearchField(isTamil, isDark),
-        _buildTabs(context, isTamil),
-        Expanded(child: _buildMobileList(context, isTamil)),
-        _buildProfileStatus(context, isTamil),
+        _buildInboxHeader(context, isTamil, isSinhala),
+        _buildSearchField(isTamil, isSinhala, isDark),
+        _buildTabs(context, isTamil, isSinhala),
+        Expanded(child: _buildMobileList(context, isTamil, isSinhala)),
+        _buildProfileStatus(context, isTamil, isSinhala),
       ],
     );
   }
 
   Widget _buildWideInbox(BuildContext context) {
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
+    final isTamil = language == 'ta';
+    final isSinhala = language == 'si';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
@@ -158,11 +162,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     width: 420,
                     child: Column(
                       children: [
-                        _buildInboxHeader(context, isTamil),
-                        _buildSearchField(isTamil, isDark),
-                        _buildTabs(context, isTamil),
-                        Expanded(child: _buildWideList(context, isTamil)),
-                        _buildProfileStatus(context, isTamil),
+                        _buildInboxHeader(context, isTamil, isSinhala),
+                        _buildSearchField(isTamil, isSinhala, isDark),
+                        _buildTabs(context, isTamil, isSinhala),
+                        Expanded(
+                          child: _buildWideList(context, isTamil, isSinhala),
+                        ),
+                        _buildProfileStatus(context, isTamil, isSinhala),
                       ],
                     ),
                   ),
@@ -174,7 +180,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   Expanded(
                     child: _isChannelOpen
                         ? _buildConversation(context)
-                        : _buildEmptyConversation(context, isTamil),
+                        : _buildEmptyConversation(context, isTamil, isSinhala),
                   ),
                 ],
               ),
@@ -185,7 +191,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildInboxHeader(BuildContext context, bool isTamil) {
+  Widget _buildInboxHeader(BuildContext context, bool isTamil, bool isSinhala) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
@@ -194,13 +200,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           Expanded(
             child: Text(
-              isTamil ? 'அரட்டை' : 'Chat',
+              isTamil
+                  ? 'அரட்டை'
+                  : isSinhala
+                  ? 'කතාබස්'
+                  : 'Chat',
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
             ),
           ),
           IconButton(
-            tooltip: isTamil ? 'சேனல்கள்' : 'Channels',
+            tooltip: isTamil
+                ? 'சேனல்கள்'
+                : isSinhala
+                ? 'නාලිකා'
+                : 'Channels',
             visualDensity: VisualDensity.compact,
             icon: Icon(
               AppIcons.groups,
@@ -211,7 +225,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onPressed: () => setState(() => _selectedTab = 1),
           ),
           IconButton(
-            tooltip: isTamil ? 'புதிய அரட்டை' : 'New chat',
+            tooltip: isTamil
+                ? 'புதிய அரட்டை'
+                : isSinhala
+                ? 'නව කතාබසක්'
+                : 'New chat',
             visualDensity: VisualDensity.compact,
             icon: Icon(
               AppIcons.conversation,
@@ -224,7 +242,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildSearchField(bool isTamil, bool isDark) {
+  Widget _buildSearchField(bool isTamil, bool isSinhala, bool isDark) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: SizedBox(
@@ -232,7 +250,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: TextField(
           controller: _searchController,
           decoration: InputDecoration(
-            hintText: isTamil ? 'தேடுங்கள்' : 'Search',
+            hintText: isTamil
+                ? 'தேடுங்கள்'
+                : isSinhala
+                ? 'සොයන්න'
+                : 'Search',
             hintStyle: TextStyle(
               color: isDark ? AppColors.mutedDark : AppColors.mutedLight,
               fontSize: 14,
@@ -262,9 +284,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildTabs(BuildContext context, bool isTamil) {
+  Widget _buildTabs(BuildContext context, bool isTamil, bool isSinhala) {
     final labels = isTamil
         ? ['படிக்காதவை', 'சேனல்கள்', 'அரட்டைகள்']
+        : isSinhala
+        ? ['නොකියවූ', 'නාලිකා', 'කතාබස්']
         : ['Unread', 'Channels', 'Chats'];
 
     return Padding(
@@ -310,60 +334,61 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildMobileList(BuildContext context, bool isTamil) {
+  Widget _buildMobileList(BuildContext context, bool isTamil, bool isSinhala) {
     if (_selectedTab == 1) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-        children: [_buildChannelTile(context, isTamil)],
+        children: [_buildChannelTile(context, isTamil, isSinhala)],
       );
     }
 
-    return _buildInboxEmpty(context, isTamil);
+    return _buildInboxEmpty(context, isTamil, isSinhala);
   }
 
-  Widget _buildWideList(BuildContext context, bool isTamil) {
+  Widget _buildWideList(BuildContext context, bool isTamil, bool isSinhala) {
     if (_selectedTab == 1) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
-        children: [_buildChannelTile(context, isTamil)],
+        children: [_buildChannelTile(context, isTamil, isSinhala)],
       );
     }
 
-    return _buildInboxEmpty(context, isTamil);
+    return _buildInboxEmpty(context, isTamil, isSinhala);
   }
 
-  Widget _buildChannelTile(BuildContext context, bool isTamil) {
+  Widget _buildChannelTile(BuildContext context, bool isTamil, bool isSinhala) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Material(
-      color: Colors.transparent,
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        selected: _isChannelOpen,
-        selectedTileColor: isDark
-            ? AppColors.accent.withValues(alpha: 0.18)
-            : AppColors.accentLight,
-        leading: CircleAvatar(
-          backgroundColor: AppColors.accentLight,
-          child: const Icon(Icons.tag, color: AppColors.accent, size: 20),
-        ),
-        title: Text(
-          _channelName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          isTamil ? '42 பேர் செயலில்' : '42 active',
-          style: const TextStyle(fontSize: 12),
-        ),
-        trailing: const Icon(Icons.chevron_right_rounded, size: 20),
-        onTap: () => setState(() => _isChannelOpen = true),
+    return ListTile(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      selected: _isChannelOpen,
+      selectedTileColor: isDark
+          ? AppColors.accent.withValues(alpha: 0.18)
+          : AppColors.accentLight,
+      leading: CircleAvatar(
+        backgroundColor: AppColors.accentLight,
+        child: const Icon(Icons.tag, color: AppColors.accent, size: 20),
       ),
+      title: Text(
+        _channelName,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        isTamil
+            ? '42 பேர் செயலில்'
+            : isSinhala
+            ? '42ක් සක්‍රියයි'
+            : '42 active',
+        style: const TextStyle(fontSize: 12),
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+      onTap: () => setState(() => _isChannelOpen = true),
     );
   }
 
-  Widget _buildInboxEmpty(BuildContext context, bool isTamil) {
+  Widget _buildInboxEmpty(BuildContext context, bool isTamil, bool isSinhala) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -371,9 +396,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           _selectedTab == 0
               ? (isTamil
                     ? 'படிக்காத செய்திகள் இல்லை.'
+                    : isSinhala
+                    ? 'නොකියවූ පණිවිඩ නැත.'
                     : 'You’re all caught up.')
               : (isTamil
                     ? 'இன்னும் அரட்டைகள் இல்லை. உரையாடலைத் தொடங்குங்கள்.'
+                    : isSinhala
+                    ? 'තවම කතාබස් නැත. සංවාදයක් ආරම්භ කරන්න.'
                     : 'No chats yet. Start a conversation.'),
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -387,7 +416,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildProfileStatus(BuildContext context, bool isTamil) {
+  Widget _buildProfileStatus(
+    BuildContext context,
+    bool isTamil,
+    bool isSinhala,
+  ) {
     final session = ref.watch(sessionProvider);
     final displayName = session?.user.displayName.trim().isNotEmpty == true
         ? session!.user.displayName
@@ -400,7 +433,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         .join();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final statusColor = _statusColor(_chatStatus);
-    final statusLabel = _statusLabel(_chatStatus, isTamil);
+    final statusLabel = _statusLabel(_chatStatus, isTamil, isSinhala);
 
     return InkWell(
       onTap: () => _showStatusMenu(context, displayName, initials),
@@ -499,7 +532,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  String _statusLabel(String status, bool isTamil) {
+  String _statusLabel(String status, bool isTamil, bool isSinhala) {
     if (isTamil) {
       switch (status) {
         case 'busy':
@@ -515,6 +548,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         case 'available':
         default:
           return 'செயலில்';
+      }
+    }
+
+    if (isSinhala) {
+      switch (status) {
+        case 'busy':
+          return 'කාර්යබහුලයි';
+        case 'do-not-disturb':
+          return 'බාධා නොකරන්න';
+        case 'be-right-back':
+          return 'ඉක්මනින් ආපසු එන්නම්';
+        case 'appear-away':
+          return 'දුරස්ව සිටින ලෙස පෙන්වන්න';
+        case 'appear-offline':
+          return 'නොබැඳි ලෙස පෙන්වන්න';
+        case 'available':
+        default:
+          return 'ලබා ගත හැක';
       }
     }
 
@@ -540,6 +591,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     String displayName,
     String initials,
   ) async {
+    final language = ref.read(languageProvider);
+    final isTamil = language == 'ta';
+    final isSinhala = language == 'si';
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final anchor = context.findRenderObject() as RenderBox;
     final topLeft = anchor.localToGlobal(Offset.zero, ancestor: overlay);
@@ -580,8 +634,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     displayName,
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  const Text(
-                    'Admin',
+                  Text(
+                    isTamil
+                        ? 'நிர்வாகி'
+                        : isSinhala
+                        ? 'පරිපාලක'
+                        : 'Admin',
                     style: TextStyle(color: AppColors.mutedLight),
                   ),
                 ],
@@ -594,7 +652,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           value: 'available',
           child: _StatusMenuRow(
             color: AppColors.success,
-            label: 'Available',
+            label: _statusLabel('available', isTamil, isSinhala),
             selected: _chatStatus == 'available',
           ),
         ),
@@ -602,7 +660,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           value: 'busy',
           child: _StatusMenuRow(
             color: Colors.redAccent,
-            label: 'Busy',
+            label: _statusLabel('busy', isTamil, isSinhala),
             selected: _chatStatus == 'busy',
           ),
         ),
@@ -610,7 +668,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           value: 'do-not-disturb',
           child: _StatusMenuRow(
             color: Colors.red,
-            label: 'Do not disturb',
+            label: _statusLabel('do-not-disturb', isTamil, isSinhala),
             showMinus: true,
             selected: _chatStatus == 'do-not-disturb',
           ),
@@ -619,7 +677,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           value: 'be-right-back',
           child: _StatusMenuRow(
             color: Colors.amber,
-            label: 'Be right back',
+            label: _statusLabel('be-right-back', isTamil, isSinhala),
             selected: _chatStatus == 'be-right-back',
           ),
         ),
@@ -627,7 +685,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           value: 'appear-away',
           child: _StatusMenuRow(
             color: Colors.amber,
-            label: 'Appear away',
+            label: _statusLabel('appear-away', isTamil, isSinhala),
             selected: _chatStatus == 'appear-away',
           ),
         ),
@@ -635,15 +693,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           value: 'appear-offline',
           child: _StatusMenuRow(
             color: Color(0xFF94A3B8),
-            label: 'Appear offline',
+            label: _statusLabel('appear-offline', isTamil, isSinhala),
             selected: _chatStatus == 'appear-offline',
           ),
         ),
         const PopupMenuDivider(),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'reset',
           child: Text(
-            'Reset status',
+            isTamil
+                ? 'நிலையை மீட்டமை'
+                : isSinhala
+                ? 'තත්ත්වය යළි පිහිටුවන්න'
+                : 'Reset status',
             style: TextStyle(color: AppColors.mutedLight),
           ),
         ),
@@ -660,14 +722,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       SnackBar(
         content: Text(
           selected == 'reset'
-              ? 'Status reset to Available.'
-              : 'Status changed to ${_statusLabel(status, false)}.',
+              ? (isTamil
+                    ? 'நிலை மீட்டமைக்கப்பட்டது.'
+                    : isSinhala
+                    ? 'තත්ත්වය යළි පිහිටුවන ලදී.'
+                    : 'Status reset to Available.')
+              : (isTamil
+                    ? 'நிலை ${_statusLabel(status, isTamil, isSinhala)} என மாற்றப்பட்டது.'
+                    : isSinhala
+                    ? 'තත්ත්වය ${_statusLabel(status, isTamil, isSinhala)} ලෙස වෙනස් කරන ලදී.'
+                    : 'Status changed to ${_statusLabel(status, false, false)}.'),
         ),
       ),
     );
   }
 
-  Widget _buildEmptyConversation(BuildContext context, bool isTamil) {
+  Widget _buildEmptyConversation(
+    BuildContext context,
+    bool isTamil,
+    bool isSinhala,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
@@ -684,6 +758,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Text(
               isTamil
                   ? 'செய்தி அனுப்ப அரட்டையைத் தேர்ந்தெடுக்கவும்'
+                  : isSinhala
+                  ? 'පණිවිඩ යැවීමට කතාබසක් තෝරන්න'
                   : 'Pick a chat to start messaging',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium
@@ -693,6 +769,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Text(
               isTamil
                   ? 'அரட்டையைத் தொடங்கவும், சேனலை உருவாக்கவும் அல்லது பட்டியலிலிருந்து உரையாடலைத் திறக்கவும்.'
+                  : isSinhala
+                  ? 'කතාබසක් අරඹන්න, නාලිකාවක් සාදන්න, නැතහොත් ලැයිස්තුවෙන් සංවාදයක් විවෘත කරන්න.'
                   : 'Start a chat, create a channel, or open a conversation from the list.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -708,7 +786,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildConversation(BuildContext context, {bool compact = false}) {
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
+    final isTamil = language == 'ta';
+    final isSinhala = language == 'si';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
@@ -727,7 +807,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             children: [
               if (compact)
                 IconButton(
-                  tooltip: isTamil ? 'பின்னால்' : 'Back to chats',
+                  tooltip: isTamil
+                      ? 'பின்னால்'
+                      : isSinhala
+                      ? 'කතාබස් වෙත ආපසු'
+                      : 'Back to chats',
                   icon: const Icon(AppIcons.back),
                   onPressed: () => setState(() => _isChannelOpen = false),
                 ),
@@ -748,7 +832,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isTamil ? '42 செயலில்' : '42 active',
+                  isTamil
+                      ? '42 செயலில்'
+                      : isSinhala
+                      ? '42ක් සක්‍රියයි'
+                      : '42 active',
                   style: const TextStyle(
                     color: AppColors.success,
                     fontSize: 11,
@@ -767,7 +855,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 _buildMessageBubble(context, _messages[index], isDark),
           ),
         ),
-        _buildMessageComposer(context, isTamil, isDark),
+        _buildMessageComposer(context, isTamil, isSinhala, isDark),
       ],
     );
   }
@@ -775,6 +863,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildMessageComposer(
     BuildContext context,
     bool isTamil,
+    bool isSinhala,
     bool isDark,
   ) {
     return Container(
@@ -792,7 +881,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: Row(
           children: [
             IconButton(
-              tooltip: isTamil ? 'கோப்பை இணைக்கவும்' : 'Attach file',
+              tooltip: isTamil
+                  ? 'கோப்பை இணைக்கவும்'
+                  : isSinhala
+                  ? 'ගොනුව අමුණන්න'
+                  : 'Attach file',
               icon: const Icon(AppIcons.attach, color: AppColors.mutedLight),
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -800,6 +893,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     content: Text(
                       isTamil
                           ? 'கோப்பு இணைப்பு விரைவில் கிடைக்கும்.'
+                          : isSinhala
+                          ? 'ගොනු ඇමුණුම් ළඟදීම ලබා ගත හැක.'
                           : 'File attachments are coming soon.',
                     ),
                   ),
@@ -813,6 +908,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 decoration: InputDecoration(
                   hintText: isTamil
                       ? 'செய்தியை உள்ளிடவும்...'
+                      : isSinhala
+                      ? 'පණිවිඩයක් ටයිප් කරන්න...'
                       : 'Type a message...',
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -830,7 +927,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             const SizedBox(width: 8),
             IconButton.filled(
-              tooltip: isTamil ? 'அனுப்பு' : 'Send message',
+              tooltip: isTamil
+                  ? 'அனுப்பு'
+                  : isSinhala
+                  ? 'පණිවිඩය යවන්න'
+                  : 'Send message',
               style: IconButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,

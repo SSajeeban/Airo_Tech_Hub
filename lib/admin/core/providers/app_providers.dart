@@ -6,6 +6,7 @@ import '../services/storage_service.dart';
 import '../../models/site_content.dart';
 import '../../models/user_session.dart';
 import '../../models/app_models.dart';
+import '../localization/admin_localizations.dart';
 
 // Storage Provider
 final storageServiceProvider = Provider<StorageService>((ref) {
@@ -27,17 +28,24 @@ final siteContentProvider = FutureProvider<SiteContent>((ref) async {
 // Language Provider ('en', 'ta', or 'si')
 class LanguageNotifier extends StateNotifier<String> {
   final StorageService _storage;
-  LanguageNotifier(this._storage) : super(_storage.getLanguage());
+  LanguageNotifier(this._storage)
+    : super(normalizeAdminLanguage(_storage.getLanguage())) {
+    if (state != _storage.getLanguage()) {
+      _storage.setLanguage(state);
+    }
+  }
 
   void setLanguage(String lang) {
-    _storage.setLanguage(lang);
-    state = lang;
+    final normalized = normalizeAdminLanguage(lang);
+    _storage.setLanguage(normalized);
+    state = normalized;
   }
 
   void toggleLanguage() {
-    final next = state == 'en'
+    final current = normalizeAdminLanguage(state);
+    final next = current == 'en'
         ? 'ta'
-        : state == 'ta'
+        : current == 'ta'
         ? 'si'
         : 'en';
     setLanguage(next);
@@ -271,8 +279,10 @@ final noticesProvider = StateProvider<List<NoticeModel>>((ref) {
       id: 'not_01',
       title: 'Monthly Mock Exam Scheduled for Saturday',
       titleTa: 'மாதாந்திர மாதிரித் தேர்வு சனிக்கிழமை நடைபெறும்',
+      titleSi: 'මාසික ආදර්ශ විභාගය සෙනසුරාදා පැවැත්වේ',
       content: 'All registered students must join the exam room 15 minutes prior to the start time with your study materials ready.',
       contentTa: 'பதிவு செய்த அனைத்து மாணவர்களும் தங்கள் கற்றல் பொருட்களுடன் தொடக்க நேரத்திற்கு 15 நிமிடங்களுக்கு முன்பே தேர்வு அறையில் இணைய வேண்டும்.',
+      contentSi: 'ලියාපදිංචි වූ සියලුම සිසුන් තම අධ්‍යයන ද්‍රව්‍ය සූදානම් කරගෙන ආරම්භක වේලාවට මිනිත්තු 15කට පෙර විභාග කාමරයට එක්වන්න.',
       isPinned: true,
       publishedAt: DateTime.now().subtract(const Duration(hours: 4)),
       author: 'Academic Coordinator',
@@ -281,8 +291,10 @@ final noticesProvider = StateProvider<List<NoticeModel>>((ref) {
       id: 'not_02',
       title: 'New AI Teacher Learning Modules Released',
       titleTa: 'புதிய AI ஆசிரியர் கற்றல் தொகுதிகள் வெளியிடப்பட்டுள்ளன',
+      titleSi: 'නව AI ගුරු ඉගෙනුම් පාඩම් නිකුත් කර ඇත',
       content: 'Students can now generate practice quizzes and study notes directly within their library tab.',
       contentTa: 'மாணவர்கள் இப்போது தங்கள் நூலகத் தாவலில் நேரடியாக பயிற்சி வினாடி வினாக்கள் மற்றும் குறிப்புகளை உருவாக்க முடியும்.',
+      contentSi: 'සිසුන්ට දැන් තම පුස්තකාල පටිත්ත තුළම පුහුණු ප්‍රශ්නාවලි සහ අධ්‍යයන සටහන් සකස් කළ හැකිය.',
       isPinned: false,
       publishedAt: DateTime.now().subtract(const Duration(days: 2)),
       author: 'AIRO Techhub Support',

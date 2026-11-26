@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 import '../../../models/user_session.dart';
@@ -19,6 +20,15 @@ class MeetingsScreen extends ConsumerStatefulWidget {
 }
 
 class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
+  String _text(String english, String tamil, String sinhala) {
+    return adminUiText(
+      ref.read(languageProvider),
+      english: english,
+      tamil: tamil,
+      sinhala: sinhala,
+    );
+  }
+
   final _titleController = TextEditingController();
   final _sessionIdController = TextEditingController();
   DateTime? _startsAt;
@@ -42,9 +52,17 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not open meeting: $url')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _text(
+              'Could not open meeting: $url',
+              'கூட்டத்தைத் திறக்க முடியவில்லை: $url',
+              'රැස්වීම විවෘත කළ නොහැක: $url',
+            ),
+          ),
+        ),
+      );
     }
   }
 
@@ -76,14 +94,15 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
   }
 
   void _createMeeting(List<GroupModel> groups) {
-    final isTamil = ref.read(languageProvider) == 'ta';
     if (ref.read(sessionProvider)?.user.role != UserRole.subscriber) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isTamil
-                ? 'நிர்வாகிகள் மட்டுமே கூட்டங்களைத் திட்டமிடலாம்.'
-                : 'Only admins can schedule meetings.',
+            _text(
+              'Only admins can schedule meetings.',
+              'நிர்வாகிகள் மட்டுமே கூட்டங்களைத் திட்டமிடலாம்.',
+              'රැස්වීම් සැලසුම් කළ හැක්කේ පරිපාලකයින්ට පමණි.',
+            ),
           ),
         ),
       );
@@ -93,20 +112,44 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     final title = _titleController.text.trim();
     final sessionId = _sessionIdController.text.trim().toUpperCase();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Enter a meeting title.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _text(
+              'Enter a meeting title.',
+              'கூட்டத் தலைப்பை உள்ளிடவும்.',
+              'රැස්වීමේ මාතෘකාවක් ඇතුළත් කරන්න.',
+            ),
+          ),
+        ),
+      );
       return;
     }
     if (_isInstantMeeting && sessionId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Generate or enter a session ID.')),
+        SnackBar(
+          content: Text(
+            _text(
+              'Generate or enter a session ID.',
+              'அமர்வு ஐடியை உருவாக்கவும் அல்லது உள்ளிடவும்.',
+              'සැසි ID එකක් සාදන්න හෝ ඇතුළත් කරන්න.',
+            ),
+          ),
+        ),
       );
       return;
     }
     if (!_isInstantMeeting && _startsAt == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choose a start date and time.')),
+        SnackBar(
+          content: Text(
+            _text(
+              'Choose a start date and time.',
+              'தொடக்க தேதி மற்றும் நேரத்தைத் தேர்ந்தெடுக்கவும்.',
+              'ආරම්භක දිනය සහ වේලාව තෝරන්න.',
+            ),
+          ),
+        ),
       );
       return;
     }
@@ -148,10 +191,22 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _isInstantMeeting ? 'Instant meeting created.' : 'Meeting scheduled.',
+          _isInstantMeeting
+              ? _text(
+                  'Instant meeting created.',
+                  'உடனடி கூட்டம் உருவாக்கப்பட்டது.',
+                  'ක්ෂණික රැස්වීම සාදන ලදී.',
+                )
+              : _text(
+                  'Meeting scheduled.',
+                  'கூட்டம் திட்டமிடப்பட்டது.',
+                  'රැස්වීම සැලසුම් කරන ලදී.',
+                ),
         ),
         action: SnackBarAction(
-          label: _isInstantMeeting ? 'JOIN NOW' : 'COPY LINK',
+          label: _isInstantMeeting
+              ? _text('JOIN NOW', 'இப்போது சேரவும்', 'දැන් එක්වන්න')
+              : _text('COPY LINK', 'இணைப்பை நகலெடு', 'සබැඳිය පිටපත් කරන්න'),
           onPressed: () {
             if (_isInstantMeeting) {
               _launchMeeting(meeting.meetingUrl);
@@ -169,13 +224,22 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     final userRole = ref.watch(sessionProvider)?.user.role;
 
     if (userRole != UserRole.subscriber) {
-      return const Scaffold(
-        body: Center(child: Text('Only admins can access meetings.')),
+      return Scaffold(
+        body: Center(
+          child: Text(
+            _text(
+              'Only admins can access meetings.',
+              'நிர்வாகிகள் மட்டுமே கூட்டங்களை அணுகலாம்.',
+              'රැස්වීම් වෙත ප්‍රවේශ විය හැක්කේ පරිපාලකයින්ට පමණි.',
+            ),
+          ),
+        ),
       );
     }
     final meetings = ref.watch(meetingsProvider);
     final groups = ref.watch(groupsProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
+    final isTamil = language == 'ta';
     final canManageMeetings =
         ref.watch(sessionProvider)?.user.role == UserRole.subscriber;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -190,9 +254,11 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              isTamil
-                  ? 'நிர்வாகிகள் மட்டுமே கூட்டங்களை அணுகலாம்.'
-                  : 'Only admins can access meetings.',
+              _text(
+                'Only admins can access meetings.',
+                'நிர்வாகிகள் மட்டுமே கூட்டங்களை அணுகலாம்.',
+                'රැස්වීම් වෙත ප්‍රවේශ විය හැක්කේ පරිපාලකයින්ට පමණි.',
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -224,7 +290,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
           _modeSelector(isDark, isTamil),
           const SizedBox(height: 14),
           if (!_isInstantMeeting) ...[
-            _fieldLabel(isTamil ? 'குழு' : 'Group', isDark),
+            _fieldLabel(_text('Group', 'குழு', 'කණ්ඩායම'), isDark),
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               initialValue: groups.any((group) => group.name == _selectedGroup)
@@ -233,7 +299,11 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
               isExpanded: true,
               decoration: _inputDecoration(isDark),
               hint: Text(
-                isTamil ? 'குழுவைத் தேர்ந்தெடுக்கவும்' : 'Select a group',
+                _text(
+                  'Select a group',
+                  'குழுவைத் தேர்ந்தெடுக்கவும்',
+                  'කණ්ඩායමක් තෝරන්න',
+                ),
               ),
               items: groups
                   .map(
@@ -253,18 +323,22 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
             ),
             const SizedBox(height: 12),
           ],
-          _fieldLabel(isTamil ? 'தலைப்பு' : 'Title', isDark),
+          _fieldLabel(_text('Title', 'தலைப்பு', 'මාතෘකාව'), isDark),
           const SizedBox(height: 6),
           TextField(
             controller: _titleController,
             decoration: _inputDecoration(
               isDark,
-              hintText: isTamil ? 'கூட்டத்தின் தலைப்பு' : 'Meeting title',
+              hintText: _text(
+                'Meeting title',
+                'கூட்டத்தின் தலைப்பு',
+                'රැස්වීමේ මාතෘකාව',
+              ),
             ),
           ),
           const SizedBox(height: 12),
           if (_isInstantMeeting) ...[
-            _fieldLabel(isTamil ? 'அமர்வு ஐடி' : 'Session ID', isDark),
+            _fieldLabel(_text('Session ID', 'அமர்வு ஐடி', 'සැසි ID'), isDark),
             const SizedBox(height: 6),
             Row(
               children: [
@@ -283,13 +357,13 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                   onPressed: () => setState(
                     () => _sessionIdController.text = _generateSessionId(),
                   ),
-                  child: Text(isTamil ? 'உருவாக்கு' : 'Generate'),
+                  child: Text(_text('Generate', 'உருவாக்கு', 'සාදන්න')),
                 ),
               ],
             ),
             const SizedBox(height: 12),
           ] else ...[
-            _fieldLabel(isTamil ? 'தொடங்கும் நேரம்' : 'Starts', isDark),
+            _fieldLabel(_text('Starts', 'தொடங்கும் நேரம்', 'ආරම්භ වේ'), isDark),
             const SizedBox(height: 6),
             InkWell(
               onTap: _pickStartDateTime,
@@ -301,9 +375,11 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                 ),
                 child: Text(
                   _startsAt == null
-                      ? (isTamil
-                            ? 'தேதி மற்றும் நேரத்தைத் தேர்ந்தெடுக்கவும்'
-                            : 'Choose date and time')
+                      ? _text(
+                          'Choose date and time',
+                          'தேதி மற்றும் நேரத்தைத் தேர்ந்தெடுக்கவும்',
+                          'දිනය සහ වේලාව තෝරන්න',
+                        )
                       : DateFormat('MM/dd/yyyy  h:mm a').format(_startsAt!),
                   style: TextStyle(
                     color: _startsAt == null
@@ -329,10 +405,16 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
               ),
               child: Text(
                 _isInstantMeeting
-                    ? (isTamil
-                          ? 'உடனடி கூட்டத்தை உருவாக்கு'
-                          : 'Create instant meeting')
-                    : (isTamil ? 'கூட்டத்தைத் திட்டமிடு' : 'Schedule meeting'),
+                    ? _text(
+                        'Create instant meeting',
+                        'உடனடி கூட்டத்தை உருவாக்கு',
+                        'ක්ෂණික රැස්වීම සාදන්න',
+                      )
+                    : _text(
+                        'Schedule meeting',
+                        'கூட்டத்தைத் திட்டமிடு',
+                        'රැස්වීම සැලසුම් කරන්න',
+                      ),
               ),
             ),
           ),
@@ -353,13 +435,13 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _modeButton(
-            isTamil ? 'திட்டமிடு' : 'Schedule meeting',
+            _text('Schedule meeting', 'திட்டமிடு', 'රැස්වීම සැලසුම් කරන්න'),
             selected: !_isInstantMeeting,
             onPressed: () => setState(() => _isInstantMeeting = false),
             isDark: isDark,
           ),
           _modeButton(
-            isTamil ? 'உடனடி கூட்டம்' : 'Instant meeting',
+            _text('Instant meeting', 'உடனடி கூட்டம்', 'ක්ෂණික රැස්වීම'),
             selected: _isInstantMeeting,
             onPressed: () => setState(() => _isInstantMeeting = true),
             isDark: isDark,
@@ -411,25 +493,31 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                 children: [
                   Expanded(
                     flex: 4,
-                    child: _headerText(isTamil ? 'கூட்டம்' : 'Meeting', isDark),
+                    child: _headerText(
+                      _text('Meeting', 'கூட்டம்', 'රැස්වීම'),
+                      isDark,
+                    ),
                   ),
                   Expanded(
                     flex: 2,
                     child: _headerText(
-                      isTamil ? 'தொடங்கும் நேரம்' : 'Starts',
+                      _text('Starts', 'தொடங்கும் நேரம்', 'ආරම්භ වේ'),
                       isDark,
                     ),
                   ),
                   Expanded(
                     flex: 1,
-                    child: _headerText(isTamil ? 'நிலை' : 'Status', isDark),
+                    child: _headerText(
+                      _text('Status', 'நிலை', 'තත්ත්වය'),
+                      isDark,
+                    ),
                   ),
                   SizedBox(
                     width: 128,
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: _headerText(
-                        isTamil ? 'செயல்கள்' : 'Actions',
+                        _text('Actions', 'செயல்கள்', 'ක්‍රියා'),
                         isDark,
                       ),
                     ),
@@ -439,7 +527,11 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
             ),
             if (meetings.isEmpty)
               _emptyMessage(
-                isTamil ? 'இன்னும் கூட்டங்கள் இல்லை.' : 'No meetings yet.',
+                _text(
+                  'No meetings yet.',
+                  'இன்னும் கூட்டங்கள் இல்லை.',
+                  'තවම රැස්වීම් නැත.',
+                ),
                 isDark,
               )
             else
@@ -461,7 +553,11 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     if (meetings.isEmpty) {
       return [
         _emptyMessage(
-          isTamil ? 'இன்னும் கூட்டங்கள் இல்லை.' : 'No meetings yet.',
+          _text(
+            'No meetings yet.',
+            'இன்னும் கூட்டங்கள் இல்லை.',
+            'තවම රැස්වීම් නැත.',
+          ),
           isDark,
         ),
       ];
@@ -500,7 +596,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${meeting.groupName} · ${isTamil ? 'அமர்வு' : 'Session'} ${meeting.id}',
+                  '${meeting.groupName} · ${_text('Session', 'அமர்வு', 'සැසිය')} ${meeting.id}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -528,7 +624,11 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  tooltip: isTamil ? 'இணைப்பை நகலெடு' : 'Copy link',
+                  tooltip: _text(
+                    'Copy link',
+                    'இணைப்பை நகலெடு',
+                    'සබැඳිය පිටපත් කරන්න',
+                  ),
                   onPressed: () => _copyMeetingLink(meeting),
                   icon: const Icon(AppIcons.copy, size: 18),
                   visualDensity: VisualDensity.compact,
@@ -537,8 +637,8 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                   onPressed: () => _launchMeeting(meeting.meetingUrl),
                   child: Text(
                     meeting.isLive
-                        ? (isTamil ? 'சேர்' : 'Join')
-                        : (isTamil ? 'தொடங்கு' : 'Start'),
+                        ? _text('Join', 'சேர்', 'එක්වන්න')
+                        : _text('Start', 'தொடங்கு', 'ආරම්භ කරන්න'),
                   ),
                 ),
               ],
@@ -592,7 +692,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
           Row(
             children: [
               Text(
-                '${isTamil ? 'அமர்வு' : 'Session'} ${meeting.id}',
+                '${_text('Session', 'அமர்வு', 'සැසිය')} ${meeting.id}',
                 style: TextStyle(
                   color: isDark ? AppColors.mutedDark : AppColors.mutedLight,
                   fontSize: 12,
@@ -600,7 +700,11 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
               ),
               const Spacer(),
               IconButton(
-                tooltip: isTamil ? 'இணைப்பை நகலெடு' : 'Copy link',
+                tooltip: _text(
+                  'Copy link',
+                  'இணைப்பை நகலெடு',
+                  'සබැඳිය පිටපත් කරන්න',
+                ),
                 onPressed: () => _copyMeetingLink(meeting),
                 icon: const Icon(AppIcons.copy, size: 18),
                 visualDensity: VisualDensity.compact,
@@ -609,8 +713,8 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                 onPressed: () => _launchMeeting(meeting.meetingUrl),
                 child: Text(
                   meeting.isLive
-                      ? (isTamil ? 'சேர்' : 'Join')
-                      : (isTamil ? 'தொடங்கு' : 'Start'),
+                      ? _text('Join', 'சேர்', 'එක්වන්න')
+                      : _text('Start', 'தொடங்கு', 'ආරම්භ කරන්න'),
                 ),
               ),
             ],
@@ -624,8 +728,8 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     final live = meeting.isLive;
     final color = live ? AppColors.success : AppColors.info;
     final label = live
-        ? (isTamil ? 'நேரலை' : 'Live')
-        : (isTamil ? 'திட்டமிடப்பட்டது' : 'Scheduled');
+        ? _text('Live', 'நேரலை', 'සජීවී')
+        : _text('Scheduled', 'திட்டமிடப்பட்டது', 'සැලසුම් කර ඇත');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
@@ -646,7 +750,15 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
   void _copyMeetingLink(MeetingModel meeting) {
     Clipboard.setData(ClipboardData(text: meeting.meetingUrl));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Meeting URL copied to clipboard.')),
+      SnackBar(
+        content: Text(
+          _text(
+            'Meeting URL copied to clipboard.',
+            'கூட்ட இணைப்பு கிளிப்போர்டுக்கு நகலெடுக்கப்பட்டது.',
+            'රැස්වීමේ URL එක ක්ලිප් පුවරුවට පිටපත් කරන ලදී.',
+          ),
+        ),
+      ),
     );
   }
 

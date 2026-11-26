@@ -4,8 +4,50 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
+
+String _paymentText(
+  bool isTamil,
+  bool isSinhala, {
+  required String english,
+  required String tamil,
+  required String sinhala,
+}) {
+  return adminUiText(
+    isTamil
+        ? 'ta'
+        : isSinhala
+        ? 'si'
+        : 'en',
+    english: english,
+    tamil: tamil,
+    sinhala: sinhala,
+  );
+}
+
+String _paymentValue(String language, String value) {
+  final normalized = normalizeAdminLanguage(language);
+  const translations = {
+    'Daily': ('தினசரி', 'දිනපතා'),
+    'Weekly': ('வாராந்திரம்', 'සතිපතා'),
+    'Monthly': ('மாதாந்திரம்', 'මාසිකව'),
+    'Yearly': ('ஆண்டுதோறும்', 'වාර්ෂිකව'),
+    'One-time': ('ஒருமுறை', 'එක් වරක්'),
+    'Group': ('குழு', 'කණ්ඩායම'),
+    'Member': ('உறுப்பினர்', 'සාමාජිකයා'),
+    'View only': ('பார்க்க மட்டும்', 'බැලීම පමණි'),
+    'Can download': ('பதிவிறக்கலாம்', 'බාගත කළ හැක'),
+  };
+  final translated = translations[value];
+  if (translated == null) return value;
+  return normalized == 'ta'
+      ? translated.$1
+      : normalized == 'si'
+      ? translated.$2
+      : value;
+}
 
 class PaymentsScreen extends ConsumerStatefulWidget {
   const PaymentsScreen({super.key});
@@ -22,9 +64,14 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final members = ref.read(membersProvider);
     if (groups.isEmpty || members.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Add a group and at least one member before creating a payment.',
+            adminUiText(
+              ref.read(languageProvider),
+              english: 'Add a group and at least one member before creating a payment.',
+              tamil: 'கட்டணத்தை உருவாக்குவதற்கு முன் ஒரு குழுவையும் குறைந்தது ஒரு உறுப்பினரையும் சேர்க்கவும்.',
+              sinhala: 'ගෙවීමක් සෑදීමට පෙර කණ්ඩායමක් සහ අවම වශයෙන් එක් සාමාජිකයෙකු එක් කරන්න.',
+            ),
           ),
         ),
       );
@@ -33,7 +80,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
     final draft = await showDialog<_PaymentDraft>(
       context: context,
-      builder: (_) => _CreatePaymentDialog(groups: groups, members: members),
+      builder: (_) => _CreatePaymentDialog(
+        groups: groups,
+        members: members,
+        language: ref.read(languageProvider),
+      ),
     );
     if (draft == null || !context.mounted) return;
 
@@ -56,8 +107,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
     if (targetMembers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('There are no active members for this payment.'),
+        SnackBar(
+          content: Text(
+            adminUiText(
+              ref.read(languageProvider),
+              english: 'There are no active members for this payment.',
+              tamil: 'இந்தக் கட்டணத்திற்கு செயலில் உள்ள உறுப்பினர்கள் இல்லை.',
+              sinhala: 'මෙම ගෙවීම සඳහා සක්‍රිය සාමාජිකයින් නැත.',
+            ),
+          ),
         ),
       );
       return;
@@ -92,7 +150,12 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Payment created for ${created.length} ${created.length == 1 ? 'member' : 'members'}.',
+          adminUiText(
+            ref.read(languageProvider),
+            english: 'Payment created for ${created.length} ${created.length == 1 ? 'member' : 'members'}.',
+            tamil: '${created.length} உறுப்பினர்களுக்கான கட்டணம் உருவாக்கப்பட்டது.',
+            sinhala: 'සාමාජිකයින් ${created.length}ක් සඳහා ගෙවීම සාදන ලදී.',
+          ),
         ),
       ),
     );
@@ -103,7 +166,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final ref = this.ref;
     final payments = ref.watch(paymentsProvider);
     final groups = ref.watch(groupsProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
+    final isTamil = language == 'ta';
+    final isSinhala = language == 'si';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final groupOptions = ['All groups', ...groups.map((group) => group.name)];
     if (!groupOptions.contains(_selectedGroup)) _selectedGroup = 'All groups';
@@ -141,7 +206,12 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         children: [
                           const TextSpan(text: 'safran  /  '),
                           TextSpan(
-                            text: isTamil ? 'கட்டணங்கள்' : 'Payments',
+                            text: adminUiText(
+                              language,
+                              english: 'Payments',
+                              tamil: 'கட்டணங்கள்',
+                              sinhala: 'ගෙවීම්',
+                            ),
                             style: TextStyle(
                               color: isDark
                                   ? AppColors.headingDark
@@ -158,15 +228,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     icon: const Icon(Icons.add_rounded, size: 17),
                     label: Text(
                       compact
-                          ? (isTamil ? 'உருவாக்கு' : 'Create')
-                          : (isTamil ? 'புதிய கட்டணம்' : 'Create a payment'),
+                          ? adminUiText(language, english: 'Create', tamil: 'உருவாக்கு', sinhala: 'සාදන්න')
+                          : adminUiText(language, english: 'Create a payment', tamil: 'புதிய கட்டணம்', sinhala: 'ගෙවීමක් සාදන්න'),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 18),
               _sectionTitle(
-                isTamil ? 'கட்டண அட்டவணைகள்' : 'Payment schedules',
+                adminUiText(language, english: 'Payment schedules', tamil: 'கட்டண அட்டவணைகள்', sinhala: 'ගෙවීම් කාලසටහන්'),
                 isDark,
               ),
               const SizedBox(height: 10),
@@ -176,6 +246,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 schedules.values.toList(),
                 compact: compact,
                 isTamil: isTamil,
+                isSinhala: isSinhala,
                 isDark: isDark,
               ),
               const SizedBox(height: 26),
@@ -184,7 +255,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 children: [
                   Expanded(
                     child: _sectionTitle(
-                      isTamil ? 'உறுப்பினர் கட்டணங்கள்' : 'Member payments',
+                      adminUiText(language, english: 'Member payments', tamil: 'உறுப்பினர் கட்டணங்கள்', sinhala: 'සාමාජික ගෙවීම්'),
                       isDark,
                     ),
                   ),
@@ -195,7 +266,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       initialValue: _selectedGroup,
                       isExpanded: true,
                       decoration: InputDecoration(
-                        labelText: isTamil ? 'குழு' : 'Group',
+                        labelText: adminUiText(language, english: 'Group', tamil: 'குழு', sinhala: 'කණ්ඩායම'),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
@@ -206,8 +277,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             (group) => DropdownMenuItem(
                               value: group,
                               child: Text(
-                                group == 'All groups' && isTamil
-                                    ? 'அனைத்து குழுக்களும்'
+                                group == 'All groups'
+                                    ? adminUiText(language, english: 'All groups', tamil: 'அனைத்து குழுக்களும்', sinhala: 'සියලුම කණ්ඩායම්')
                                     : group,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -230,6 +301,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 filteredPayments,
                 compact: compact,
                 isTamil: isTamil,
+                isSinhala: isSinhala,
                 isDark: isDark,
               ),
             ],
@@ -254,11 +326,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     List<PaymentModel> schedules, {
     required bool compact,
     required bool isTamil,
+    required bool isSinhala,
     required bool isDark,
   }) {
-    final emptyMessage = isTamil
-        ? 'இன்னும் கட்டண அட்டவணைகள் இல்லை.'
-        : 'No payment schedules yet.';
+    final emptyMessage = _paymentText(
+      isTamil,
+      isSinhala,
+      english: 'No payment schedules yet.',
+      tamil: 'இன்னும் கட்டண அட்டவணைகள் இல்லை.',
+      sinhala: 'තවම ගෙවීම් කාලසටහන් නැත.',
+    );
     if (compact) {
       return _tableContainer(
         context,
@@ -272,6 +349,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         ref,
                         schedule,
                         isTamil: isTamil,
+                        isSinhala: isSinhala,
                         isDark: isDark,
                       ),
                     )
@@ -280,14 +358,14 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       );
     }
 
-    const headers = [
-      'Title',
-      'Amount',
-      'Repeats',
-      'Applies to',
-      'Starts on',
-      'Status',
-      'Actions',
+    final headers = [
+      _paymentText(isTamil, isSinhala, english: 'Title', tamil: 'தலைப்பு', sinhala: 'මාතෘකාව'),
+      _paymentText(isTamil, isSinhala, english: 'Amount', tamil: 'தொகை', sinhala: 'මුදල'),
+      _paymentText(isTamil, isSinhala, english: 'Repeats', tamil: 'மீண்டும்', sinhala: 'නැවත සිදුවීම'),
+      _paymentText(isTamil, isSinhala, english: 'Applies to', tamil: 'பொருந்துவது', sinhala: 'අදාළ වන්නේ'),
+      _paymentText(isTamil, isSinhala, english: 'Starts on', tamil: 'தொடங்கும் தேதி', sinhala: 'ආරම්භක දිනය'),
+      _paymentText(isTamil, isSinhala, english: 'Status', tamil: 'நிலை', sinhala: 'තත්ත්වය'),
+      _paymentText(isTamil, isSinhala, english: 'Actions', tamil: 'செயல்கள்', sinhala: 'ක්‍රියා'),
     ];
     return _tableContainer(
       context,
@@ -318,7 +396,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       Text(
                         '${schedule.currency} ${schedule.amount.toStringAsFixed(0)}',
                       ),
-                      Text(schedule.scheduleType),
+                      Text(
+                        _paymentValue(
+                          isTamil
+                              ? 'ta'
+                              : isSinhala
+                              ? 'si'
+                              : 'en',
+                          schedule.scheduleType,
+                        ),
+                      ),
                       Text(
                         schedule.appliesTo == 'Group'
                             ? schedule.groupName
@@ -329,8 +416,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           'dd/MM/yyyy',
                         ).format(schedule.startsOn ?? schedule.dueDate),
                       ),
-                      const Text('Active'),
-                      _deleteScheduleButton(ref, schedule, isTamil),
+                      Text(_paymentText(isTamil, isSinhala, english: 'Active', tamil: 'செயலில்', sinhala: 'සක්‍රිය')),
+                      _deleteScheduleButton(ref, schedule, isTamil, isSinhala),
                     ],
                     widths: const [185, 110, 120, 210, 140, 100, 90],
                   ),
@@ -346,11 +433,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     List<PaymentModel> payments, {
     required bool compact,
     required bool isTamil,
+    required bool isSinhala,
     required bool isDark,
   }) {
-    final emptyMessage = isTamil
-        ? 'இந்த வடிகட்டிக்கு உறுப்பினர் கட்டணங்கள் இல்லை.'
-        : 'No member payments match this filter.';
+    final emptyMessage = _paymentText(
+      isTamil,
+      isSinhala,
+      english: 'No member payments match this filter.',
+      tamil: 'இந்த வடிகட்டிக்கு உறுப்பினர் கட்டணங்கள் இல்லை.',
+      sinhala: 'මෙම පෙරහනට ගැළපෙන සාමාජික ගෙවීම් නැත.',
+    );
     if (compact) {
       return _tableContainer(
         context,
@@ -364,6 +456,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         ref,
                         payment,
                         isTamil: isTamil,
+                        isSinhala: isSinhala,
                         isDark: isDark,
                       ),
                     )
@@ -372,15 +465,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       );
     }
 
-    const headers = [
-      'Member',
-      'Group',
-      'Title',
-      'Repeats',
-      'Amount',
-      'Due date',
-      'Status',
-      'Actions',
+    final headers = [
+      _paymentText(isTamil, isSinhala, english: 'Member', tamil: 'உறுப்பினர்', sinhala: 'සාමාජිකයා'),
+      _paymentText(isTamil, isSinhala, english: 'Group', tamil: 'குழு', sinhala: 'කණ්ඩායම'),
+      _paymentText(isTamil, isSinhala, english: 'Title', tamil: 'தலைப்பு', sinhala: 'මාතෘකාව'),
+      _paymentText(isTamil, isSinhala, english: 'Repeats', tamil: 'மீண்டும்', sinhala: 'නැවත සිදුවීම'),
+      _paymentText(isTamil, isSinhala, english: 'Amount', tamil: 'தொகை', sinhala: 'මුදල'),
+      _paymentText(isTamil, isSinhala, english: 'Due date', tamil: 'கடைசி தேதி', sinhala: 'ගෙවිය යුතු දිනය'),
+      _paymentText(isTamil, isSinhala, english: 'Status', tamil: 'நிலை', sinhala: 'තත්ත්වය'),
+      _paymentText(isTamil, isSinhala, english: 'Actions', tamil: 'செயல்கள்', sinhala: 'ක්‍රියා'),
     ];
     return _tableContainer(
       context,
@@ -410,15 +503,32 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       Text(payment.memberName),
                       Text(payment.groupName),
                       Text(payment.title.isEmpty ? '—' : payment.title),
-                      Text(payment.scheduleType),
+                      Text(
+                        _paymentValue(
+                          isTamil
+                              ? 'ta'
+                              : isSinhala
+                              ? 'si'
+                              : 'en',
+                          payment.scheduleType,
+                        ),
+                      ),
                       Text(
                         '${payment.currency} ${payment.amount.toStringAsFixed(0)}',
                       ),
                       Text(DateFormat('dd/MM/yyyy').format(payment.dueDate)),
-                      Text(payment.isPaid ? 'Paid' : 'Pending'),
+                      Text(
+                        _paymentText(
+                          isTamil,
+                          isSinhala,
+                          english: payment.isPaid ? 'Paid' : 'Pending',
+                          tamil: payment.isPaid ? 'செலுத்தப்பட்டது' : 'நிலுவை',
+                          sinhala: payment.isPaid ? 'ගෙවා ඇත' : 'ගෙවීමට නියමිතයි',
+                        ),
+                      ),
                       payment.isPaid
                           ? const SizedBox.shrink()
-                          : _markPaidButton(context, ref, payment, isTamil),
+                          : _markPaidButton(context, ref, payment, isTamil, isSinhala),
                     ],
                     widths: const [145, 165, 160, 90, 110, 115, 90, 100],
                   ),
@@ -542,17 +652,18 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     WidgetRef ref,
     PaymentModel schedule, {
     required bool isTamil,
+    required bool isSinhala,
     required bool isDark,
   }) {
     return _mobileRow(
       context,
       title: schedule.title,
       subtitle:
-          '${schedule.appliesTo == 'Group' ? schedule.groupName : schedule.memberName} • ${schedule.scheduleType}',
+          '${schedule.appliesTo == 'Group' ? schedule.groupName : schedule.memberName} • ${_paymentValue(isTamil ? 'ta' : isSinhala ? 'si' : 'en', schedule.scheduleType)}',
       details:
           'LKR ${schedule.amount.toStringAsFixed(0)} • ${DateFormat('dd/MM/yyyy').format(schedule.startsOn ?? schedule.dueDate)}',
-      status: isTamil ? 'செயலில்' : 'Active',
-      action: _deleteScheduleButton(ref, schedule, isTamil),
+      status: _paymentText(isTamil, isSinhala, english: 'Active', tamil: 'செயலில்', sinhala: 'සක්‍රිය'),
+      action: _deleteScheduleButton(ref, schedule, isTamil, isSinhala),
       isDark: isDark,
     );
   }
@@ -562,6 +673,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     WidgetRef ref,
     PaymentModel payment, {
     required bool isTamil,
+    required bool isSinhala,
     required bool isDark,
   }) {
     return _mobileRow(
@@ -570,13 +682,17 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       subtitle:
           '${payment.groupName} • ${payment.title.isEmpty ? payment.scheduleType : payment.title}',
       details:
-          '${payment.scheduleType} • ${payment.currency} ${payment.amount.toStringAsFixed(0)} • ${DateFormat('dd/MM/yyyy').format(payment.dueDate)}',
-      status: payment.isPaid
-          ? (isTamil ? 'செலுத்தப்பட்டது' : 'Paid')
-          : (isTamil ? 'நிலுவை' : 'Pending'),
+          '${_paymentValue(isTamil ? 'ta' : isSinhala ? 'si' : 'en', payment.scheduleType)} • ${payment.currency} ${payment.amount.toStringAsFixed(0)} • ${DateFormat('dd/MM/yyyy').format(payment.dueDate)}',
+      status: _paymentText(
+        isTamil,
+        isSinhala,
+        english: payment.isPaid ? 'Paid' : 'Pending',
+        tamil: payment.isPaid ? 'செலுத்தப்பட்டது' : 'நிலுவை',
+        sinhala: payment.isPaid ? 'ගෙවා ඇත' : 'ගෙවීමට නියමිතයි',
+      ),
       action: payment.isPaid
           ? const SizedBox.shrink()
-          : _markPaidButton(context, ref, payment, isTamil),
+          : _markPaidButton(context, ref, payment, isTamil, isSinhala),
       isDark: isDark,
     );
   }
@@ -641,9 +757,16 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     WidgetRef ref,
     PaymentModel schedule,
     bool isTamil,
+    bool isSinhala,
   ) {
     return IconButton(
-      tooltip: isTamil ? 'அட்டவணையை நீக்கு' : 'Delete schedule',
+      tooltip: _paymentText(
+        isTamil,
+        isSinhala,
+        english: 'Delete schedule',
+        tamil: 'அட்டவணையை நீக்கு',
+        sinhala: 'කාලසටහන මකන්න',
+      ),
       visualDensity: VisualDensity.compact,
       onPressed: () {
         ref
@@ -663,6 +786,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     WidgetRef ref,
     PaymentModel payment,
     bool isTamil,
+    bool isSinhala,
   ) {
     return TextButton(
       onPressed: () {
@@ -690,9 +814,13 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isTamil
-                  ? '${payment.memberName} கட்டணம் செலுத்தியதாக குறிக்கப்பட்டது.'
-                  : 'Marked ${payment.memberName} as paid.',
+              _paymentText(
+                isTamil,
+                isSinhala,
+                english: 'Marked ${payment.memberName} as paid.',
+                tamil: '${payment.memberName} கட்டணம் செலுத்தியதாக குறிக்கப்பட்டது.',
+                sinhala: '${payment.memberName} ගෙවූ බව සලකුණු කරන ලදී.',
+              ),
             ),
           ),
         );
@@ -702,7 +830,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-      child: Text(isTamil ? 'செலுத்து' : 'Mark paid'),
+      child: Text(
+        _paymentText(
+          isTamil,
+          isSinhala,
+          english: 'Mark paid',
+          tamil: 'செலுத்து',
+          sinhala: 'ගෙවූ බව සලකුණු කරන්න',
+        ),
+      ),
     );
   }
 }
@@ -730,8 +866,13 @@ class _PaymentDraft {
 class _CreatePaymentDialog extends StatefulWidget {
   final List<GroupModel> groups;
   final List<MemberModel> members;
+  final String language;
 
-  const _CreatePaymentDialog({required this.groups, required this.members});
+  const _CreatePaymentDialog({
+    required this.groups,
+    required this.members,
+    required this.language,
+  });
 
   @override
   State<_CreatePaymentDialog> createState() => _CreatePaymentDialogState();
@@ -802,6 +943,7 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final language = widget.language;
     final groups = widget.groups;
     final activeMembers = widget.members
         .where((member) => member.status.toLowerCase() == 'active')
@@ -818,20 +960,20 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
             final twoColumns = constraints.maxWidth >= 500;
             final fields = <Widget>[
               _field(
-                label: 'Title',
+                label: adminUiText(language, english: 'Title', tamil: 'தலைப்பு', sinhala: 'මාතෘකාව'),
                 child: TextFormField(
                   controller: _titleController,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    hintText: 'e.g. Monthly tuition',
+                  decoration: InputDecoration(
+                    hintText: adminUiText(language, english: 'e.g. Monthly tuition', tamil: 'எ.கா. மாதாந்திர கட்டணம்', sinhala: 'උදා: මාසික ගාස්තුව'),
                   ),
                   validator: (value) => value == null || value.trim().isEmpty
-                      ? 'Enter a payment title'
+                      ? adminUiText(language, english: 'Enter a payment title', tamil: 'கட்டணத் தலைப்பை உள்ளிடவும்', sinhala: 'ගෙවීම් මාතෘකාවක් ඇතුළත් කරන්න')
                       : null,
                 ),
               ),
               _field(
-                label: 'Amount (LKR)',
+                label: adminUiText(language, english: 'Amount (LKR)', tamil: 'தொகை (LKR)', sinhala: 'මුදල (LKR)'),
                 child: TextFormField(
                   controller: _amountController,
                   keyboardType: const TextInputType.numberWithOptions(
@@ -841,26 +983,26 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                   validator: (value) {
                     final amount = double.tryParse(value?.trim() ?? '');
                     if (amount == null || !amount.isFinite || amount <= 0) {
-                      return 'Enter an amount greater than 0';
+                      return adminUiText(language, english: 'Enter an amount greater than 0', tamil: '0-ஐ விட அதிகமான தொகையை உள்ளிடவும்', sinhala: '0ට වඩා වැඩි මුදලක් ඇතුළත් කරන්න');
                     }
                     return null;
                   },
                 ),
               ),
               _field(
-                label: 'Repeats',
+                label: adminUiText(language, english: 'Repeats', tamil: 'மீண்டும்', sinhala: 'නැවත සිදුවීම'),
                 child: DropdownButtonFormField<String>(
                   initialValue: _repeat,
                   isExpanded: true,
                   decoration: const InputDecoration(),
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: 'One-time',
-                      child: Text('One-time'),
+                      child: Text(adminUiText(language, english: 'One-time', tamil: 'ஒருமுறை', sinhala: 'එක් වරක්')),
                     ),
-                    DropdownMenuItem(value: 'Weekly', child: Text('Weekly')),
-                    DropdownMenuItem(value: 'Monthly', child: Text('Monthly')),
-                    DropdownMenuItem(value: 'Yearly', child: Text('Yearly')),
+                    DropdownMenuItem(value: 'Weekly', child: Text(adminUiText(language, english: 'Weekly', tamil: 'வாராந்திரம்', sinhala: 'සතිපතා'))),
+                    DropdownMenuItem(value: 'Monthly', child: Text(adminUiText(language, english: 'Monthly', tamil: 'மாதாந்திரம்', sinhala: 'මාසිකව'))),
+                    DropdownMenuItem(value: 'Yearly', child: Text(adminUiText(language, english: 'Yearly', tamil: 'ஆண்டுதோறும்', sinhala: 'වාර්ෂිකව'))),
                   ],
                   onChanged: (value) {
                     if (value != null) setState(() => _repeat = value);
@@ -868,14 +1010,14 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                 ),
               ),
               _field(
-                label: 'Applies to',
+                label: adminUiText(language, english: 'Applies to', tamil: 'பொருந்துவது', sinhala: 'අදාළ වන්නේ'),
                 child: DropdownButtonFormField<String>(
                   initialValue: _appliesTo,
                   isExpanded: true,
                   decoration: const InputDecoration(),
-                  items: const [
-                    DropdownMenuItem(value: 'Group', child: Text('Group')),
-                    DropdownMenuItem(value: 'Member', child: Text('Member')),
+                  items: [
+                    DropdownMenuItem(value: 'Group', child: Text(adminUiText(language, english: 'Group', tamil: 'குழு', sinhala: 'කණ්ඩායම'))),
+                    DropdownMenuItem(value: 'Member', child: Text(adminUiText(language, english: 'Member', tamil: 'உறுப்பினர்', sinhala: 'සාමාජිකයා'))),
                   ],
                   onChanged: (value) {
                     if (value != null) setState(() => _appliesTo = value);
@@ -883,14 +1025,16 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                 ),
               ),
               _field(
-                label: _appliesTo == 'Group' ? 'Group' : 'Member',
+                label: _appliesTo == 'Group'
+                    ? adminUiText(language, english: 'Group', tamil: 'குழு', sinhala: 'කණ්ඩායම')
+                    : adminUiText(language, english: 'Member', tamil: 'உறுப்பினர்', sinhala: 'සාමාජිකයා'),
                 child: DropdownButtonFormField<String>(
                   initialValue: targetValue,
                   isExpanded: true,
                   decoration: InputDecoration(
                     hintText: _appliesTo == 'Group'
-                        ? 'Choose a group'
-                        : 'Choose a member',
+                        ? adminUiText(language, english: 'Choose a group', tamil: 'குழுவைத் தேர்ந்தெடுக்கவும்', sinhala: 'කණ්ඩායමක් තෝරන්න')
+                        : adminUiText(language, english: 'Choose a member', tamil: 'உறுப்பினரைத் தேர்ந்தெடுக்கவும்', sinhala: 'සාමාජිකයෙකු තෝරන්න'),
                   ),
                   items: _appliesTo == 'Group'
                       ? groups
@@ -916,7 +1060,12 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                             )
                             .toList(),
                   validator: (value) => value == null
-                      ? 'Choose a ${_appliesTo.toLowerCase()}'
+                      ? adminUiText(
+                          language,
+                          english: _appliesTo == 'Group' ? 'Choose a group' : 'Choose a member',
+                          tamil: _appliesTo == 'Group' ? 'குழுவைத் தேர்ந்தெடுக்கவும்' : 'உறுப்பினரைத் தேர்ந்தெடுக்கவும்',
+                          sinhala: _appliesTo == 'Group' ? 'කණ්ඩායමක් තෝරන්න' : 'සාමාජිකයෙකු තෝරන්න',
+                        )
                       : null,
                   onChanged: (value) {
                     setState(() {
@@ -930,7 +1079,7 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                 ),
               ),
               _field(
-                label: 'Starts on',
+                label: adminUiText(language, english: 'Starts on', tamil: 'தொடங்கும் தேதி', sinhala: 'ආරම්භක දිනය'),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
                   onTap: _pickStartDate,
@@ -943,11 +1092,11 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                 ),
               ),
               _field(
-                label: 'Note',
+                label: adminUiText(language, english: 'Note', tamil: 'குறிப்பு', sinhala: 'සටහන'),
                 child: TextFormField(
                   controller: _noteController,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(hintText: 'Optional'),
+                  decoration: InputDecoration(hintText: adminUiText(language, english: 'Optional', tamil: 'விருப்பத்தேர்வு', sinhala: 'විකල්ප')),
                 ),
               ),
             ];
@@ -971,7 +1120,7 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Create a payment',
+                      adminUiText(language, english: 'Create a payment', tamil: 'கட்டணத்தை உருவாக்கு', sinhala: 'ගෙවීමක් සාදන්න'),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: isDark
                             ? AppColors.headingDark
@@ -982,8 +1131,8 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                     const SizedBox(height: 6),
                     Text(
                       _appliesTo == 'Group'
-                          ? 'A group payment applies to every current active member of that group. Members are notified when it is set, and the due payment stays on their home page until it is marked paid.'
-                          : 'This payment applies to one member. They are notified when it is set and can mark the payment as paid.',
+                          ? adminUiText(language, english: 'A group payment applies to every current active member of that group. Members are notified when it is set, and the due payment stays on their home page until it is marked paid.', tamil: 'ஒரு குழு கட்டணம் அந்தக் குழுவின் செயலில் உள்ள ஒவ்வொரு உறுப்பினருக்கும் பொருந்தும். கட்டணம் அமைக்கப்பட்டதும் உறுப்பினர்களுக்கு அறிவிக்கப்படும்; செலுத்தியதாகக் குறிக்கும் வரை நிலுவைத் தொகை முகப்புப் பக்கத்தில் இருக்கும்.', sinhala: 'කණ්ඩායම් ගෙවීමක් එම කණ්ඩායමේ දැනට සක්‍රිය සියලුම සාමාජිකයින්ට අදාළ වේ. එය සකස් කළ විට සාමාජිකයින්ට දැනුම් දෙන අතර ගෙවූ බව සලකුණු කරන තෙක් ගෙවිය යුතු මුදල මුල් පිටුවේ පවතී.')
+                          : adminUiText(language, english: 'This payment applies to one member. They are notified when it is set and can mark the payment as paid.', tamil: 'இந்தக் கட்டணம் ஒரு உறுப்பினருக்குப் பொருந்தும். அமைக்கப்பட்டதும் அவருக்கு அறிவிக்கப்படும்; கட்டணத்தைச் செலுத்தியதாகக் குறிக்கலாம்.', sinhala: 'මෙම ගෙවීම එක් සාමාජිකයෙකුට අදාළ වේ. එය සකස් කළ විට ඔහුට හෝ ඇයට දැනුම් දෙන අතර ගෙවූ බව සලකුණු කළ හැක.'),
                       style: TextStyle(
                         color: isDark
                             ? AppColors.mutedDark
@@ -1006,11 +1155,11 @@ class _CreatePaymentDialogState extends State<_CreatePaymentDialog> {
                       children: [
                         OutlinedButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Cancel'),
+                          child: Text(adminUiText(language, english: 'Cancel', tamil: 'ரத்து', sinhala: 'අවලංගු කරන්න')),
                         ),
                         FilledButton(
                           onPressed: _submit,
-                          child: const Text('Create a payment'),
+                          child: Text(adminUiText(language, english: 'Create a payment', tamil: 'கட்டணத்தை உருவாக்கு', sinhala: 'ගෙවීමක් සාදන්න')),
                         ),
                       ],
                     ),

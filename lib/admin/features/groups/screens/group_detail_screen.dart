@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -39,14 +40,17 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
         .toList();
   }
 
-  void _addMember(GroupModel group, bool isTamil) {
+  void _addMember(GroupModel group, String language) {
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     if (name.isEmpty || phone.isEmpty) {
       setState(() {
-        _memberError = isTamil
-            ? 'பெயர் மற்றும் தொலைபேசி எண்ணை உள்ளிடவும்.'
-            : 'Enter a name and phone number.';
+        _memberError = adminUiText(
+          language,
+          english: 'Enter a name and phone number.',
+          tamil: 'பெயர் மற்றும் தொலைபேசி எண்ணை உள்ளிடவும்.',
+          sinhala: 'නම සහ දුරකථන අංකය ඇතුළත් කරන්න.',
+        );
       });
       return;
     }
@@ -70,31 +74,60 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isTamil ? 'உறுப்பினர் சேர்க்கப்பட்டார்.' : 'Member added.',
+          adminUiText(
+            language,
+            english: 'Member added.',
+            tamil: 'உறுப்பினர் சேர்க்கப்பட்டார்.',
+            sinhala: 'සාමාජිකයා එක් කරන ලදී.',
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _deleteMember(MemberModel member, bool isTamil) async {
+  Future<void> _deleteMember(MemberModel member, String language) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isTamil ? 'உறுப்பினரை நீக்கவா?' : 'Remove member?'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Remove member?',
+            tamil: 'உறுப்பினரை நீக்கவா?',
+            sinhala: 'සාමාජිකයා ඉවත් කරන්නද?',
+          ),
+        ),
         content: Text(
-          isTamil
-              ? '${member.name} உறுப்பினரை இந்தக் குழுவிலிருந்து நீக்கவா?'
-              : 'Remove ${member.name} from this group?',
+          adminUiText(
+            language,
+            english: 'Remove ${member.name} from this group?',
+            tamil: '${member.name} உறுப்பினரை இந்தக் குழுவிலிருந்து நீக்கவா?',
+            sinhala: '${member.name} මෙම කණ්ඩායමෙන් ඉවත් කරන්නද?',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(isTamil ? 'ரத்து' : 'Cancel'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Cancel',
+                tamil: 'ரத்து',
+                sinhala: 'අවලංගු කරන්න',
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: Text(isTamil ? 'நீக்கு' : 'Remove'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Remove',
+                tamil: 'நீக்கு',
+                sinhala: 'ඉවත් කරන්න',
+              ),
+            ),
           ),
         ],
       ),
@@ -138,27 +171,44 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
         );
   }
 
-  Future<void> _editMember(MemberModel member, bool isTamil) async {
+  Future<void> _editMember(MemberModel member, String language) async {
     final nameController = TextEditingController(text: member.name);
     final phoneController = TextEditingController(text: member.phone);
     final updated = await showDialog<MemberModel>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isTamil ? 'உறுப்பினரைத் திருத்து' : 'Edit member'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Edit member',
+            tamil: 'உறுப்பினரைத் திருத்து',
+            sinhala: 'සාමාජිකයා සංස්කරණය කරන්න',
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
               decoration: InputDecoration(
-                labelText: isTamil ? 'பெயர்' : 'Name with initial',
+                labelText: adminUiText(
+                  language,
+                  english: 'Name with initial',
+                  tamil: 'பெயர்',
+                  sinhala: 'මුලකුරු සමඟ නම',
+                ),
               ),
             ),
             TextField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
-                labelText: isTamil ? 'தொலைபேசி' : 'Phone',
+                labelText: adminUiText(
+                  language,
+                  english: 'Phone',
+                  tamil: 'தொலைபேசி',
+                  sinhala: 'දුරකථනය',
+                ),
               ),
             ),
           ],
@@ -166,7 +216,14 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(isTamil ? 'ரத்து' : 'Cancel'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Cancel',
+                tamil: 'ரத்து',
+                sinhala: 'අවලංගු කරන්න',
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -195,7 +252,14 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                 ),
               );
             },
-            child: Text(isTamil ? 'சேமி' : 'Save'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Save',
+                tamil: 'சேமி',
+                sinhala: 'සුරකින්න',
+              ),
+            ),
           ),
         ],
       ),
@@ -213,25 +277,49 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
         );
   }
 
-  Future<void> _deleteGroup(GroupModel group, bool isTamil) async {
+  Future<void> _deleteGroup(GroupModel group, String language) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isTamil ? 'குழுவை நீக்கவா?' : 'Delete group?'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Delete group?',
+            tamil: 'குழுவை நீக்கவா?',
+            sinhala: 'කණ්ඩායම මකා දමන්නද?',
+          ),
+        ),
         content: Text(
-          isTamil
-              ? '"${group.name}" குழுவை நிரந்தரமாக நீக்கவா?'
-              : 'Permanently delete "${group.name}"?',
+          adminUiText(
+            language,
+            english: 'Permanently delete "${group.name}"?',
+            tamil: '"${group.name}" குழுவை நிரந்தரமாக நீக்கவா?',
+            sinhala: '"${group.name}" කණ්ඩායම ස්ථිරවම මකා දමන්නද?',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(isTamil ? 'ரத்து' : 'Cancel'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Cancel',
+                tamil: 'ரத்து',
+                sinhala: 'අවලංගු කරන්න',
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: Text(isTamil ? 'குழுவை நீக்கு' : 'Delete group'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Delete group',
+                tamil: 'குழுவை நீக்கு',
+                sinhala: 'කණ්ඩායම මකන්න',
+              ),
+            ),
           ),
         ],
       ),
@@ -256,13 +344,18 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     context.go('/app/groups');
   }
 
-  void _copyJoinLink(GroupModel group, bool isTamil) {
+  void _copyJoinLink(GroupModel group, String language) {
     final link = 'https://app.airotechhub.lk/group/${group.code}';
     Clipboard.setData(ClipboardData(text: link));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isTamil ? 'சேரும் இணைப்பு நகலெடுக்கப்பட்டது.' : 'Join link copied.',
+          adminUiText(
+            language,
+            english: 'Join link copied.',
+            tamil: 'சேரும் இணைப்பு நகலெடுக்கப்பட்டது.',
+            sinhala: 'එක්වීමේ සබැඳිය පිටපත් කරන ලදී.',
+          ),
         ),
       ),
     );
@@ -284,12 +377,24 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(isTamil ? 'குழு கிடைக்கவில்லை' : 'Group not found'),
+            Text(
+              adminUiText(
+                currentLang,
+                english: 'Group not found',
+                tamil: 'குழு கிடைக்கவில்லை',
+                sinhala: 'කණ්ඩායම හමු නොවීය',
+              ),
+            ),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: () => context.go('/app/groups'),
               child: Text(
-                isTamil ? 'குழுக்களுக்குத் திரும்பு' : 'Back to groups',
+                adminUiText(
+                  currentLang,
+                  english: 'Back to groups',
+                  tamil: 'குழுக்களுக்குத் திரும்பு',
+                  sinhala: 'කණ්ඩායම් වෙත ආපසු',
+                ),
               ),
             ),
           ],
@@ -312,14 +417,17 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                 child: _languageSwitch(isTamil, isSinhala, currentLang),
               ),
               const SizedBox(height: 12),
-              _breadcrumb(group, isTamil, colors),
+              _breadcrumb(group, currentLang, colors),
               const SizedBox(height: 12),
-              _joinLinkCard(group, joinLink, isTamil, colors),
+              _joinLinkCard(group, joinLink, currentLang, colors),
               const SizedBox(height: 16),
               Text(
-                isTamil
-                    ? 'ஒப்புதலுக்காக காத்திருக்கிறது'
-                    : 'Waiting for approval',
+                adminUiText(
+                  currentLang,
+                  english: 'Waiting for approval',
+                  tamil: 'ஒப்புதலுக்காக காத்திருக்கிறது',
+                  sinhala: 'අනුමැතිය සඳහා රැඳී සිටී',
+                ),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: colors.primary,
                   fontWeight: FontWeight.w700,
@@ -330,20 +438,23 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    isTamil
-                        ? 'யாரும் காத்திருக்கவில்லை.'
-                        : 'No one is waiting.',
+                    adminUiText(
+                      currentLang,
+                      english: 'No one is waiting.',
+                      tamil: 'யாரும் காத்திருக்கவில்லை.',
+                      sinhala: 'කිසිවෙකු රැඳී නොසිටී.',
+                    ),
                     style: TextStyle(color: colors.onSurfaceVariant),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              _addMemberForm(group, isTamil, colors),
+              _addMemberForm(group, currentLang, colors),
               const SizedBox(height: 12),
-              _membersSection(group, members, isTamil, colors),
+              _membersSection(group, members, currentLang, colors),
               const SizedBox(height: 16),
               FilledButton(
-                onPressed: () => _deleteGroup(group, isTamil),
+                onPressed: () => _deleteGroup(group, currentLang),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.danger,
                   minimumSize: const Size.fromHeight(42),
@@ -351,7 +462,14 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                     borderRadius: BorderRadius.circular(7),
                   ),
                 ),
-                child: Text(isTamil ? 'குழுவை நீக்கு' : 'Delete group'),
+                child: Text(
+                  adminUiText(
+                    currentLang,
+                    english: 'Delete group',
+                    tamil: 'குழுவை நீக்கு',
+                    sinhala: 'කණ්ඩායම මකන්න',
+                  ),
+                ),
               ),
             ],
           ),
@@ -424,7 +542,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     );
   }
 
-  Widget _breadcrumb(GroupModel group, bool isTamil, ColorScheme colors) {
+  Widget _breadcrumb(GroupModel group, String language, ColorScheme colors) {
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 6,
@@ -432,7 +550,12 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
         InkWell(
           onTap: () => context.go('/app/groups'),
           child: Text(
-            isTamil ? 'குழுக்கள்' : 'Groups',
+            adminUiText(
+              language,
+              english: 'Groups',
+              tamil: 'குழுக்கள்',
+              sinhala: 'කණ්ඩායම්',
+            ),
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
         ),
@@ -455,7 +578,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   Widget _joinLinkCard(
     GroupModel group,
     String joinLink,
-    bool isTamil,
+    String language,
     ColorScheme colors,
   ) {
     return Card(
@@ -470,15 +593,26 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isTamil ? 'சேரும் இணைப்பு' : 'Join link',
+              adminUiText(
+                language,
+                english: 'Join link',
+                tamil: 'சேரும் இணைப்பு',
+                sinhala: 'එක්වීමේ සබැඳිය',
+              ),
               style: Theme.of(context).textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text(
-              isTamil
-                  ? 'இந்த இணைப்பைப் பகிரவும். சேர விரும்புபவரை அவர்கள் பதிவு செய்வதற்கு முன் நீங்கள் ஏற்க வேண்டும்.'
-                  : 'Share this link. A person asks to join, and you accept them before they can sign in.',
+              adminUiText(
+                language,
+                english:
+                    'Share this link. A person asks to join, and you accept them before they can sign in.',
+                tamil:
+                    'இந்த இணைப்பைப் பகிரவும். சேர விரும்புபவரை அவர்கள் பதிவு செய்வதற்கு முன் நீங்கள் ஏற்க வேண்டும்.',
+                sinhala:
+                    'මෙම සබැඳිය බෙදාගන්න. එක්වීමට ඉල්ලන අය පුරනය වීමට පෙර ඔබ ඔවුන්ව පිළිගන්න.',
+              ),
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 10),
@@ -500,12 +634,19 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                   ),
                 );
                 final copyButton = OutlinedButton(
-                  onPressed: () => _copyJoinLink(group, isTamil),
+                  onPressed: () => _copyJoinLink(group, language),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 40),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
-                  child: Text(isTamil ? 'இணைப்பை நகலெடு' : 'Copy link'),
+                  child: Text(
+                    adminUiText(
+                      language,
+                      english: 'Copy link',
+                      tamil: 'இணைப்பை நகலெடு',
+                      sinhala: 'සබැඳිය පිටපත් කරන්න',
+                    ),
+                  ),
                 );
                 if (constraints.maxWidth < 480) {
                   return Column(
@@ -535,7 +676,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     );
   }
 
-  Widget _addMemberForm(GroupModel group, bool isTamil, ColorScheme colors) {
+  Widget _addMemberForm(
+    GroupModel group,
+    String language,
+    ColorScheme colors,
+  ) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
@@ -550,24 +695,39 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
             LayoutBuilder(
               builder: (context, constraints) {
                 final nameField = _memberTextField(
-                  label: isTamil
-                      ? 'பெயர் மற்றும் முதலெழுத்து'
-                      : 'Name with initial',
+                  label: adminUiText(
+                    language,
+                    english: 'Name with initial',
+                    tamil: 'பெயர் மற்றும் முதலெழுத்து',
+                    sinhala: 'මුලකුරු සමඟ නම',
+                  ),
                   controller: _nameController,
                   errorText: _memberError,
                 );
                 final phoneField = _memberTextField(
-                  label: isTamil ? 'தொலைபேசி' : 'Phone',
+                  label: adminUiText(
+                    language,
+                    english: 'Phone',
+                    tamil: 'தொலைபேசி',
+                    sinhala: 'දුරකථනය',
+                  ),
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                 );
                 final addButton = FilledButton(
-                  onPressed: () => _addMember(group, isTamil),
+                  onPressed: () => _addMember(group, language),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.accent,
                     minimumSize: const Size(0, 42),
                   ),
-                  child: Text(isTamil ? 'உறுப்பினரைச் சேர்' : 'Add member'),
+                  child: Text(
+                    adminUiText(
+                      language,
+                      english: 'Add member',
+                      tamil: 'உறுப்பினரைச் சேர்',
+                      sinhala: 'සාමාජිකයා එක් කරන්න',
+                    ),
+                  ),
                 );
                 if (constraints.maxWidth < 650) {
                   return Column(
@@ -633,14 +793,19 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   Widget _membersSection(
     GroupModel group,
     List<MemberModel> members,
-    bool isTamil,
+    String language,
     ColorScheme colors,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          isTamil ? 'உறுப்பினர்கள்' : 'Members',
+          adminUiText(
+            language,
+            english: 'Members',
+            tamil: 'உறுப்பினர்கள்',
+            sinhala: 'සාමාජිකයින්',
+          ),
           style: Theme.of(context).textTheme.titleMedium
               ?.copyWith(color: colors.primary, fontWeight: FontWeight.w700),
         ),
@@ -650,7 +815,12 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                isTamil ? 'உறுப்பினர்கள் இல்லை.' : 'No members in this group.',
+                adminUiText(
+                  language,
+                  english: 'No members in this group.',
+                  tamil: 'உறுப்பினர்கள் இல்லை.',
+                  sinhala: 'මෙම කණ්ඩායමේ සාමාජිකයින් නැත.',
+                ),
                 style: TextStyle(color: colors.onSurfaceVariant),
               ),
             ),
@@ -674,7 +844,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                 ),
                 itemCount: members.length,
                 itemBuilder: (context, index) =>
-                    _memberCard(members[index], isTamil, colors),
+                    _memberCard(members[index], language, colors),
               );
             },
           ),
@@ -682,7 +852,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     );
   }
 
-  Widget _memberCard(MemberModel member, bool isTamil, ColorScheme colors) {
+  Widget _memberCard(
+    MemberModel member,
+    String language,
+    ColorScheme colors,
+  ) {
     final initial = member.name.isEmpty
         ? '?'
         : member.name.characters.first.toUpperCase();
@@ -725,8 +899,13 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
               ),
             ),
             IconButton(
-              onPressed: () => _showMemberDetails(member, isTamil),
-              tooltip: isTamil ? 'விவரங்கள்' : 'View details',
+              onPressed: () => _showMemberDetails(member, language),
+              tooltip: adminUiText(
+                language,
+                english: 'View details',
+                tamil: 'விவரங்கள்',
+                sinhala: 'විස්තර බලන්න',
+              ),
               visualDensity: VisualDensity.compact,
               constraints: const BoxConstraints.tightFor(width: 32, height: 32),
               padding: EdgeInsets.zero,
@@ -734,8 +913,13 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
               icon: const Icon(Icons.visibility_outlined),
             ),
             IconButton(
-              onPressed: () => _editMember(member, isTamil),
-              tooltip: isTamil ? 'திருத்து' : 'Edit',
+              onPressed: () => _editMember(member, language),
+              tooltip: adminUiText(
+                language,
+                english: 'Edit',
+                tamil: 'திருத்து',
+                sinhala: 'සංස්කරණය කරන්න',
+              ),
               visualDensity: VisualDensity.compact,
               constraints: const BoxConstraints.tightFor(width: 32, height: 32),
               padding: EdgeInsets.zero,
@@ -743,8 +927,13 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
               icon: const Icon(Icons.edit_outlined),
             ),
             IconButton(
-              onPressed: () => _deleteMember(member, isTamil),
-              tooltip: isTamil ? 'நீக்கு' : 'Remove',
+              onPressed: () => _deleteMember(member, language),
+              tooltip: adminUiText(
+                language,
+                english: 'Remove',
+                tamil: 'நீக்கு',
+                sinhala: 'ඉවත් කරන්න',
+              ),
               color: AppColors.danger,
               visualDensity: VisualDensity.compact,
               constraints: const BoxConstraints.tightFor(width: 32, height: 32),
@@ -758,19 +947,26 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     );
   }
 
-  void _showMemberDetails(MemberModel member, bool isTamil) {
+  void _showMemberDetails(MemberModel member, String language) {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(member.name),
         content: Text(
-          '${isTamil ? 'தொலைபேசி' : 'Phone'}: ${member.phone}\n'
-          '${isTamil ? 'மின்னஞ்சல்' : 'Email'}: ${member.email.isEmpty ? '—' : member.email}',
+          '${adminUiText(language, english: 'Phone', tamil: 'தொலைபேசி', sinhala: 'දුරකථනය')}: ${member.phone}\n'
+          '${adminUiText(language, english: 'Email', tamil: 'மின்னஞ்சல்', sinhala: 'විද්‍යුත් තැපෑල')}: ${member.email.isEmpty ? '—' : member.email}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(isTamil ? 'மூடு' : 'Close'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Close',
+                tamil: 'மூடு',
+                sinhala: 'වසන්න',
+              ),
+            ),
           ),
         ],
       ),

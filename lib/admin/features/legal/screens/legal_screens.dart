@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 
 class PrivacyPolicyScreen extends ConsumerWidget {
@@ -8,11 +9,19 @@ class PrivacyPolicyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final siteAsync = ref.watch(siteContentProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
+    final isTamil = language == 'ta';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isTamil ? 'தனியுரிமைக் கொள்கை' : 'Privacy Policy'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Privacy Policy',
+            tamil: 'தனியுரிமைக் கொள்கை',
+            sinhala: 'පෞද්ගලිකත්ව ප්‍රතිපත්තිය',
+          ),
+        ),
       ),
       body: siteAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -43,11 +52,19 @@ class CookiePolicyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final siteAsync = ref.watch(siteContentProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
+    final isTamil = language == 'ta';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isTamil ? 'குக்கீ கொள்கை' : 'Cookie Policy'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Cookie Policy',
+            tamil: 'குக்கீ கொள்கை',
+            sinhala: 'කුකී ප්‍රතිපත්තිය',
+          ),
+        ),
       ),
       body: siteAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

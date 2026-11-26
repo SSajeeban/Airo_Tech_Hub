@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -58,13 +59,16 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
     });
   }
 
-  void _saveGroup(bool isTamil) {
+  void _saveGroup(String language) {
     final name = _nameController.text.trim();
     if (name.length < 2 || name.length > 120) {
       setState(() {
-        _nameError = isTamil
-            ? 'குழு பெயர் 2 முதல் 120 எழுத்துகளுக்குள் இருக்க வேண்டும்.'
-            : 'Enter a group name between 2 and 120 characters.';
+        _nameError = adminUiText(
+          language,
+          english: 'Enter a group name between 2 and 120 characters.',
+          tamil: 'குழு பெயர் 2 முதல் 120 எழுத்துகளுக்குள் இருக்க வேண்டும்.',
+          sinhala: 'අක්ෂර 2ත් 120ත් අතර කණ්ඩායම් නමක් ඇතුළත් කරන්න.',
+        );
       });
       return;
     }
@@ -107,7 +111,7 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
     final colors = Theme.of(context).colorScheme;
 
     return LayoutBuilder(
@@ -128,14 +132,22 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                     children: [
                       IconButton(
                         onPressed: () => context.go('/app/groups'),
-                        tooltip: isTamil
-                            ? 'குழுக்களுக்குத் திரும்பு'
-                            : 'Back to groups',
+                        tooltip: adminUiText(
+                          language,
+                          english: 'Back to groups',
+                          tamil: 'குழுக்களுக்குத் திரும்பு',
+                          sinhala: 'කණ්ඩායම් වෙත ආපසු',
+                        ),
                         icon: const Icon(AppIcons.back),
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        isTamil ? 'குழுக்கள் / உருவாக்கு' : 'Groups / Create',
+                        adminUiText(
+                          language,
+                          english: 'Groups / Create',
+                          tamil: 'குழுக்கள் / உருவாக்கு',
+                          sinhala: 'කණ්ඩායම් / සාදන්න',
+                        ),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(color: colors.onSurfaceVariant),
                       ),
@@ -173,7 +185,12 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                           LayoutBuilder(
                             builder: (context, constraints) {
                               final nameField = _textField(
-                                label: isTamil ? 'பெயர்' : 'Name',
+                                label: adminUiText(
+                                  language,
+                                  english: 'Name',
+                                  tamil: 'பெயர்',
+                                  sinhala: 'නම',
+                                ),
                                 controller: _nameController,
                                 errorText: _nameError,
                                 onChanged: (_) {
@@ -183,7 +200,12 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                                 },
                               );
                               final descriptionField = _textField(
-                                label: isTamil ? 'விளக்கம்' : 'Description',
+                                label: adminUiText(
+                                  language,
+                                  english: 'Description',
+                                  tamil: 'விளக்கம்',
+                                  sinhala: 'විස්තරය',
+                                ),
                                 controller: _descriptionController,
                               );
                               if (!constraints.maxWidth.isFinite ||
@@ -211,9 +233,12 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  isTamil
-                                      ? 'தனிப்பயன் புலங்கள்'
-                                      : 'Custom fields',
+                                  adminUiText(
+                                    language,
+                                    english: 'Custom fields',
+                                    tamil: 'தனிப்பயன் புலங்கள்',
+                                    sinhala: 'අභිරුචි ක්ෂේත්‍ර',
+                                  ),
                                   style: Theme.of(context).textTheme.titleSmall
                                       ?.copyWith(
                                         color: colors.onSurface,
@@ -243,9 +268,12 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                                         const Icon(Icons.add_rounded, size: 18),
                                         const SizedBox(width: 6),
                                         Text(
-                                          isTamil
-                                              ? 'புலம் சேர்க்க'
-                                              : 'Add field',
+                                          adminUiText(
+                                            language,
+                                            english: 'Add field',
+                                            tamil: 'புலம் சேர்க்க',
+                                            sinhala: 'ක්ෂේත්‍රය එක් කරන්න',
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -262,15 +290,30 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
                                   final keyField = _textField(
-                                    label: isTamil ? 'புலம்' : 'Field',
+                                    label: adminUiText(
+                                      language,
+                                      english: 'Field',
+                                      tamil: 'புலம்',
+                                      sinhala: 'ක්ෂේත්‍රය',
+                                    ),
                                     controller: field.fieldController,
                                   );
                                   final valueField = _textField(
-                                    label: isTamil ? 'மதிப்பு' : 'Value',
+                                    label: adminUiText(
+                                      language,
+                                      english: 'Value',
+                                      tamil: 'மதிப்பு',
+                                      sinhala: 'අගය',
+                                    ),
                                     controller: field.valueController,
                                   );
                                   final removeButton = IconButton(
-                                    tooltip: isTamil ? 'நீக்கு' : 'Remove',
+                                    tooltip: adminUiText(
+                                      language,
+                                      english: 'Remove',
+                                      tamil: 'நீக்கு',
+                                      sinhala: 'ඉවත් කරන්න',
+                                    ),
                                     color: AppColors.danger,
                                     onPressed: () => _removeField(index),
                                     icon: const Icon(
@@ -309,7 +352,7 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                           }),
                           const SizedBox(height: 4),
                           FilledButton(
-                            onPressed: () => _saveGroup(isTamil),
+                            onPressed: () => _saveGroup(language),
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.accent,
                               minimumSize: const Size.fromHeight(44),
@@ -319,8 +362,18 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
                             ),
                             child: Text(
                               widget.group == null
-                                  ? (isTamil ? 'உருவாக்கு' : 'Create')
-                                  : (isTamil ? 'சேமி' : 'Save'),
+                                  ? adminUiText(
+                                      language,
+                                      english: 'Create',
+                                      tamil: 'உருவாக்கு',
+                                      sinhala: 'සාදන්න',
+                                    )
+                                  : adminUiText(
+                                      language,
+                                      english: 'Save',
+                                      tamil: 'சேமி',
+                                      sinhala: 'සුරකින්න',
+                                    ),
                             ),
                           ),
                         ],
@@ -356,7 +409,12 @@ class _GroupFormScreenState extends ConsumerState<GroupFormScreen> {
         TextField(
           controller: controller,
           onChanged: onChanged,
-          maxLines: label == 'Description' || label == 'விளக்கம்' ? 2 : 1,
+          maxLines:
+              label == 'Description' ||
+                  label == 'விளக்கம்' ||
+                  label == 'විස්තරය'
+              ? 2
+              : 1,
           decoration: InputDecoration(
             isDense: true,
             errorText: errorText,

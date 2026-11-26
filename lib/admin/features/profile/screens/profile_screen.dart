@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../widgets/profile_photo_editor_dialog.dart';
 
@@ -62,7 +63,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (bytes.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not read the selected image.')),
+        SnackBar(
+          content: Text(
+            adminUiText(
+              ref.read(languageProvider),
+              english: 'Could not read the selected image.',
+              tamil: 'தேர்ந்தெடுத்த படத்தைப் படிக்க முடியவில்லை.',
+              sinhala: 'තෝරාගත් රූපය කියවිය නොහැකි විය.',
+            ),
+          ),
+        ),
       );
       return;
     }
@@ -77,12 +87,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           .uploadOrganizationLogo(bytes: bytes, fileName: result.name);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Organization logo updated.')),
+        SnackBar(
+          content: Text(
+            adminUiText(
+              ref.read(languageProvider),
+              english: 'Organization logo updated.',
+              tamil: 'நிறுவன லோகோ புதுப்பிக்கப்பட்டது.',
+              sinhala: 'ආයතන ලාංඡනය යාවත්කාලීන කරන ලදී.',
+            ),
+          ),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Logo saved locally: $error')));
+          .showSnackBar(
+            SnackBar(
+              content: Text(
+                adminUiText(
+                  ref.read(languageProvider),
+                  english: 'Logo saved locally: $error',
+                  tamil: 'லோகோ உள்ளூரில் சேமிக்கப்பட்டது: $error',
+                  sinhala: 'ලාංඡනය උපාංගයේ සුරකින ලදී: $error',
+                ),
+              ),
+            ),
+          );
     }
   }
 
@@ -97,9 +127,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ref.read(languageProvider) == 'ta'
-                ? 'தேர்ந்தெடுத்த படத்தைப் படிக்க முடியவில்லை.'
-                : 'Could not read the selected image.',
+            adminUiText(
+              ref.read(languageProvider),
+              english: 'Could not read the selected image.',
+              tamil: 'தேர்ந்தெடுத்த படத்தைப் படிக்க முடியவில்லை.',
+              sinhala: 'තෝරාගත් රූපය කියවිය නොහැකි විය.',
+            ),
           ),
         ),
       );
@@ -116,9 +149,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ref.read(languageProvider) == 'ta'
-                ? 'இந்தப் படத்தைத் திறக்க முடியவில்லை.'
-                : 'Could not open this image.',
+            adminUiText(
+              ref.read(languageProvider),
+              english: 'Could not open this image.',
+              tamil: 'இந்தப் படத்தைத் திறக்க முடியவில்லை.',
+              sinhala: 'මෙම රූපය විවෘත කළ නොහැක.',
+            ),
           ),
         ),
       );
@@ -146,7 +182,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       builder: (context) => ProfilePhotoEditorDialog(
         image: orientedImage,
         previewBytes: previewBytes,
-        isTamil: ref.read(languageProvider) == 'ta',
+        language: ref.read(languageProvider),
       ),
     );
     if (croppedBytes == null || !mounted) return;
@@ -158,16 +194,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ref.read(languageProvider) == 'ta'
-              ? 'சுயவிவரப் படம் புதுப்பிக்கப்பட்டது.'
-              : 'Profile photo updated.',
+          adminUiText(
+            ref.read(languageProvider),
+            english: 'Profile photo updated.',
+            tamil: 'சுயவிவரப் படம் புதுப்பிக்கப்பட்டது.',
+            sinhala: 'පැතිකඩ ඡායාරූපය යාවත්කාලීන කරන ලදී.',
+          ),
         ),
       ),
     );
   }
 
   Future<void> _showProfilePhotoOptions() async {
-    final isTamil = ref.read(languageProvider) == 'ta';
+    final language = ref.read(languageProvider);
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
@@ -177,21 +216,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             if (_profilePhotoBase64.isNotEmpty)
               ListTile(
                 leading: const Icon(Icons.visibility_outlined),
-                title: Text(isTamil ? 'படத்தைப் பார்க்க' : 'View photo'),
+                title: Text(adminUiText(language, english: 'View photo', tamil: 'படத்தைப் பார்க்க', sinhala: 'ඡායාරූපය බලන්න')),
                 onTap: () => Navigator.pop(context, 'view'),
               ),
             if (_profilePhotoBase64.isNotEmpty)
               ListTile(
                 leading: const Icon(Icons.crop_outlined),
-                title: Text(isTamil ? 'படத்தைத் திருத்து' : 'Edit photo'),
+                title: Text(adminUiText(language, english: 'Edit photo', tamil: 'படத்தைத் திருத்து', sinhala: 'ඡායාරූපය සංස්කරණය කරන්න')),
                 onTap: () => Navigator.pop(context, 'edit'),
               ),
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
               title: Text(
                 _profilePhotoBase64.isEmpty
-                    ? (isTamil ? 'படத்தைச் சேர்' : 'Add photo')
-                    : (isTamil ? 'படத்தை மாற்று' : 'Change photo'),
+                    ? adminUiText(language, english: 'Add photo', tamil: 'படத்தைச் சேர்', sinhala: 'ඡායාරූපයක් එක් කරන්න')
+                    : adminUiText(language, english: 'Change photo', tamil: 'படத்தை மாற்று', sinhala: 'ඡායාරූපය වෙනස් කරන්න'),
               ),
               onTap: () => Navigator.pop(context, 'change'),
             ),
@@ -199,7 +238,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
                 title: Text(
-                  isTamil ? 'படத்தை நீக்கு' : 'Remove photo',
+                  adminUiText(language, english: 'Remove photo', tamil: 'படத்தை நீக்கு', sinhala: 'ඡායාරූපය ඉවත් කරන්න'),
                   style: const TextStyle(color: Colors.red),
                 ),
                 onTap: () => Navigator.pop(context, 'remove'),
@@ -243,13 +282,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final email = _emailController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Teacher name is required.')),
+        SnackBar(
+          content: Text(adminUiText(ref.read(languageProvider), english: 'Teacher name is required.', tamil: 'ஆசிரியர் பெயர் தேவை.', sinhala: 'ගුරුවරයාගේ නම අවශ්‍යය.')),
+        ),
       );
       return;
     }
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid email address.')),
+        SnackBar(
+          content: Text(adminUiText(ref.read(languageProvider), english: 'Enter a valid email address.', tamil: 'சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.', sinhala: 'වලංගු විද්‍යුත් තැපැල් ලිපිනයක් ඇතුළත් කරන්න.')),
+        ),
       );
       return;
     }
@@ -264,14 +307,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       SnackBar(
         content: Text(
           savedToServer
-              ? 'Profile settings saved successfully!'
-              : 'Profile saved locally. Server unavailable.',
+              ? adminUiText(ref.read(languageProvider), english: 'Profile settings saved successfully!', tamil: 'சுயவிவர அமைப்புகள் வெற்றிகரமாகச் சேமிக்கப்பட்டன!', sinhala: 'පැතිකඩ සැකසුම් සාර්ථකව සුරකින ලදී!')
+              : adminUiText(ref.read(languageProvider), english: 'Profile saved locally. Server unavailable.', tamil: 'சுயவிவரம் உள்ளூரில் சேமிக்கப்பட்டது. சேவையகம் கிடைக்கவில்லை.', sinhala: 'පැතිකඩ උපාංගයේ සුරකින ලදී. සේවාදායකය ලබා ගත නොහැක.'),
         ),
       ),
     );
   }
 
   Future<void> _changePassword() async {
+    final language = ref.read(languageProvider);
     final currentController = TextEditingController();
     final newController = TextEditingController();
     final confirmController = TextEditingController();
@@ -280,7 +324,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Change Password'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Change Password',
+            tamil: 'கடவுச்சொல்லை மாற்று',
+            sinhala: 'මුරපදය වෙනස් කරන්න',
+          ),
+        ),
         content: Form(
           key: formKey,
           child: Column(
@@ -289,21 +340,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextFormField(
                 controller: currentController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Current password',
+                decoration: InputDecoration(
+                  labelText: adminUiText(
+                    language,
+                    english: 'Current password',
+                    tamil: 'தற்போதைய கடவுச்சொல்',
+                    sinhala: 'වත්මන් මුරපදය',
+                  ),
                 ),
                 validator: (value) => value == null || value.isEmpty
-                    ? 'Enter your current password.'
+                    ? adminUiText(
+                        language,
+                        english: 'Enter your current password.',
+                        tamil: 'உங்கள் தற்போதைய கடவுச்சொல்லை உள்ளிடவும்.',
+                        sinhala: 'ඔබගේ වත්මන් මුරපදය ඇතුළත් කරන්න.',
+                      )
                     : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: newController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'New password'),
+                decoration: InputDecoration(
+                  labelText: adminUiText(
+                    language,
+                    english: 'New password',
+                    tamil: 'புதிய கடவுச்சொல்',
+                    sinhala: 'නව මුරපදය',
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.length < 8) {
-                    return 'Use at least 8 characters.';
+                    return adminUiText(
+                      language,
+                      english: 'Use at least 8 characters.',
+                      tamil: 'குறைந்தது 8 எழுத்துகளைப் பயன்படுத்தவும்.',
+                      sinhala: 'අවම වශයෙන් අක්ෂර 8ක් භාවිතා කරන්න.',
+                    );
                   }
                   return null;
                 },
@@ -312,11 +385,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextFormField(
                 controller: confirmController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm new password',
+                decoration: InputDecoration(
+                  labelText: adminUiText(
+                    language,
+                    english: 'Confirm new password',
+                    tamil: 'புதிய கடவுச்சொல்லை உறுதிப்படுத்தவும்',
+                    sinhala: 'නව මුරපදය තහවුරු කරන්න',
+                  ),
                 ),
                 validator: (value) => value != newController.text
-                    ? 'Passwords do not match.'
+                    ? adminUiText(
+                        language,
+                        english: 'Passwords do not match.',
+                        tamil: 'கடவுச்சொற்கள் பொருந்தவில்லை.',
+                        sinhala: 'මුරපද ගැළපෙන්නේ නැත.',
+                      )
                     : null,
               ),
             ],
@@ -325,7 +408,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Cancel',
+                tamil: 'ரத்து',
+                sinhala: 'අවලංගු කරන්න',
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -333,7 +423,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Navigator.of(dialogContext).pop(true);
               }
             },
-            child: const Text('Change Password'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Change Password',
+                tamil: 'கடவுச்சொல்லை மாற்று',
+                sinhala: 'මුරපදය වෙනස් කරන්න',
+              ),
+            ),
           ),
         ],
       ),
@@ -349,7 +446,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             );
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password changed successfully.')),
+          SnackBar(
+            content: Text(
+              adminUiText(
+                language,
+                english: 'Password changed successfully.',
+                tamil: 'கடவுச்சொல் வெற்றிகரமாக மாற்றப்பட்டது.',
+                sinhala: 'මුරපදය සාර්ථකව වෙනස් කරන ලදී.',
+              ),
+            ),
+          ),
         );
       } catch (error) {
         if (!mounted) return;
@@ -377,15 +483,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider);
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isTamil ? 'சுயவிவரம்' : 'Profile'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Profile',
+            tamil: 'சுயவிவரம்',
+            sinhala: 'පැතිකඩ',
+          ),
+        ),
         actions: [
           IconButton(
-            tooltip: isTamil ? 'மூடு' : 'Close',
+            tooltip: adminUiText(
+              language,
+              english: 'Close',
+              tamil: 'மூடு',
+              sinhala: 'වසන්න',
+            ),
             icon: const Icon(Icons.close),
             color: Colors.red,
             onPressed: _closeProfile,
@@ -475,7 +593,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
             // Teacher Details Heading
             Text(
-              isTamil ? 'ஆசிரியர் விவரங்கள்' : 'Teacher Details',
+              adminUiText(
+                language,
+                english: 'Teacher Details',
+                tamil: 'ஆசிரியர் விவரங்கள்',
+                sinhala: 'ගුරු විස්තර',
+              ),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
@@ -489,8 +612,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     TextField(
                       controller: _organizationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Organization Name',
+                      decoration: InputDecoration(
+                        labelText: adminUiText(language, english: 'Organization Name', tamil: 'நிறுவனத்தின் பெயர்', sinhala: 'ආයතනයේ නම'),
                         prefixIcon: Icon(Icons.business_outlined),
                         border: OutlineInputBorder(),
                       ),
@@ -501,8 +624,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     // Teacher Name
                     TextField(
                       controller: _teacherNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Teacher Name',
+                      decoration: InputDecoration(
+                        labelText: adminUiText(language, english: 'Teacher Name', tamil: 'ஆசிரியர் பெயர்', sinhala: 'ගුරුවරයාගේ නම'),
                         prefixIcon: Icon(Icons.person_outline),
                         border: OutlineInputBorder(),
                       ),
@@ -513,8 +636,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     // Subject
                     TextField(
                       controller: _subjectController,
-                      decoration: const InputDecoration(
-                        labelText: 'Subject / Specialization',
+                      decoration: InputDecoration(
+                        labelText: adminUiText(language, english: 'Subject / Specialization', tamil: 'பாடம் / சிறப்புத் துறை', sinhala: 'විෂය / විශේෂීකරණය'),
                         prefixIcon: Icon(Icons.book_outlined),
                         border: OutlineInputBorder(),
                       ),
@@ -525,8 +648,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     // Qualification
                     TextField(
                       controller: _qualificationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Qualification',
+                      decoration: InputDecoration(
+                        labelText: adminUiText(language, english: 'Qualification', tamil: 'தகுதி', sinhala: 'සුදුසුකම'),
                         prefixIcon: Icon(Icons.school_outlined),
                         border: OutlineInputBorder(),
                       ),
@@ -538,8 +661,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     TextField(
                       controller: _experienceController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Teaching Experience (Years)',
+                      decoration: InputDecoration(
+                        labelText: adminUiText(language, english: 'Teaching Experience (Years)', tamil: 'கற்பித்தல் அனுபவம் (ஆண்டுகள்)', sinhala: 'ඉගැන්වීමේ පළපුරුද්ද (වසර)'),
                         prefixIcon: Icon(Icons.work_outline),
                         border: OutlineInputBorder(),
                       ),
@@ -551,8 +674,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     TextField(
                       controller: _contactController,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Contact Number',
+                      decoration: InputDecoration(
+                        labelText: adminUiText(language, english: 'Contact Number', tamil: 'தொடர்பு எண்', sinhala: 'සම්බන්ධතා අංකය'),
                         prefixIcon: Icon(Icons.phone_outlined),
                         border: OutlineInputBorder(),
                       ),
@@ -564,8 +687,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     TextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Teacher Email Address',
+                      decoration: InputDecoration(
+                        labelText: adminUiText(language, english: 'Teacher Email Address', tamil: 'ஆசிரியர் மின்னஞ்சல் முகவரி', sinhala: 'ගුරු විද්‍යුත් තැපැල් ලිපිනය'),
                         prefixIcon: Icon(Icons.email_outlined),
                         border: OutlineInputBorder(),
                       ),
@@ -586,11 +709,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       Icons.workspace_premium,
                       color: AppColors.accent,
                     ),
-                    title: const Text(
-                      'Subscription Plan',
+                    title: Text(
+                      adminUiText(language, english: 'Subscription Plan', tamil: 'சந்தா திட்டம்', sinhala: 'දායකත්ව සැලැස්ම'),
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: const Text('Pro Educator Tier • Active'),
+                    subtitle: Text(adminUiText(language, english: 'Pro Educator Tier • Active', tamil: 'ப்ரோ கல்வியாளர் நிலை • செயலில்', sinhala: 'ප්‍රෝ අධ්‍යාපක මට්ටම • සක්‍රිය')),
                     trailing: const Icon(Icons.chevron_right),
                   ),
 
@@ -601,11 +724,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       Icons.palette_outlined,
                       color: AppColors.brandBlue,
                     ),
-                    title: const Text(
-                      'Custom Organization Logo',
+                    title: Text(
+                      adminUiText(language, english: 'Custom Organization Logo', tamil: 'தனிப்பயன் நிறுவன லோகோ', sinhala: 'අභිරුචි ආයතනික ලාංඡනය'),
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: const Text('Enabled for student portal'),
+                    subtitle: Text(adminUiText(language, english: 'Enabled for student portal', tamil: 'மாணவர் போர்ட்டலுக்கு இயக்கப்பட்டது', sinhala: 'ශිෂ්‍ය ද්වාරය සඳහා සක්‍රිය කර ඇත')),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _pickOrganizationLogo,
                   ),
@@ -617,8 +740,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       Icons.security_outlined,
                       color: AppColors.warning,
                     ),
-                    title: const Text(
-                      'Change Password',
+                    title: Text(
+                      adminUiText(language, english: 'Change Password', tamil: 'கடவுச்சொல்லை மாற்று', sinhala: 'මුරපදය වෙනස් කරන්න'),
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     trailing: const Icon(Icons.chevron_right),
@@ -633,7 +756,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             // Save Changes Button
             ElevatedButton(
               onPressed: _saveProfile,
-              child: const Text('Save Changes'),
+              child: Text(adminUiText(language, english: 'Save Changes', tamil: 'மாற்றங்களைச் சேமி', sinhala: 'වෙනස්කම් සුරකින්න')),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -65,15 +66,17 @@ class _AiTeacherWorkspace extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isTamil = ref.watch(languageProvider) == 'ta';
+    final language = ref.watch(languageProvider);
+    final isTamil = language == 'ta';
+    final isSinhala = language == 'si';
     final themeMode = ref.watch(themeModeProvider);
     final isDark =
         themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final theme = isDark
-        ? AppTheme.darkTheme(isTamil: isTamil)
-        : AppTheme.lightTheme(isTamil: isTamil);
+        ? AppTheme.darkTheme(isTamil: isTamil, isSinhala: isSinhala)
+        : AppTheme.lightTheme(isTamil: isTamil, isSinhala: isSinhala);
 
     return Theme(
       data: theme,
@@ -83,7 +86,14 @@ class _AiTeacherWorkspace extends ConsumerWidget {
             onPressed: onExit,
             icon: const Icon(Icons.arrow_back),
           ),
-          title: Text(isTamil ? 'AI ஆசிரியர்' : 'AI Teacher'),
+          title: Text(
+            adminUiText(
+              language,
+              english: 'AI Teacher',
+              tamil: 'AI ஆசிரியர்',
+              sinhala: 'AI ගුරුවරයා',
+            ),
+          ),
         ),
         body: const AiTeacherScreen(),
       ),

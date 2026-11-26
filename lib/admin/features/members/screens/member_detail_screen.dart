@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -186,18 +187,35 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
           .map((item) => item.id == member.id ? updated : item)
           .toList();
     });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Member details saved.')));
+    final language = ref.read(languageProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          adminUiText(
+            language,
+            english: 'Member details saved.',
+            tamil: 'உறுப்பினர் விவரங்கள் சேமிக்கப்பட்டன.',
+            sinhala: 'සාමාජික විස්තර සුරකින ලදී.',
+          ),
+        ),
+      ),
+    );
   }
 
-  Future<void> _addPayment(MemberModel member) async {
+  Future<void> _addPayment(MemberModel member, String language) async {
     final amountController = TextEditingController();
     final noteController = TextEditingController();
     final result = await showDialog<MapEntry<double, String>>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Record payment'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Record payment',
+            tamil: 'கட்டணத்தைப் பதிவு செய்',
+            sinhala: 'ගෙවීම සටහන් කරන්න',
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -206,22 +224,41 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Amount (LKR)',
+              decoration: InputDecoration(
+                labelText: adminUiText(
+                  language,
+                  english: 'Amount (LKR)',
+                  tamil: 'தொகை (LKR)',
+                  sinhala: 'මුදල (LKR)',
+                ),
                 prefixText: 'LKR ',
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: noteController,
-              decoration: const InputDecoration(labelText: 'Note'),
+              decoration: InputDecoration(
+                labelText: adminUiText(
+                  language,
+                  english: 'Note',
+                  tamil: 'குறிப்பு',
+                  sinhala: 'සටහන',
+                ),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Cancel',
+                tamil: 'ரத்து',
+                sinhala: 'අවලංගු කරන්න',
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -232,7 +269,14 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                 MapEntry(amount, noteController.text.trim()),
               );
             },
-            child: const Text('Save payment'),
+            child: Text(
+              adminUiText(
+                language,
+                english: 'Save payment',
+                tamil: 'கட்டணத்தைச் சேமி',
+                sinhala: 'ගෙවීම සුරකින්න',
+              ),
+            ),
           ),
         ],
       ),
@@ -272,19 +316,36 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
   Widget build(BuildContext context) {
     final members = ref.watch(membersProvider);
     final groups = ref.watch(groupsProvider);
+    final language = ref.watch(languageProvider);
     final member = members
         .where((item) => item.id == widget.memberId)
         .firstOrNull;
     if (member == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Member'),
+          title: Text(
+            adminUiText(
+              language,
+              english: 'Member',
+              tamil: 'உறுப்பினர்',
+              sinhala: 'සාමාජිකයා',
+            ),
+          ),
           leading: IconButton(
             onPressed: () => context.go('/app/members'),
             icon: const Icon(Icons.arrow_back_rounded),
           ),
         ),
-        body: const Center(child: Text('Member not found')),
+        body: Center(
+          child: Text(
+            adminUiText(
+              language,
+              english: 'Member not found',
+              tamil: 'உறுப்பினர் கிடைக்கவில்லை',
+              sinhala: 'සාමාජිකයා හමු නොවීය',
+            ),
+          ),
+        ),
       );
     }
     _initialize(member, groups);
@@ -301,9 +362,21 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Member Profile'),
+        title: Text(
+          adminUiText(
+            language,
+            english: 'Member Profile',
+            tamil: 'உறுப்பினர் சுயவிவரம்',
+            sinhala: 'සාමාජික පැතිකඩ',
+          ),
+        ),
         leading: IconButton(
-          tooltip: 'Back to members',
+          tooltip: adminUiText(
+            language,
+            english: 'Back to members',
+            tamil: 'உறுப்பினர்களுக்குத் திரும்பு',
+            sinhala: 'සාමාජිකයින් වෙත ආපසු',
+          ),
           onPressed: () => context.go('/app/members'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
@@ -357,19 +430,34 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                                 ),
                                 Text(
                                   member.email.isEmpty
-                                      ? 'No email address'
+                                      ? adminUiText(
+                                          language,
+                                          english: 'No email address',
+                                          tamil: 'மின்னஞ்சல் முகவரி இல்லை',
+                                          sinhala: 'විද්‍යුත් තැපැල් ලිපිනයක් නැත',
+                                        )
                                       : member.email,
                                   style: TextStyle(color: Colors.grey.shade600),
                                 ),
                                 const SizedBox(height: 8),
-                                _MemberStatus(status: member.status),
+                                _MemberStatus(
+                                  status: member.status,
+                                  language: language,
+                                ),
                               ],
                             ),
                           ),
                           OutlinedButton.icon(
                             onPressed: _pickPhoto,
                             icon: const Icon(Icons.photo_camera_outlined),
-                            label: const Text('Change photo'),
+                            label: Text(
+                              adminUiText(
+                                language,
+                                english: 'Change photo',
+                                tamil: 'புகைப்படத்தை மாற்று',
+                                sinhala: 'ඡායාරූපය වෙනස් කරන්න',
+                              ),
+                            ),
                           ),
                           if (photo != null && !photo.startsWith('http'))
                             SizedBox(
@@ -390,12 +478,24 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   _SectionCard(
-                    title: 'Member details',
+                    title: adminUiText(
+                      language,
+                      english: 'Member details',
+                      tamil: 'உறுப்பினர் விவரங்கள்',
+                      sinhala: 'සාමාජික විස්තර',
+                    ),
                     icon: Icons.badge_outlined,
                     trailing: FilledButton.icon(
                       onPressed: () => _save(member),
                       icon: const Icon(Icons.save_outlined),
-                      label: const Text('Save details'),
+                      label: Text(
+                        adminUiText(
+                          language,
+                          english: 'Save details',
+                          tamil: 'விவரங்களைச் சேமி',
+                          sinhala: 'විස්තර සුරකින්න',
+                        ),
+                      ),
                     ),
                     child: Column(
                       children: [
@@ -404,40 +504,70 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                           children: [
                             TextFormField(
                               controller: _displayName,
-                              decoration: const InputDecoration(
-                                labelText: 'Display name',
+                              decoration: InputDecoration(
+                                labelText: adminUiText(
+                                  language,
+                                  english: 'Display name',
+                                  tamil: 'காட்சிப் பெயர்',
+                                  sinhala: 'පෙන්වන නම',
+                                ),
                               ),
                             ),
                             TextFormField(
                               controller: _fullName,
-                              decoration: const InputDecoration(
-                                labelText: 'Full name',
+                              decoration: InputDecoration(
+                                labelText: adminUiText(
+                                  language,
+                                  english: 'Full name',
+                                  tamil: 'முழுப் பெயர்',
+                                  sinhala: 'සම්පූර්ණ නම',
+                                ),
                               ),
                             ),
                             TextFormField(
                               controller: _email,
                               keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(
-                                labelText: 'Email address',
+                              decoration: InputDecoration(
+                                labelText: adminUiText(
+                                  language,
+                                  english: 'Email address',
+                                  tamil: 'மின்னஞ்சல் முகவரி',
+                                  sinhala: 'විද්‍යුත් තැපැල් ලිපිනය',
+                                ),
                               ),
                             ),
                             TextFormField(
                               controller: _phone,
                               keyboardType: TextInputType.phone,
-                              decoration: const InputDecoration(
-                                labelText: 'Phone number',
+                              decoration: InputDecoration(
+                                labelText: adminUiText(
+                                  language,
+                                  english: 'Phone number',
+                                  tamil: 'தொலைபேசி எண்',
+                                  sinhala: 'දුරකථන අංකය',
+                                ),
                               ),
                             ),
                             InkWell(
                               onTap: _selectBirthDate,
                               child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Date of birth',
+                                decoration: InputDecoration(
+                                  labelText: adminUiText(
+                                    language,
+                                    english: 'Date of birth',
+                                    tamil: 'பிறந்த தேதி',
+                                    sinhala: 'උපන් දිනය',
+                                  ),
                                   suffixIcon: Icon(Icons.calendar_today),
                                 ),
                                 child: Text(
                                   _dateOfBirth == null
-                                      ? 'Not provided'
+                                      ? adminUiText(
+                                          language,
+                                          english: 'Not provided',
+                                          tamil: 'வழங்கப்படவில்லை',
+                                          sinhala: 'සපයා නැත',
+                                        )
                                       : DateFormat(
                                           'dd MMM yyyy',
                                         ).format(DateTime.parse(_dateOfBirth!)),
@@ -446,17 +576,36 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                             ),
                             DropdownButtonFormField<String>(
                               initialValue: member.status,
-                              decoration: const InputDecoration(
-                                labelText: 'Status',
+                              decoration: InputDecoration(
+                                labelText: adminUiText(
+                                  language,
+                                  english: 'Status',
+                                  tamil: 'நிலை',
+                                  sinhala: 'තත්ත්වය',
+                                ),
                               ),
-                              items: const [
+                              items: [
                                 DropdownMenuItem(
                                   value: 'Active',
-                                  child: Text('Active'),
+                                  child: Text(
+                                    adminUiText(
+                                      language,
+                                      english: 'Active',
+                                      tamil: 'செயலில்',
+                                      sinhala: 'සක්‍රිය',
+                                    ),
+                                  ),
                                 ),
                                 DropdownMenuItem(
                                   value: 'Inactive',
-                                  child: Text('Inactive'),
+                                  child: Text(
+                                    adminUiText(
+                                      language,
+                                      english: 'Inactive',
+                                      tamil: 'செயலற்றது',
+                                      sinhala: 'අක්‍රිය',
+                                    ),
+                                  ),
                                 ),
                               ],
                               onChanged: (value) {
@@ -485,8 +634,13 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                           controller: _address,
                           minLines: 2,
                           maxLines: 4,
-                          decoration: const InputDecoration(
-                            labelText: 'Address',
+                          decoration: InputDecoration(
+                            labelText: adminUiText(
+                              language,
+                              english: 'Address',
+                              tamil: 'முகவரி',
+                              sinhala: 'ලිපිනය',
+                            ),
                             alignLabelWithHint: true,
                           ),
                         ),
@@ -495,11 +649,21 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   _SectionCard(
-                    title: 'Custom fields',
+                    title: adminUiText(
+                      language,
+                      english: 'Custom fields',
+                      tamil: 'தனிப்பயன் புலங்கள்',
+                      sinhala: 'අභිරුචි ක්ෂේත්‍ර',
+                    ),
                     icon: Icons.tune_rounded,
                     child: member.customFields.isEmpty
                         ? Text(
-                            'No custom fields have been added.',
+                            adminUiText(
+                              language,
+                              english: 'No custom fields have been added.',
+                              tamil: 'தனிப்பயன் புலங்கள் சேர்க்கப்படவில்லை.',
+                              sinhala: 'අභිරුචි ක්ෂේත්‍ර එක් කර නැත.',
+                            ),
                             style: TextStyle(color: Colors.grey.shade600),
                           )
                         : Column(
@@ -516,16 +680,33 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   _SectionCard(
-                    title: 'Documents',
+                    title: adminUiText(
+                      language,
+                      english: 'Documents',
+                      tamil: 'ஆவணங்கள்',
+                      sinhala: 'ලේඛන',
+                    ),
                     icon: Icons.folder_open_outlined,
                     trailing: OutlinedButton.icon(
                       onPressed: () => _addDocuments(member),
                       icon: const Icon(Icons.upload_file_rounded),
-                      label: const Text('Add documents'),
+                      label: Text(
+                        adminUiText(
+                          language,
+                          english: 'Add documents',
+                          tamil: 'ஆவணங்களைச் சேர்',
+                          sinhala: 'ලේඛන එක් කරන්න',
+                        ),
+                      ),
                     ),
                     child: member.documents.isEmpty
                         ? Text(
-                            'No documents attached to this profile.',
+                            adminUiText(
+                              language,
+                              english: 'No documents attached to this profile.',
+                              tamil: 'இந்த சுயவிவரத்துடன் ஆவணங்கள் இணைக்கப்படவில்லை.',
+                              sinhala: 'මෙම පැතිකඩට ලේඛන අමුණා නැත.',
+                            ),
                             style: TextStyle(color: Colors.grey.shade600),
                           )
                         : Column(
@@ -544,10 +725,22 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   _SectionCard(
-                    title: 'Groups',
+                    title: adminUiText(
+                      language,
+                      english: 'Groups',
+                      tamil: 'குழுக்கள்',
+                      sinhala: 'කණ්ඩායම්',
+                    ),
                     icon: Icons.groups_2_outlined,
                     child: groups.isEmpty
-                        ? const Text('No groups are available.')
+                        ? Text(
+                            adminUiText(
+                              language,
+                              english: 'No groups are available.',
+                              tamil: 'குழுக்கள் எதுவும் இல்லை.',
+                              sinhala: 'කණ්ඩායම් නොමැත.',
+                            ),
+                          )
                         : Wrap(
                             spacing: 8,
                             runSpacing: 4,
@@ -574,16 +767,33 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   _SectionCard(
-                    title: 'Payments',
+                    title: adminUiText(
+                      language,
+                      english: 'Payments',
+                      tamil: 'கட்டணங்கள்',
+                      sinhala: 'ගෙවීම්',
+                    ),
                     icon: Icons.payments_outlined,
                     trailing: OutlinedButton.icon(
-                      onPressed: () => _addPayment(member),
+                      onPressed: () => _addPayment(member, language),
                       icon: const Icon(Icons.add_rounded),
-                      label: const Text('Record payment'),
+                      label: Text(
+                        adminUiText(
+                          language,
+                          english: 'Record payment',
+                          tamil: 'கட்டணத்தைப் பதிவு செய்',
+                          sinhala: 'ගෙවීම සටහන් කරන්න',
+                        ),
+                      ),
                     ),
                     child: payments.isEmpty
                         ? Text(
-                            'No payment records for this member.',
+                            adminUiText(
+                              language,
+                              english: 'No payment records for this member.',
+                              tamil: 'இந்த உறுப்பினருக்கான கட்டணப் பதிவுகள் இல்லை.',
+                              sinhala: 'මෙම සාමාජිකයා සඳහා ගෙවීම් වාර්තා නැත.',
+                            ),
                             style: TextStyle(color: Colors.grey.shade600),
                           )
                         : SingleChildScrollView(
@@ -591,11 +801,47 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                             child: SizedBox(
                               width: 560,
                               child: DataTable(
-                                columns: const [
-                                  DataColumn(label: Text('Description')),
-                                  DataColumn(label: Text('Amount')),
-                                  DataColumn(label: Text('Date')),
-                                  DataColumn(label: Text('Status')),
+                                columns: [
+                                  DataColumn(
+                                    label: Text(
+                                      adminUiText(
+                                        language,
+                                        english: 'Description',
+                                        tamil: 'விளக்கம்',
+                                        sinhala: 'විස්තරය',
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      adminUiText(
+                                        language,
+                                        english: 'Amount',
+                                        tamil: 'தொகை',
+                                        sinhala: 'මුදල',
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      adminUiText(
+                                        language,
+                                        english: 'Date',
+                                        tamil: 'தேதி',
+                                        sinhala: 'දිනය',
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      adminUiText(
+                                        language,
+                                        english: 'Status',
+                                        tamil: 'நிலை',
+                                        sinhala: 'තත්ත්වය',
+                                      ),
+                                    ),
+                                  ),
                                 ],
                                 rows: payments
                                     .map(
@@ -622,7 +868,19 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                                           ),
                                           DataCell(
                                             Text(
-                                              payment.isPaid ? 'Paid' : 'Due',
+                                              payment.isPaid
+                                                  ? adminUiText(
+                                                      language,
+                                                      english: 'Paid',
+                                                      tamil: 'செலுத்தப்பட்டது',
+                                                      sinhala: 'ගෙවා ඇත',
+                                                    )
+                                                  : adminUiText(
+                                                      language,
+                                                      english: 'Due',
+                                                      tamil: 'நிலுவை',
+                                                      sinhala: 'ගෙවිය යුතුය',
+                                                    ),
                                             ),
                                           ),
                                         ],
@@ -638,7 +896,14 @@ class _MemberDetailScreenState extends ConsumerState<MemberDetailScreen> {
                     alignment: Alignment.centerRight,
                     child: FilledButton(
                       onPressed: () => _save(member),
-                      child: const Text('Save details'),
+                      child: Text(
+                        adminUiText(
+                          language,
+                          english: 'Save details',
+                          tamil: 'விவரங்களைச் சேமி',
+                          sinhala: 'විස්තර සුරකින්න',
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -741,9 +1006,10 @@ class _SectionCard extends StatelessWidget {
 }
 
 class _MemberStatus extends StatelessWidget {
-  const _MemberStatus({required this.status});
+  const _MemberStatus({required this.status, required this.language});
 
   final String status;
+  final String language;
 
   @override
   Widget build(BuildContext context) {
@@ -757,7 +1023,19 @@ class _MemberStatus extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        status,
+        status.toLowerCase() == 'active'
+            ? adminUiText(
+                language,
+                english: 'Active',
+                tamil: 'செயலில்',
+                sinhala: 'සක්‍රිය',
+              )
+            : adminUiText(
+                language,
+                english: 'Inactive',
+                tamil: 'செயலற்றது',
+                sinhala: 'අක්‍රිය',
+              ),
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w700,

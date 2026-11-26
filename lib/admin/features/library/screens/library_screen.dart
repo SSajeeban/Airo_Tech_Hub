@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/localization/admin_localizations.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../models/app_models.dart';
 
@@ -14,6 +15,15 @@ class LibraryScreen extends ConsumerStatefulWidget {
 }
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
+  String _text(String english, String tamil, String sinhala) {
+    return adminUiText(
+      ref.read(languageProvider),
+      english: english,
+      tamil: tamil,
+      sinhala: sinhala,
+    );
+  }
+
   final _dateFormat = DateFormat('MMM d, yyyy, h:mm a');
   final _folders = <String>[
     'Combined Mathematics',
@@ -82,9 +92,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Center(
                 child: Text(
-                  isTamil
-                      ? 'இந்தக் காலப்பகுதியில் கோப்புகள் இல்லை.'
-                      : 'No files found for this date range.',
+                  _text(
+                    'No files found for this date range.',
+                    'இந்தக் காலப்பகுதியில் கோப்புகள் இல்லை.',
+                    'මෙම දින පරාසය සඳහා ගොනු හමු නොවීය.',
+                  ),
                   style: TextStyle(color: colors.onSurfaceVariant),
                 ),
               ),
@@ -118,7 +130,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               width: 184,
               child: _dateButton(
                 context,
-                label: isTamil ? 'இருந்து' : 'From',
+                label: _text('From', 'இருந்து', 'සිට'),
                 date: _fromDate,
                 onSelected: (date) => setState(() => _fromDate = date),
               ),
@@ -127,7 +139,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               width: 184,
               child: _dateButton(
                 context,
-                label: isTamil ? 'வரை' : 'To',
+                label: _text('To', 'வரை', 'දක්වා'),
                 date: _toDate,
                 onSelected: (date) => setState(() => _toDate = date),
               ),
@@ -135,12 +147,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             OutlinedButton.icon(
               onPressed: () => _showNewFolderDialog(isTamil),
               icon: const Icon(AppIcons.folderAdd),
-              label: Text(isTamil ? 'புதிய கோப்புறை' : 'New folder'),
+              label: Text(_text('New folder', 'புதிய கோப்புறை', 'නව ෆෝල්ඩරය')),
             ),
             OutlinedButton.icon(
               onPressed: () => _showUploadDialog(isTamil),
               icon: const Icon(AppIcons.upload),
-              label: Text(isTamil ? 'கோப்பைப் பதிவேற்று' : 'Upload file'),
+              label: Text(_text('Upload file', 'கோப்பைப் பதிவேற்று', 'ගොනුව උඩුගත කරන්න')),
             ),
             ToggleButtons(
               isSelected: [!_isGridView, _isGridView],
@@ -225,11 +237,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               colors.surfaceContainerHighest,
             ),
             columns: [
-              DataColumn(label: Text(isTamil ? 'பெயர்' : 'Name')),
-              DataColumn(label: Text(isTamil ? 'உரிமையாளர்' : 'Owner')),
-              DataColumn(label: Text(isTamil ? 'மாற்றப்பட்டது' : 'Modified')),
-              DataColumn(label: Text(isTamil ? 'அளவு' : 'Size')),
-              DataColumn(label: Text(isTamil ? 'ஒதுக்கப்பட்டது' : 'Allocated')),
+              DataColumn(label: Text(_text('Name', 'பெயர்', 'නම'))),
+              DataColumn(label: Text(_text('Owner', 'உரிமையாளர்', 'හිමිකරු'))),
+              DataColumn(label: Text(_text('Modified', 'மாற்றப்பட்டது', 'වෙනස් කළ දිනය'))),
+              DataColumn(label: Text(_text('Size', 'அளவு', 'ප්‍රමාණය'))),
+              DataColumn(label: Text(_text('Allocated', 'ஒதுக்கப்பட்டது', 'පවරා ඇත'))),
               const DataColumn(label: SizedBox.shrink()),
             ],
             rows: items.map((item) {
@@ -267,8 +279,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   DataCell(
                     Text(
                       _allocatedItems.contains(item.id)
-                          ? (isTamil ? 'ஒதுக்கப்பட்டது' : 'Allocated')
-                          : (isTamil ? 'ஒதுக்கப்படவில்லை' : 'Not allocated'),
+                          ? _text('Allocated', 'ஒதுக்கப்பட்டது', 'පවරා ඇත')
+                          : _text('Not allocated', 'ஒதுக்கப்படவில்லை', 'පවරා නැත'),
                     ),
                   ),
                   DataCell(
@@ -279,7 +291,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         _selectedGroup = null;
                         _selectedMember = null;
                       }),
-                      child: Text(isTamil ? 'ஒதுக்கு' : 'Allocate'),
+                      child: Text(_text('Allocate', 'ஒதுக்கு', 'පවරන්න')),
                     ),
                   ),
                 ],
@@ -353,7 +365,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         ),
                       ),
                       IconButton(
-                        tooltip: isTamil ? 'ஒதுக்கு' : 'Allocate',
+                        tooltip: _text('Allocate', 'ஒதுக்கு', 'පවරන්න'),
                         onPressed: () => setState(() {
                           _selectedItemId = item.id;
                           _allocatingItemId = item.id;
@@ -403,7 +415,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    isTamil ? 'கோப்பை ஒதுக்கு' : 'Allocate file',
+                    _text('Allocate file', 'கோப்பை ஒதுக்கு', 'ගොනුව පවරන්න'),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -411,12 +423,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 ),
                 TextButton(
                   onPressed: () => setState(() => _allocatingItemId = null),
-                  child: Text(isTamil ? 'மூடு' : 'Close'),
+                  child: Text(_text('Close', 'மூடு', 'වසන්න')),
                 ),
               ],
             ),
             Text(
-              '${item.title}. ${isTamil ? 'பகிரப்பட்ட கோப்பு கோப்புறையாக மறைக்கப்படும். பகிரப்பட்ட கோப்புறையை உறுப்பினர் திறக்கலாம்.' : 'A shared file stays hidden as a folder. A shared folder is what the member can open.'}',
+              '${item.title}. ${_text('A shared file stays hidden as a folder. A shared folder is what the member can open.', 'பகிரப்பட்ட கோப்பு கோப்புறையாக மறைக்கப்படும். பகிரப்பட்ட கோப்புறையை உறுப்பினர் திறக்கலாம்.', 'බෙදාගත් ගොනුවක් ෆෝල්ඩරයක් ලෙස සඟවා පවතී. සාමාජිකයාට විවෘත කළ හැක්කේ බෙදාගත් ෆෝල්ඩරයකි.')}',
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
@@ -424,7 +436,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               spacing: 8,
               children: [
                 ChoiceChip(
-                  label: Text(isTamil ? 'குழு' : 'Group'),
+                  label: Text(_text('Group', 'குழு', 'කණ්ඩායම')),
                   selected: _allocationType == 'Group',
                   onSelected: (_) => setState(() {
                     _allocationType = 'Group';
@@ -432,7 +444,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   }),
                 ),
                 ChoiceChip(
-                  label: Text(isTamil ? 'தனிநபர்' : 'Individual'),
+                  label: Text(_text('Individual', 'தனிநபர்', 'තනි පුද්ගල')),
                   selected: _allocationType == 'Individual',
                   onSelected: (_) => setState(() {
                     _allocationType = 'Individual';
@@ -470,12 +482,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                   hint: Text(
                     _allocationType == 'Group'
-                        ? (isTamil
-                              ? 'குழுவைத் தேர்ந்தெடுக்கவும்'
-                              : 'Select group')
-                        : (isTamil
-                              ? 'உறுப்பினரைத் தேர்ந்தெடுக்கவும்'
-                              : 'Select individual'),
+                        ? _text('Select group', 'குழுவைத் தேர்ந்தெடுக்கவும்', 'කණ්ඩායම තෝරන්න')
+                        : _text('Select individual', 'உறுப்பினரைத் தேர்ந்தெடுக்கவும்', 'තනි පුද්ගලයෙකු තෝරන්න'),
                   ),
                   items: targetOptions
                       .map(
@@ -500,14 +508,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: 'View only',
-                      child: Text('View only'),
+                      child: Text(_text('View only', 'பார்க்க மட்டும்', 'බැලීම පමණි')),
                     ),
                     DropdownMenuItem(
                       value: 'Can download',
-                      child: Text('Can download'),
+                      child: Text(_text('Can download', 'பதிவிறக்கலாம்', 'බාගත කළ හැක')),
                     ),
                   ],
                   onChanged: (value) {
@@ -527,9 +535,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                isTamil
-                                    ? 'கோப்பு ஒதுக்கப்பட்டது.'
-                                    : 'File allocated to $target ($_permission).',
+                                _text(
+                                  'File allocated to $target ($_permission).',
+                                  'கோப்பு $target-க்கு ஒதுக்கப்பட்டது.',
+                                  'ගොනුව $target වෙත පවරන ලදී.',
+                                ),
                               ),
                             ),
                           );
@@ -538,7 +548,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     backgroundColor: AppColors.accent,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                   ),
-                  child: Text(isTamil ? 'ஒதுக்கு' : 'Allocate'),
+                  child: Text(_text('Allocate', 'ஒதுக்கு', 'පවරන්න')),
                 );
                 if (constraints.maxWidth < 620) {
                   return Column(
@@ -589,34 +599,40 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 ),
                 _roundAction(
                   icon: AppIcons.download,
-                  tooltip: isTamil ? 'பதிவிறக்கு' : 'Download',
+                  tooltip: _text('Download', 'பதிவிறக்கு', 'බාගන්න'),
                   onPressed: () => _showMessage(
-                    isTamil
-                        ? 'பதிவிறக்கம் விரைவில் கிடைக்கும்.'
-                        : 'File download is not connected yet.',
+                    _text(
+                      'File download is not connected yet.',
+                      'கோப்பு பதிவிறக்கம் இன்னும் இணைக்கப்படவில்லை.',
+                      'ගොනු බාගැනීම තවම සම්බන්ධ කර නැත.',
+                    ),
                   ),
                 ),
                 _roundAction(
                   icon: AppIcons.copy,
-                  tooltip: isTamil ? 'நகலெடு' : 'Copy link',
+                  tooltip: _text('Copy link', 'இணைப்பை நகலெடு', 'සබැඳිය පිටපත් කරන්න'),
                   onPressed: () => _showMessage(
-                    isTamil
-                        ? 'கோப்பு இணைப்பு நகலெடுக்கப்பட்டது.'
-                        : 'File link copied.',
+                    _text(
+                      'File link copied.',
+                      'கோப்பு இணைப்பு நகலெடுக்கப்பட்டது.',
+                      'ගොනු සබැඳිය පිටපත් කරන ලදී.',
+                    ),
                   ),
                 ),
                 _roundAction(
                   icon: AppIcons.view,
-                  tooltip: isTamil ? 'பார்க்க' : 'Preview',
+                  tooltip: _text('Preview', 'முன்னோட்டம்', 'පෙරදසුන'),
                   onPressed: () => _showMessage(
-                    isTamil
-                        ? 'முன்னோட்டம் கிடைக்கவில்லை.'
-                        : 'File preview is not available for this item.',
+                    _text(
+                      'File preview is not available for this item.',
+                      'இந்த உருப்படிக்கான முன்னோட்டம் கிடைக்கவில்லை.',
+                      'මෙම අයිතමය සඳහා පෙරදසුනක් නොමැත.',
+                    ),
                   ),
                 ),
                 _roundAction(
                   icon: AppIcons.delete,
-                  tooltip: isTamil ? 'நீக்கு' : 'Delete',
+                  tooltip: _text('Delete', 'நீக்கு', 'මකන්න'),
                   color: AppColors.warning,
                   onPressed: () => _confirmDelete(item, isTamil),
                 ),
@@ -671,24 +687,24 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final folderName = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(isTamil ? 'புதிய கோப்புறை' : 'New folder'),
+        title: Text(_text('New folder', 'புதிய கோப்புறை', 'නව ෆෝල්ඩරය')),
         content: TextField(
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-            labelText: isTamil ? 'கோப்புறை பெயர்' : 'Folder name',
+            labelText: _text('Folder name', 'கோப்புறை பெயர்', 'ෆෝල්ඩරයේ නම'),
           ),
           onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(isTamil ? 'ரத்து' : 'Cancel'),
+            child: Text(_text('Cancel', 'ரத்து', 'අවලංගු කරන්න')),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.pop(dialogContext, controller.text.trim()),
-            child: Text(isTamil ? 'உருவாக்கு' : 'Create'),
+            child: Text(_text('Create', 'உருவாக்கு', 'සාදන්න')),
           ),
         ],
       ),
@@ -697,14 +713,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     if (folderName == null || folderName.isEmpty || !mounted) return;
     if (_folders.contains(folderName)) {
       _showMessage(
-        isTamil
-            ? 'இந்தக் கோப்புறை ஏற்கனவே உள்ளது.'
-            : 'That folder already exists.',
+        _text(
+          'That folder already exists.',
+          'இந்தக் கோப்புறை ஏற்கனவே உள்ளது.',
+          'එම ෆෝල්ඩරය දැනටමත් පවතී.',
+        ),
       );
       return;
     }
     setState(() => _folders.add(folderName));
-    _showMessage(isTamil ? 'கோப்புறை உருவாக்கப்பட்டது.' : 'Folder created.');
+    _showMessage(_text('Folder created.', 'கோப்புறை உருவாக்கப்பட்டது.', 'ෆෝල්ඩරය සාදන ලදී.'));
   }
 
   Future<void> _showUploadDialog(bool isTamil) async {
@@ -712,7 +730,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final filename = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(isTamil ? 'கோப்பைப் பதிவேற்று' : 'Upload file'),
+        title: Text(_text('Upload file', 'கோப்பைப் பதிவேற்று', 'ගොනුව උඩුගත කරන්න')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -720,7 +738,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               controller: controller,
               autofocus: true,
               decoration: InputDecoration(
-                labelText: isTamil ? 'கோப்பு பெயர்' : 'File name',
+                labelText: _text('File name', 'கோப்பு பெயர்', 'ගොනුවේ නම'),
                 hintText: 'Study notes.pdf',
               ),
               onSubmitted: (value) =>
@@ -732,7 +750,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ? _uploadFolder
                   : _folders.first,
               decoration: InputDecoration(
-                labelText: isTamil ? 'கோப்புறை' : 'Folder',
+                labelText: _text('Folder', 'கோப்புறை', 'ෆෝල්ඩරය'),
                 border: const OutlineInputBorder(),
               ),
               items: _folders
@@ -754,12 +772,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(isTamil ? 'ரத்து' : 'Cancel'),
+            child: Text(_text('Cancel', 'ரத்து', 'අවලංගු කරන්න')),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.pop(dialogContext, controller.text.trim()),
-            child: Text(isTamil ? 'சேர்' : 'Add'),
+            child: Text(_text('Add', 'சேர்', 'එක් කරන්න')),
           ),
         ],
       ),
@@ -788,9 +806,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       _toDate = null;
     });
     _showMessage(
-      isTamil
-          ? 'கோப்பு பட்டியலில் சேர்க்கப்பட்டது. உண்மையான கோப்பு பதிவேற்றம் இன்னும் இணைக்கப்படவில்லை.'
-          : 'Added to the library list. File storage upload is not connected yet.',
+      _text(
+        'Added to the library list. File storage upload is not connected yet.',
+        'கோப்பு நூலகப் பட்டியலில் சேர்க்கப்பட்டது. கோப்பு சேமிப்பகப் பதிவேற்றம் இன்னும் இணைக்கப்படவில்லை.',
+        'පුස්තකාල ලැයිස්තුවට එක් කරන ලදී. ගොනු ගබඩා උඩුගත කිරීම තවම සම්බන්ධ කර නැත.',
+      ),
     );
   }
 
@@ -798,16 +818,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(isTamil ? 'கோப்பை நீக்கவா?' : 'Delete file?'),
+        title: Text(_text('Delete file?', 'கோப்பை நீக்கவா?', 'ගොනුව මකා දමන්නද?')),
         content: Text(item.title),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(isTamil ? 'ரத்து' : 'Cancel'),
+            child: Text(_text('Cancel', 'ரத்து', 'අවලංගු කරන්න')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(isTamil ? 'நீக்கு' : 'Delete'),
+            child: Text(_text('Delete', 'நீக்கு', 'මකන්න')),
           ),
         ],
       ),
